@@ -1,0 +1,21 @@
+{
+  "name": "bridgelab",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@10.5.2",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "pnpm --recursive build",
+    "typecheck": "pnpm --recursive typecheck",
+    "lint": "eslint packages/*/src/**/*.ts",
+    "test": "vitest run --passWithNoTests"
+  },
+  "devDependencies": {
+    "eslint": "^9.22.0",
+    "typescript": "^5.8.2",
+    "typescript-eslint": "^8.26.1",
+    "vitest": "^3.0.8"
+  }
+}

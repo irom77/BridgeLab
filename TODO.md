@@ -2,11 +2,15 @@
 
 Status follows the app-wide plan in [`docs/superpowers/plans/2026-10-25-bridgelab-app.md`](docs/superpowers/plans/2026-10-25-bridgelab-app.md).
 
+## Current focus
+
+Finish the platform-neutral bridge core (rules, scoring, and take-back/replay), then build PBN import/export. Start the solo client after those domain APIs are stable.
+
 ## Foundation
 
-- [ ] Establish the pnpm workspace, root scripts, and CI.
-- [ ] Complete and test immutable auction/play state, scoring, and undo/replay in `packages/core`.
-- [ ] Build complete PBN parsing, serialization, and round-trip tests.
+- [ ] Establish the pnpm workspace, root scripts, and CI (workspace, scripts, and CI workflow are scaffolded; dependency installation, lockfile, and CI verification remain).
+- [ ] Complete immutable auction/play state, scoring, and undo/replay in `packages/core` (deal validation, auction modifier handling, scoring, and score-on-completion are implemented; focused coverage and rule review remain).
+- [ ] Complete PBN support (parser, serializer, multi-board records, deals, auctions, play, tags, comments, and diagnostics are implemented in `packages/core`; round-trip coverage, malformed-input review, and extraction into `packages/pbn` remain).
 
 ## Solo app
 

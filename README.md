@@ -36,13 +36,13 @@ docs/superpowers/
 
 ## Core package
 
-The initial package lives in `packages/core/src` and currently provides card/deal types, dealing and shuffle helpers, follow-suit validation, trick winner evaluation, immutable action history, bot/solver interfaces, and basic PBN metadata utilities.
+The initial package lives in `packages/core/src` and currently provides card/deal types, dealing and shuffle helpers, follow-suit validation, trick winner evaluation, an immutable auction/play reducer with undo/redo reconstruction, bot/solver interfaces, and basic PBN metadata utilities.
 
-The core is TypeScript and designed to stay independent of UI and platform APIs. A root workspace and runnable app commands have not been added yet.
+The core is TypeScript and designed to stay independent of UI and platform APIs. It is part of the root pnpm workspace and builds to `packages/core/dist`.
 
 ## Development
 
-The repository does not yet have root package scripts. Check `TODO.md` for the next implementation milestone. When workspace tooling is added, its root `package.json` will define the canonical install, test, typecheck, lint, and build commands.
+Run `pnpm install` to install the development tools, then use `pnpm typecheck`, `pnpm lint`, `pnpm test`, and `pnpm build` from the repository root.
 
 ## Project guidance
 

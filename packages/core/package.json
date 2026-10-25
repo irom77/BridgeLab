@@ -1,11 +1,18 @@
 {
   "name": "@bridgelab/core",
   "version": "0.1.0",
-  "private": true,
   "license": "MIT",
   "type": "module",
   "description": "Cross-platform contract bridge rules and game state primitives",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit"
+  },
   "exports": {
-    ".": "./src/index.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
   }
 }

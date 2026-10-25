@@ -36,6 +36,8 @@ export function cardId(card: Card): string {
 
 export function isValidDeal(deal: Deal): boolean {
   const cards = SEATS.flatMap((seat) => deal[seat]);
+  const deck = new Set(createDeck().map(cardId));
   return SEATS.every((seat) => deal[seat].length === 13) &&
-    cards.length === 52 && new Set(cards.map(cardId)).size === 52;
+    cards.length === 52 && new Set(cards.map(cardId)).size === 52 &&
+    cards.every((card) => deck.has(cardId(card)));
 }

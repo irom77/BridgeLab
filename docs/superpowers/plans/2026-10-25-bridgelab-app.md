@@ -89,21 +89,22 @@ packages/
 - Game phases cover auction, passed out, play, and complete. State includes dealer, vulnerability, auction, contract/declarer, remaining hands, current/completed tricks, score, and action history.
 
 - [ ] Write tests for bid ordering, passes/doubles/redoubles, passed-out boards, contract/declarer resolution, opening lead, legal play, trick winner, 13-trick completion, scoring, and immutable undo/redo/replay.
-- [ ] Implement the reducer using shared value types and existing rule helpers; failed transitions return typed errors and leave prior state unchanged.
-- [ ] Verify duplicate scoring for contract level, strain, doubling, vulnerability, overtricks, and undertricks against known scoring examples.
+- [x] Implement the reducer using shared value types and existing rule helpers; failed transitions return typed errors and leave prior state unchanged. (Initial reducer, deal validation, auction modifier handling, history reconstruction, and score-on-completion are implemented.)
+- [ ] Verify duplicate scoring for contract level, strain, doubling, vulnerability, overtricks, and undertricks against known scoring examples; focused tests and broader edge-case review remain.
 
 #### Task 3: Build complete PBN import/export
 
 **Files:**
-- Create: `packages/pbn/package.json`, `src/parser.ts`, `src/serializer.ts`, and tests
-- Modify: `packages/core` only for shared domain types needed by PBN
+- Modify: `packages/core/src/pbn.ts` for the initial parser/serializer implementation
+- Later extract: `packages/pbn/package.json`, `src/parser.ts`, and `src/serializer.ts` when a separate package boundary is needed
+- Create: PBN parser/serializer tests
 
 **Interfaces:**
 - Produces: `parsePbn(input): PbnDocument`, `serializePbn(document): string`, conversion between PBN boards and core hand records, and structured diagnostics with board/line context.
 
-- [ ] Define PBN document and board types for tags, deal, auction, play, and comments.
+- [x] Define PBN document and board types for tags, deal, auction, play, comments, and diagnostics (currently in `packages/core/src/pbn.ts`).
 - [ ] Test standard tag/section syntax, all seats and vulnerabilities, suit/rank mapping, comments, multiple boards, incomplete records, and malformed input.
-- [ ] Implement parser and serializer; preserve unrecognized tags and comments where possible.
+- [x] Implement parser and serializer; preserve unrecognized tags and comments where possible (initial implementation is in `packages/core/src/pbn.ts`).
 - [ ] Verify round-trip on representative fixtures and reject invalid deals without losing unrelated boards.
 
 ### Milestone 3: Solo app and hand review
