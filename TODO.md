@@ -36,13 +36,19 @@ The core rules, PBN package, and solo client are in place. Beginner bots support
   - [x] Add a balanced responder invitation or game bid after opener's uncontested 1NT rebid.
   - [x] Add a natural five-card major signoff after opener's uncontested 1NT rebid with a minimum responder hand.
   - [x] Invite game in a five-card major at 3M with 10–12 HCP after opener's uncontested 1NT rebid.
+  - [x] Add 2/1 forcing 1NT responses with 6–12 HCP when no direct new-suit or minimum raise applies; 10–12 HCP three-card major limit raises start with 1NT.
+  - [x] Require a 2/1 opener with 12–17 HCP to continue after forcing 1NT, including a manufactured three-card minor rebid when needed.
+  - [x] Add responder's 11–12 HCP 2NT invitation or three-card major limit raise after opener's natural minor rebid.
+  - [x] Rebids a five-card heart suit below direct 2/1 strength after 1♠–1NT–2♣.
+  - [x] Respect passed-hand exceptions: lower the direct two-level response threshold and do not force opener to rebid after a passed-hand 1NT response.
+  - [ ] Cover interference exceptions to the 2/1 forcing 1NT agreement.
   - [x] Add a natural two-level lower side-suit rebid after a major opening and an uncontested 1NT response.
   - [x] After 1♥–1NT, show a four-card spade suit with a 2♠ reverse and 16+ HCP, preferring a four-card lower side suit when available.
   - [ ] Add broader opener continuations and strength ranges.
     - [x] After 1M–1NT, rebid a six-card opening major when no lower four-card side suit is available.
     - [x] After 1M–1NT, rebid 2NT with a balanced 18–19 HCP hand.
     - [x] After 1M–1NT–2NT, responder bids 3NT with 6+ HCP to accept game.
-  - [ ] Implement distinct SAYC and 2/1 response agreements, including game-forcing 2/1 sequences. (A limited uncontested major-opening 1M–2-over-1 sequence now requires 13+ HCP in 2/1 and continues to game; broader continuations and complete SAYC agreements remain.)
+  - [ ] Implement distinct SAYC and 2/1 response agreements, including game-forcing 2/1 sequences. (2/1 now uses forcing 1NT with 6–12 HCP in the listed uncontested cases; a narrow major-opening 1M–2-over-1 sequence requires 13+ HCP and continues to game. Broader continuations and complete SAYC agreements remain.)
   - [ ] Add intermediate, advanced, and expert bidding/play strategies with distinct tested behavior.
     - [x] Add an initial intermediate card-play tactic: win cheaply when an opponent is winning, or play low when partner is winning; bidding still uses beginner rules.
   - [x] Expose Beginner and Intermediate bot skill in solo setup; advanced and expert remain unavailable.

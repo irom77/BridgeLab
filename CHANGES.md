@@ -4,6 +4,7 @@ Project changes are recorded here, newest first. Keep entries short and link imp
 
 ## Unreleased
 
+- Added 2/1 forcing 1NT responses and continuations, including passed-hand exceptions; responder can invite in notrump, show a three-card limit raise, or rebid a five-card heart suit below direct 2/1 strength.
 - Corrected the SVG wordmark and app header mark to use ContractPlay branding.
 - Rebranded the app and workspace packages as ContractPlay; existing `bridgelab.solo` saves migrate to the new storage key.
 - Added a responder game acceptance: 3NT with 6+ HCP after 1M–1NT–2NT.

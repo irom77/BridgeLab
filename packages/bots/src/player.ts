@@ -17,12 +17,18 @@ function isBalanced(hand: Hand): boolean {
   return counts.every((count) => count >= 2) && counts.filter((count) => count === 2).length <= 1;
 }
 
+function passedBeforeOpening(auction: readonly PublicBid[], seat: Seat, opening: PublicBid): boolean {
+  const openingIndex = auction.indexOf(opening);
+  return openingIndex >= 0 && auction.slice(0, openingIndex).some((call) => call.seat === seat && call.bid === "pass");
+}
+
 function twoOverOneAuction(auction: readonly PublicBid[], style: ConventionSystem["style"]) {
   if (style !== "2/1") return undefined;
   const contracts = auction.filter(({ bid }) => bid !== "pass");
   if (contracts.length < 2 || contracts.length > 3) return undefined;
   const opening = contracts[0]!;
   const response = contracts[1]!;
+  if (passedBeforeOpening(auction, response.seat, opening)) return undefined;
   const openingSuit = opening.bid.match(/^1(hearts|spades)$/)?.[1] as Suit | undefined;
   const responseSuit = response.bid.match(/^2(clubs|diamonds|hearts|spades)$/)?.[1] as Suit | undefined;
   const suitOrder: readonly Suit[] = ["clubs", "diamonds", "hearts", "spades"];
@@ -99,6 +105,23 @@ export class BeginnerBot implements BotPlayer {
       ) {
         return points(hand) >= 6 ? "3notrump" : "pass";
       }
+      const openingMajor = opening?.bid.match(/^1(hearts|spades)$/)?.[1] as Suit | undefined;
+      const rebidSuit = rebid?.bid.match(/^2(clubs|diamonds)$/)?.[1] as Suit | undefined;
+      if (
+        opening?.seat === partner && response?.seat === seat && response.bid === "1notrump" &&
+        rebid?.seat === partner && openingMajor && rebidSuit
+      ) {
+        const responderPoints = points(hand);
+        const majorSupport = hand.filter((card) => card.suit === openingMajor).length;
+        if (majorSupport >= 3 && responderPoints >= 11 && responderPoints <= 12) return `3${openingMajor}` as Bid;
+        if (isBalanced(hand) && responderPoints >= 11 && responderPoints <= 12) return "2notrump";
+        const alternateMajor = openingMajor === "spades" ? "hearts" : undefined;
+        const directTwoLevelMinimum = this.convention.style === "2/1" ? 13 : 10;
+        if (
+          alternateMajor && responderPoints < directTwoLevelMinimum &&
+          hand.filter((card) => card.suit === alternateMajor).length >= 5
+        ) return `2${alternateMajor}` as Bid;
+      }
       const isOneLevelSuit = (bid: Bid | undefined) => bid !== undefined && /^1(clubs|diamonds|hearts|spades)$/.test(bid);
       if (
         opening?.seat === partner && response?.seat === seat && rebid?.seat === partner &&
@@ -146,6 +169,11 @@ export class BeginnerBot implements BotPlayer {
           if (higherSecondSuit && openerPoints >= 16) return `2${higherSecondSuit}` as Bid;
           if (hand.filter((card) => card.suit === openingSuit).length >= 6) return `2${openingSuit}` as Bid;
         }
+        if (this.convention.style === "2/1" && !passedBeforeOpening(auction, partner, opening!) && openerPoints >= 12 && openerPoints <= 17) {
+          if (hand.filter((card) => card.suit === "clubs").length >= 3) return "2clubs";
+          if (hand.filter((card) => card.suit === "diamonds").length >= 3) return "2diamonds";
+          return `2${openingSuit}` as Bid;
+        }
         return "pass";
       }
       const responseSuit = response?.bid.match(/^1(clubs|diamonds|hearts|spades)$/)?.[1] as Suit | undefined;
@@ -178,6 +206,7 @@ export class BeginnerBot implements BotPlayer {
     if (opening.seat !== partner) return "pass";
 
     const responderPoints = points(hand);
+    const passedHand = passedBeforeOpening(auction, seat, opening);
     if (opening.bid === "1notrump") {
       if (!isBalanced(hand) || responderPoints < 8) return "pass";
       return responderPoints < 10 ? "2notrump" : "3notrump";
@@ -195,7 +224,7 @@ export class BeginnerBot implements BotPlayer {
         .sort((a, b) => suitLength(b) - suitLength(a) || suitOrder.indexOf(b) - suitOrder.indexOf(a))[0];
       if (newSuit) return `1${newSuit}` as Bid;
       const hasMajorSupport = (openingSuit === "hearts" || openingSuit === "spades") && suitLength(openingSuit) >= 3;
-      const twoLevelMinimum = this.convention.style === "2/1" && openedMajor ? 13 : 10;
+      const twoLevelMinimum = this.convention.style === "2/1" && openedMajor && !passedHand ? 13 : 10;
       if (responderPoints >= twoLevelMinimum && !hasMajorSupport) {
         const twoLevelSuit = [...suitOrder]
           .filter((suit) => suit !== openingSuit && suitOrder.indexOf(suit) < openingRank && suitLength(suit) >= 4)
@@ -216,6 +245,8 @@ export class BeginnerBot implements BotPlayer {
     }
     if (!openedMajor) return "pass";
     const supportLength = hand.filter((card) => card.suit === openedMajor).length;
+    if (this.convention.style === "2/1" && !passedHand && supportLength === 3 && responderPoints >= 10 && responderPoints <= 12) return "1notrump";
+    if (this.convention.style === "2/1" && !passedHand && supportLength < 3 && responderPoints >= 6 && responderPoints <= 12) return "1notrump";
     if (supportLength < 3 && isBalanced(hand) && responderPoints >= 6 && responderPoints <= 9) return "1notrump";
     if (supportLength < 3 || responderPoints < 6) return "pass";
     if (responderPoints < 10) return `2${openedMajor}` as Bid;
