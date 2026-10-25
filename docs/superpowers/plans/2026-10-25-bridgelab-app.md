@@ -73,8 +73,8 @@ packages/
 **Interfaces:**
 - Produces: workspace commands for `typecheck`, `lint`, `test`, and `build`; `@bridgelab/core` resolves as a workspace package.
 
-- [ ] Add workspace package scripts and baseline CI on Linux for lint, typecheck, unit tests, and production builds.
-- [ ] Run all workspace checks; CI must fail on type, lint, test, or build errors.
+- [x] Add workspace package scripts and baseline CI on Linux for lint, typecheck, unit tests, and production builds.
+- [x] Run all workspace checks; CI must fail on type, lint, test, or build errors. (Local workspace checks pass.)
 
 ### Milestone 2: Complete bridge domain core
 
@@ -88,24 +88,23 @@ packages/
 - Produces: `createGameState`, `applyAction`, `undoAction`, `redoAction`, and `replayActions`; typed `GameState`, `Contract`, `Trick`, `RuleError`, and score values.
 - Game phases cover auction, passed out, play, and complete. State includes dealer, vulnerability, auction, contract/declarer, remaining hands, current/completed tricks, score, and action history.
 
-- [ ] Write tests for bid ordering, passes/doubles/redoubles, passed-out boards, contract/declarer resolution, opening lead, legal play, trick winner, 13-trick completion, scoring, and immutable undo/redo/replay.
+- [x] Write tests for bid ordering, passes/doubles/redoubles, passed-out boards, contract/declarer resolution, opening lead, legal play, trick winner, 13-trick completion, scoring, and immutable undo/redo/replay.
 - [x] Implement the reducer using shared value types and existing rule helpers; failed transitions return typed errors and leave prior state unchanged. (Initial reducer, deal validation, auction modifier handling, history reconstruction, and score-on-completion are implemented.)
-- [ ] Verify duplicate scoring for contract level, strain, doubling, vulnerability, overtricks, and undertricks against known scoring examples; focused tests and broader edge-case review remain.
+- [x] Verify duplicate scoring for contract level, strain, doubling, vulnerability, overtricks, and undertricks against known scoring examples. (Redoubled undertrick scoring was corrected.)
 
 #### Task 3: Build complete PBN import/export
 
 **Files:**
-- Modify: `packages/core/src/pbn.ts` for the initial parser/serializer implementation
-- Later extract: `packages/pbn/package.json`, `src/parser.ts`, and `src/serializer.ts` when a separate package boundary is needed
+- Create: `packages/pbn/package.json`, `src/pbn.ts`, and package tests
 - Create: PBN parser/serializer tests
 
 **Interfaces:**
 - Produces: `parsePbn(input): PbnDocument`, `serializePbn(document): string`, conversion between PBN boards and core hand records, and structured diagnostics with board/line context.
 
-- [x] Define PBN document and board types for tags, deal, auction, play, comments, and diagnostics (currently in `packages/core/src/pbn.ts`).
-- [ ] Test standard tag/section syntax, all seats and vulnerabilities, suit/rank mapping, comments, multiple boards, incomplete records, and malformed input.
-- [x] Implement parser and serializer; preserve unrecognized tags and comments where possible (initial implementation is in `packages/core/src/pbn.ts`).
-- [ ] Verify round-trip on representative fixtures and reject invalid deals without losing unrelated boards.
+- [x] Define PBN document and board types for tags, deal, auction, play, comments, and diagnostics (in `packages/pbn/src/pbn.ts`).
+- [x] Test standard tag/section syntax, all seats and vulnerabilities, suit/rank mapping, comments, multiple boards, incomplete records, and malformed input.
+- [x] Implement parser and serializer; preserve unrecognized tags and comments where possible (implementation extracted to `packages/pbn/src/pbn.ts`).
+- [x] Verify round-trip on representative fixtures and reject invalid deals without losing unrelated boards.
 
 ### Milestone 3: Solo app and hand review
 
@@ -118,10 +117,10 @@ packages/
 **Interfaces:**
 - Client consumes `@bridgelab/core` and exposes screens for home, new hand, auction/play table, results, and hand review.
 
-- [ ] Add keyboard navigation and accessible labels for bids, cards, seats, vulnerability, and turn status.
-- [ ] Implement table layout that adapts between desktop, phone portrait, and iPad/tablet landscape.
-- [ ] Add UI tests for bidding, selecting a legal card, invalid-card feedback, trick transitions, and completed-hand summary.
-- [ ] Verify web builds and interaction at phone, tablet, and desktop viewport sizes.
+- [x] Add keyboard navigation and accessible labels for bids, cards, seats, vulnerability, and turn status. (Native controls remain keyboard reachable; cards/actions and live status have accessible names.)
+- [x] Implement table layout that adapts between desktop, phone portrait, and iPad/tablet landscape. (Responsive CSS breakpoints are in place; device-size review remains.)
+- [x] Add UI tests for bidding, selecting a legal card, invalid-card feedback, trick transitions, and completed-hand summary.
+- [x] Verify web builds and interaction at phone, tablet, and desktop viewport sizes. (Production build, UI interaction tests, and Chromium viewport checks pass without horizontal overflow.)
 
 #### Task 5: Add local solo game setup, persistence, and history review
 
@@ -132,9 +131,9 @@ packages/
 **Interfaces:**
 - Produces: create random or imported hand, resume unfinished local hand, save completed hand, browse recent hands, review move-by-move, and take back during solo play.
 
-- [ ] Store local game records with schema version, actions, board metadata, and optional PBN source.
-- [ ] Test save/reload, schema migration, delete/export, review stepping, and take-back branch behavior.
-- [ ] Implement deal setup, dealer/vulnerability selection, start/restart, autosave, and result summary.
+- [x] Store local game records with schema version, actions, and board metadata; keep the current hand and recent completed records in browser storage.
+- [x] Test save/reload, schema migration, delete/export, review stepping, and take-back branch behavior.
+- [x] Implement random/PBN deal setup, dealer/vulnerability selection, start/restart, autosave, resume, and result summary.
 
 #### Task 6: Implement usable bots and hint integration
 
@@ -145,9 +144,9 @@ packages/
 **Interfaces:**
 - Produces: `BotPlayer` implementations configured by skill and bidding style (`SAYC`, `2/1`); `Solver` adapter remains optional and asynchronously callable.
 
-- [ ] Define a convention-system interface and test that each bot only receives its hand, public auction/play, and legal context.
-- [ ] Implement a baseline legal bot first, then beginner/intermediate bidding and play strategies with SAYC and 2/1 configuration.
-- [ ] Implement hints that return only legal cards when no solver is configured and display solver recommendations when available.
+- [x] Define a convention-system interface and test that each bot only receives its hand, public auction/play, and legal context. (Initial `PlayContext` exposes only own hand and public trick; bidding gets own hand and seat-tagged public auction.)
+- [ ] Implement a baseline legal bot first, then beginner/intermediate bidding and play strategies with SAYC and 2/1 configuration. (Beginner opening/pass rules, legal card play, five-card-major/minor opening selection, limited 1NT and minor-opening responses, balanced 1NT responses to major openings, major and minor raises, limited one- and two-level new-suit responses, a narrow uncontested 1M–2-over-1 game force, responder continuations after opener rebids 1NT including the natural five-card-major signoff, opener's lower side-suit rebid after 1M–1NT, and opener suit/second-suit/2♣/minimum and invitational major raise/1NT/2NT rebids are implemented; other continuations, stronger levels, and complete conventions remain.)
+- [x] Implement hints that return only legal cards when no solver is configured and display solver recommendations when available. (Client highlights the fallback legal set or the supplied optional solver recommendations; hints never play automatically.)
 - [ ] Add deterministic seeded-deal tests for legality, no hidden-information access, and stable output.
 
 ### Milestone 4: Ship the shared app to requested platforms

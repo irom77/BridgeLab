@@ -1,5 +1,5 @@
 import type { Seat } from "./cards.js";
-import type { Vulnerability } from "./pbn.js";
+import type { Vulnerability } from "./types.js";
 import type { Contract } from "./game.js";
 
 export type ContractScore = Readonly<{
@@ -29,8 +29,8 @@ function contractTrickPoints(contract: Contract): number {
   return undoubled * (contract.doubled === 0 ? 1 : contract.doubled === 1 ? 2 : 4);
 }
 
-function undertrickPenalty(count: number, vulnerable: boolean, doubled: boolean): number {
-  if (!doubled) return count * (vulnerable ? 100 : 50);
+function undertrickPenalty(count: number, vulnerable: boolean, doubled: 0 | 1 | 2): number {
+  if (doubled === 0) return count * (vulnerable ? 100 : 50);
   let penalty = 0;
   for (let under = 1; under <= count; under++) {
     if (vulnerable) penalty += under === 1 ? 200 : 300;
@@ -38,7 +38,7 @@ function undertrickPenalty(count: number, vulnerable: boolean, doubled: boolean)
     else if (under <= 4) penalty += 200;
     else penalty += 300;
   }
-  return penalty;
+  return penalty * (doubled === 2 ? 2 : 1);
 }
 
 /** Calculates standard duplicate contract score, signed from North-South's perspective. */
@@ -55,11 +55,10 @@ export function scoreContract(
   const overtricks = Math.max(0, tricksTaken - tricksRequired);
   const undertricks = Math.max(0, tricksRequired - tricksTaken);
   const vulnerable = isVulnerable(contract.declarer, vulnerability);
-  const multiplier = contract.doubled === 0 ? 1 : contract.doubled === 1 ? 2 : 4;
   let declaringSideScore: number;
 
   if (undertricks > 0) {
-    declaringSideScore = -undertrickPenalty(undertricks, vulnerable, contract.doubled > 0);
+    declaringSideScore = -undertrickPenalty(undertricks, vulnerable, contract.doubled);
   } else {
     const trickPoints = contractTrickPoints(contract);
     let bonus = trickPoints >= 100 ? (vulnerable ? 500 : 300) : 50;

@@ -1,0 +1,74 @@
+import { describe, expect, it } from "vitest";
+import { createDeck, deal } from "@bridgelab/core";
+import { exportPbn, parsePbn, pbnBoardToHand, serializePbn } from "./pbn.js";
+
+const normalizedDeal = (value: ReturnType<typeof deal>) => Object.fromEntries(
+  Object.entries(value).map(([seat, hand]) => [seat, hand.map(({ suit, rank }) => `${suit}:${rank}`).sort()])
+);
+
+describe("PBN import and export", () => {
+  it.each([
+    ["N", "north"], ["E", "east"], ["S", "south"], ["W", "west"]
+  ] as const)("maps dealer %s to %s", (encoded, dealer) => {
+    expect(parsePbn(`[Dealer "${encoded}"]\n[Vulnerable "None"]`).boards[0]?.dealer).toBe(dealer);
+  });
+
+  it.each([
+    ["None", "None"], ["NS", "NS"], ["EW", "EW"], ["All", "Both"]
+  ] as const)("maps vulnerability %s to %s", (encoded, vulnerability) => {
+    expect(parsePbn(`[Dealer "N"]\n[Vulnerable "${encoded}"]`).boards[0]?.vulnerability).toBe(vulnerability);
+  });
+
+  it("round-trips a deal, auction, play, unknown tag, and comments", () => {
+    const source = exportPbn({
+      dealer: "north",
+      vulnerability: "EW",
+      deal: deal(createDeck()),
+      actions: [
+        { type: "bid", seat: "north", bid: "1clubs" },
+        { type: "bid", seat: "east", bid: "pass" },
+        { type: "play", seat: "east", card: { suit: "spades", rank: "2" } }
+      ],
+      tags: [{ name: "Event", value: "Practice" }, { name: "Annotator", value: "BridgeLab" }],
+      comments: ["review this hand"]
+    });
+    const board = parsePbn(source).boards[0]!;
+    expect(normalizedDeal(board.deal!)).toEqual(normalizedDeal(deal(createDeck())));
+    expect(board.actions).toEqual([
+      { type: "bid", seat: "north", bid: "1clubs" },
+      { type: "bid", seat: "east", bid: "pass" },
+      { type: "play", seat: "east", card: { suit: "spades", rank: "2" } }
+    ]);
+    expect(board.tags.map(({ name }) => name)).toContain("Annotator");
+    expect(board.comments).toContain("review this hand");
+    expect(normalizedDeal(parsePbn(serializePbn({ boards: [board] })).boards[0]!.deal!)).toEqual(normalizedDeal(board.deal!));
+  });
+
+  it("keeps independent boards when one deal is malformed", () => {
+    const source = `[Board "1"]\n[Dealer "N"]\n[Vulnerable "None"]\n[Deal "N:invalid"]\n\n[Board "2"]\n[Dealer "E"]\n[Vulnerable "All"]`;
+    const boards = parsePbn(source).boards;
+    expect(boards).toHaveLength(2);
+    expect(boards[0]?.diagnostics).toContainEqual(expect.objectContaining({ severity: "error", message: "Invalid or incomplete Deal tag" }));
+    expect(boards[1]).toMatchObject({ dealer: "east", vulnerability: "Both" });
+  });
+
+  it("reports missing required metadata when converting a board to a hand", () => {
+    const board = parsePbn(`[Event "Practice"]`).boards[0]!;
+    expect(board.diagnostics).toEqual([
+      expect.objectContaining({ severity: "warning", message: "Missing Dealer tag", line: 1 }),
+      expect.objectContaining({ severity: "warning", message: "Missing Vulnerable tag", line: 1 })
+    ]);
+    expect(() => pbnBoardToHand(board)).toThrow("missing a valid Dealer tag");
+  });
+
+  it("reports unknown auction calls and keeps parsing the rest of an incomplete record", () => {
+    const board = parsePbn(`[Dealer "N"]\n[Vulnerable "None"]\n[Auction "N"]\n1C mystery Pass`).boards[0]!;
+    expect(board.actions).toEqual([
+      { type: "bid", seat: "north", bid: "1clubs" },
+      { type: "bid", seat: "east", bid: "pass" }
+    ]);
+    expect(board.diagnostics).toContainEqual(expect.objectContaining({
+      severity: "warning", message: "Unrecognized auction call: mystery", line: 4
+    }));
+  });
+});

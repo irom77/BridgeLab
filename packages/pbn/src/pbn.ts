@@ -1,7 +1,5 @@
-import { SEATS, SUITS, RANKS, isValidDeal, type Card, type Deal, type Seat, type Suit } from "./cards.js";
-import type { Bid, GameAction } from "./history.js";
+import { SEATS, SUITS, RANKS, isValidDeal, type Card, type Deal, type Seat, type Suit, type Vulnerability, type Bid, type GameAction } from "@bridgelab/core";
 
-export type Vulnerability = "None" | "NS" | "EW" | "Both";
 export type PbnTag = Readonly<{ name: string; value: string; line?: number }>;
 export type PbnDiagnostic = Readonly<{ severity: "error" | "warning"; message: string; line: number }>;
 export type PbnHand = Readonly<{

@@ -8,9 +8,9 @@
   },
   "scripts": {
     "build": "pnpm --recursive build",
-    "typecheck": "pnpm --recursive typecheck",
-    "lint": "eslint packages/*/src/**/*.ts",
-    "test": "vitest run --passWithNoTests"
+    "typecheck": "pnpm --recursive build && pnpm --recursive typecheck",
+    "lint": "eslint \"apps/*/src/**/*.{ts,tsx}\" \"packages/*/src/**/*.ts\"",
+    "test": "pnpm --filter @bridgelab/pbn... build && pnpm --filter @bridgelab/persistence... build && pnpm --filter @bridgelab/bots... build && vitest run --passWithNoTests"
   },
   "devDependencies": {
     "eslint": "^9.22.0",
