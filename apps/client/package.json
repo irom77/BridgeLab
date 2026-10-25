@@ -1,5 +1,5 @@
 {
-  "name": "@bridgelab/client",
+  "name": "@contractplay/client",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -9,10 +9,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@bridgelab/core": "workspace:*",
-    "@bridgelab/bots": "workspace:*",
-    "@bridgelab/persistence": "workspace:*",
-    "@bridgelab/pbn": "workspace:*",
+    "@contractplay/core": "workspace:*",
+    "@contractplay/bots": "workspace:*",
+    "@contractplay/persistence": "workspace:*",
+    "@contractplay/pbn": "workspace:*",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },

@@ -4,6 +4,7 @@ Project changes are recorded here, newest first. Keep entries short and link imp
 
 ## Unreleased
 
+- Rebranded the app and workspace packages as ContractPlay; existing `bridgelab.solo` saves migrate to the new storage key.
 - Added a responder game acceptance: 3NT with 6+ HCP after 1M–1NT–2NT.
 - Added an invitational 3M responder rebid with a five-card major and 10–12 HCP after opener's uncontested 1NT rebid.
 - Added a solo setup choice for Beginner or Intermediate bot skill; Intermediate bots still use beginner bidding.
@@ -40,11 +41,11 @@ Project changes are recorded here, newest first. Keep entries short and link imp
 ## 2026-10-25
 
 - Added a responsive React bridge table with reducer-backed auction, card play, rule feedback, trick progression, and hand results.
-- Added the pnpm lockfile, focused core and PBN tests, and a separate `@bridgelab/pbn` package; corrected redoubled undertrick penalties.
+- Added the pnpm lockfile, focused core and PBN tests, and a separate `@contractplay/pbn` package; corrected redoubled undertrick penalties.
 - Added the pnpm workspace foundation, shared strict TypeScript settings, core build/typecheck scripts, and CI workflow.
 - Added immutable auction and card-play transitions, contract/declarer resolution, trick progression, and history reconstruction APIs in `packages/core`.
 - Added full-deal validation and duplicate contract scoring, including vulnerability, doubles/redoubles, overtricks, undertricks, game, and slam bonuses; completed hands now include their score.
 - Added PBN parsing and serialization for multi-board records, deals, auctions, card play, comments, preserved tags, and board-level diagnostics.
 - Added the MIT license.
 - Added the initial `packages/core` TypeScript scaffold for cards, dealing, play legality, action history, bot/hint interfaces, and basic PBN metadata utilities.
-- Added the BridgeLab app roadmap and the initial project documentation and agent guidance.
+- Added the ContractPlay app roadmap and the initial project documentation and agent guidance.

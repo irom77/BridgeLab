@@ -4,11 +4,11 @@
 
 **Goal:** Let a local player configure a deal, resume it after reload, browse finished hands, and step through or take back actions.
 
-**Architecture:** Keep game transitions in `@bridgelab/core`; add a versioned storage adapter package that accepts a `Storage`-shaped interface, and let the React client coordinate setup, autosave, recent hands, and review. Store the current hand and recent completed hands as JSON in browser local storage.
+**Architecture:** Keep game transitions in `@contractplay/core`; add a versioned storage adapter package that accepts a `Storage`-shaped interface, and let the React client coordinate setup, autosave, recent hands, and review. Store the current hand and recent completed hands as JSON in browser local storage.
 
 **Tech Stack:** TypeScript, React, Vite, Vitest, pnpm workspace.
 
-**Spec:** Task 5 in `docs/superpowers/plans/2026-10-25-bridgelab-app.md`.
+**Spec:** Task 5 in `docs/superpowers/plans/2026-10-25-contractplay-app.md`.
 
 ## Global Constraints
 
@@ -50,7 +50,7 @@
 
 **Files:**
 - Modify: `apps/client/src/App.tsx`, `apps/client/src/styles.css`, `apps/client/src/App.test.tsx`
-- Modify: `docs/superpowers/plans/2026-10-25-bridgelab-app.md`, `TODO.md`, `CHANGES.md`, `README.md`
+- Modify: `docs/superpowers/plans/2026-10-25-contractplay-app.md`, `TODO.md`, `CHANGES.md`, `README.md`
 
 **Interfaces:**
 - Setup uses dealer choices North/East/South/West and vulnerability None/NS/EW/Both, and accepts a pasted PBN board.

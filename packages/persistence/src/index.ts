@@ -1,6 +1,7 @@
-import { isValidDeal, RANKS, SEATS, SUITS, type Deal, type GameState, type Seat, type Suit } from "@bridgelab/core";
+import { isValidDeal, RANKS, SEATS, SUITS, type Deal, type GameState, type Seat, type Suit } from "@contractplay/core";
 
-const storageKey = "bridgelab.solo";
+const storageKey = "contractplay.solo";
+const legacyStorageKey = "bridgelab.solo";
 
 export type SavedHand = Readonly<{
   id: string;
@@ -81,12 +82,16 @@ function normalize(value: unknown): SoloData {
 }
 
 export function loadSoloData(storage: StorageLike): SoloData {
-  const raw = storage.getItem(storageKey);
+  const currentRaw = storage.getItem(storageKey);
+  const raw = currentRaw ?? storage.getItem(legacyStorageKey);
   if (raw === null) return emptyData();
   try {
     const parsed: unknown = JSON.parse(raw);
     const data = normalize(parsed);
-    if (isRecord(parsed) && parsed.version !== data.version) saveSoloData(storage, data);
+    if (currentRaw === null || (isRecord(parsed) && parsed.version !== data.version)) {
+      saveSoloData(storage, data);
+      if (currentRaw === null) storage.removeItem(legacyStorageKey);
+    }
     return data;
   } catch {
     return emptyData();

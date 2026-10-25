@@ -1,4 +1,4 @@
-import { SEATS, cardId, type Bid, type BotConfig, type BotPlayer, type Hand, type PlayContext, type PublicBid, type Seat, type Suit } from "@bridgelab/core";
+import { SEATS, cardId, type Bid, type BotConfig, type BotPlayer, type Hand, type PlayContext, type PublicBid, type Seat, type Suit } from "@contractplay/core";
 
 export interface ConventionSystem {
   readonly style: "SAYC" | "2/1";

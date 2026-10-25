@@ -1,16 +1,16 @@
 {
-  "name": "@bridgelab/pbn",
+  "name": "@contractplay/pbn",
   "version": "0.1.0",
   "license": "MIT",
   "type": "module",
-  "description": "PBN import, export, and diagnostics for BridgeLab",
+  "description": "PBN import, export, and diagnostics for ContractPlay",
   "files": ["dist"],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@bridgelab/core": "workspace:*"
+    "@contractplay/core": "workspace:*"
   },
   "exports": {
     ".": {

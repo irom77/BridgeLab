@@ -1,4 +1,4 @@
-import { applyAction, createGameState, deal, validatePlay } from "@bridgelab/core";
+import { applyAction, createGameState, deal, validatePlay } from "@contractplay/core";
 import { describe, expect, it } from "vitest";
 import { deleteSavedHand, exportSavedHand, loadSoloData, saveSoloData, type SoloData } from "./index.js";
 
@@ -40,7 +40,18 @@ describe("local solo store", () => {
     storage.setItem("bridgelab.solo", JSON.stringify({ version: 0, currentGame: game }));
 
     expect(loadSoloData(storage)).toEqual({ ...emptyData, currentGame: game });
-    expect(JSON.parse(storage.getItem("bridgelab.solo")!).version).toBe(1);
+    expect(JSON.parse(storage.getItem("contractplay.solo")!).version).toBe(1);
+    expect(storage.getItem("bridgelab.solo")).toBeNull();
+  });
+
+  it("migrates existing BridgeLab saves to the ContractPlay storage key", () => {
+    const storage = new MemoryStorage();
+    const data: SoloData = { version: 1, currentHandId: null, currentGame: game, completedHands: [] };
+    storage.setItem("bridgelab.solo", JSON.stringify(data));
+
+    expect(loadSoloData(storage)).toEqual(data);
+    expect(JSON.parse(storage.getItem("contractplay.solo")!)).toEqual(data);
+    expect(storage.getItem("bridgelab.solo")).toBeNull();
   });
 
   it("round-trips current and completed games", () => {
@@ -54,14 +65,14 @@ describe("local solo store", () => {
 
   it("recovers from malformed saved JSON", () => {
     const storage = new MemoryStorage();
-    storage.setItem("bridgelab.solo", "{bad json");
+    storage.setItem("contractplay.solo", "{bad json");
 
     expect(loadSoloData(storage)).toEqual(emptyData);
   });
 
   it("discards a structurally invalid current game and its hand id", () => {
     const storage = new MemoryStorage();
-    storage.setItem("bridgelab.solo", JSON.stringify({
+    storage.setItem("contractplay.solo", JSON.stringify({
       version: 1,
       currentHandId: "broken-hand",
       currentGame: { phase: "unknown", history: { actions: [] } },

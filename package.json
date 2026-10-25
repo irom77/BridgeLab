@@ -1,5 +1,5 @@
 {
-  "name": "bridgelab",
+  "name": "contractplay",
   "version": "0.1.0",
   "private": true,
   "packageManager": "pnpm@10.5.2",
@@ -10,7 +10,7 @@
     "build": "pnpm --recursive build",
     "typecheck": "pnpm --recursive build && pnpm --recursive typecheck",
     "lint": "eslint \"apps/*/src/**/*.{ts,tsx}\" \"packages/*/src/**/*.ts\"",
-    "test": "pnpm --filter @bridgelab/pbn... build && pnpm --filter @bridgelab/persistence... build && pnpm --filter @bridgelab/bots... build && vitest run --passWithNoTests"
+    "test": "pnpm --filter @contractplay/pbn... build && pnpm --filter @contractplay/persistence... build && pnpm --filter @contractplay/bots... build && vitest run --passWithNoTests"
   },
   "devDependencies": {
     "eslint": "^9.22.0",

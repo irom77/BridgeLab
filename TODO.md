@@ -1,6 +1,6 @@
-# BridgeLab roadmap
+# ContractPlay roadmap
 
-Status follows the app-wide plan in [`docs/superpowers/plans/2026-10-25-bridgelab-app.md`](docs/superpowers/plans/2026-10-25-bridgelab-app.md).
+Status follows the app-wide plan in [`docs/superpowers/plans/2026-10-25-contractplay-app.md`](docs/superpowers/plans/2026-10-25-contractplay-app.md).
 
 ## Current focus
 
@@ -11,6 +11,7 @@ The core rules, PBN package, and solo client are in place. Beginner bots support
 - [x] Establish the pnpm workspace, root scripts, and CI (workspace dependencies installed; lockfile generated; local checks pass).
 - [x] Complete immutable auction/play state, scoring, and undo/replay in `packages/core` (focused coverage includes auction modifiers, legality, 13-trick completion, scoring examples, and history reconstruction).
 - [x] Complete initial PBN support (parser and serializer are extracted into `packages/pbn`; round-trip, seats/vulnerabilities, comments, tags, malformed records, and board-isolation coverage is in place).
+- [x] Rename the app, workspace package scope, and repository to ContractPlay.
 
 ## Solo app
 

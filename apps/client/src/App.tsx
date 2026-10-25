@@ -15,10 +15,10 @@ import {
   type Solver,
   type Suit,
   type Vulnerability
-} from "@bridgelab/core";
-import { parsePbn } from "@bridgelab/pbn";
-import { deleteSavedHand, exportSavedHand, loadSoloData, saveSoloData, type SavedHand, type SoloData } from "@bridgelab/persistence";
-import { createBot } from "@bridgelab/bots";
+} from "@contractplay/core";
+import { parsePbn } from "@contractplay/pbn";
+import { deleteSavedHand, exportSavedHand, loadSoloData, saveSoloData, type SavedHand, type SoloData } from "@contractplay/persistence";
+import { createBot } from "@contractplay/bots";
 
 const seatNames: Record<Seat, string> = { north: "North", east: "East", south: "South", west: "West" };
 const biddingStrains = ["clubs", "diamonds", "hearts", "spades", "notrump"] as const;
@@ -215,7 +215,7 @@ export default function App({ solver }: { solver?: Solver } = {}) {
     const url = URL.createObjectURL(new Blob([contents], { type: "application/json" }));
     const link = document.createElement("a");
     link.href = url;
-    link.download = `bridgelab-${id}.json`;
+    link.download = `contractplay-${id}.json`;
     link.click();
     URL.revokeObjectURL(url);
   }
@@ -233,7 +233,7 @@ export default function App({ solver }: { solver?: Solver } = {}) {
   return (
     <main className="app-shell">
       <header className="site-header">
-        <a className="brand" href="#home" aria-label="BridgeLab home"><span className="brand-mark">B</span><span>BridgeLab</span></a>
+        <a className="brand" href="#home" aria-label="ContractPlay home"><span className="brand-mark">B</span><span>ContractPlay</span></a>
         <span className="header-note">Play · learn · review</span>
       </header>
 
@@ -333,7 +333,7 @@ export default function App({ solver }: { solver?: Solver } = {}) {
       ) : null}
 
       {message ? <p className="error-message" role="alert">{message}</p> : null}
-      <footer className="app-footer"><span>BridgeLab</span><span>Every hand has a story.</span></footer>
+      <footer className="app-footer"><span>ContractPlay</span><span>Every hand has a story.</span></footer>
     </main>
   );
 }

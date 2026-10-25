@@ -23,16 +23,16 @@ importers:
 
   apps/client:
     dependencies:
-      '@bridgelab/bots':
+      '@contractplay/bots':
         specifier: workspace:*
         version: link:../../packages/bots
-      '@bridgelab/core':
+      '@contractplay/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@bridgelab/pbn':
+      '@contractplay/pbn':
         specifier: workspace:*
         version: link:../../packages/pbn
-      '@bridgelab/persistence':
+      '@contractplay/persistence':
         specifier: workspace:*
         version: link:../../packages/persistence
       react:
@@ -66,7 +66,7 @@ importers:
 
   packages/bots:
     dependencies:
-      '@bridgelab/core':
+      '@contractplay/core':
         specifier: workspace:*
         version: link:../core
 
@@ -74,13 +74,13 @@ importers:
 
   packages/pbn:
     dependencies:
-      '@bridgelab/core':
+      '@contractplay/core':
         specifier: workspace:*
         version: link:../core
 
   packages/persistence:
     dependencies:
-      '@bridgelab/core':
+      '@contractplay/core':
         specifier: workspace:*
         version: link:../core
 

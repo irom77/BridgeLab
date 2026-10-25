@@ -1,14 +1,14 @@
-# BridgeLab Application Implementation Plan
+# ContractPlay Application Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Deliver BridgeLab as a cross-platform contract bridge app for Web, Windows, macOS, iOS, and iPad, with solo play, hand review, PBN import/export, bots and hints, followed by live multiplayer.
+**Goal:** Deliver ContractPlay as a cross-platform contract bridge app for Web, Windows, macOS, iOS, and iPad, with solo play, hand review, PBN import/export, bots and hints, followed by live multiplayer.
 
 **Architecture:** Use a TypeScript monorepo with a React web client and the existing platform-neutral `packages/core` as the rules authority. Ship the web client directly in browsers and package the same client in Tauri 2 for desktop and mobile; run online games through a server-authoritative API so hidden hands and legal actions are controlled centrally. Build the first usable release around solo play and review, then add multiplayer without changing the bridge rules model.
 
 **Tech Stack:** TypeScript, React, Vite, pnpm workspaces, Tauri 2, Node.js server, PostgreSQL for online accounts/game records, WebSocket transport for live tables, Vitest and Playwright for automated tests. Keep bridge rules and domain packages free of UI, platform, and database dependencies.
 
-**Spec:** BridgeLab product brief from the conversation: cross-platform contract bridge for Web, Windows, Mac, iOS, and iPad; reusable card/deal logic; legal play validation; immutable action history with take-back/review; PBN import/export; configurable bot skill and bidding conventions; and a solver-backed hint seam. The repo currently contains only a core package scaffold and no application or server.
+**Spec:** ContractPlay product brief from the conversation: cross-platform contract bridge for Web, Windows, Mac, iOS, and iPad; reusable card/deal logic; legal play validation; immutable action history with take-back/review; PBN import/export; configurable bot skill and bidding conventions; and a solver-backed hint seam. The repo currently contains only a core package scaffold and no application or server.
 
 This app-wide roadmap supersedes `2026-10-25-core-game-reducer.md` as the execution plan; its reducer scope is included in Milestone 2, Task 2.
 
@@ -71,7 +71,7 @@ packages/
 - Modify: `packages/core/package.json` and `packages/core/tsconfig.json`
 
 **Interfaces:**
-- Produces: workspace commands for `typecheck`, `lint`, `test`, and `build`; `@bridgelab/core` resolves as a workspace package.
+- Produces: workspace commands for `typecheck`, `lint`, `test`, and `build`; `@contractplay/core` resolves as a workspace package.
 
 - [x] Add workspace package scripts and baseline CI on Linux for lint, typecheck, unit tests, and production builds.
 - [x] Run all workspace checks; CI must fail on type, lint, test, or build errors. (Local workspace checks pass.)
@@ -115,7 +115,7 @@ packages/
 - Create: `packages/ui` only for components shared by multiple client surfaces
 
 **Interfaces:**
-- Client consumes `@bridgelab/core` and exposes screens for home, new hand, auction/play table, results, and hand review.
+- Client consumes `@contractplay/core` and exposes screens for home, new hand, auction/play table, results, and hand review.
 
 - [x] Add keyboard navigation and accessible labels for bids, cards, seats, vulnerability, and turn status. (Native controls remain keyboard reachable; cards/actions and live status have accessible names.)
 - [x] Implement table layout that adapts between desktop, phone portrait, and iPad/tablet landscape. (Responsive CSS breakpoints are in place; device-size review remains.)

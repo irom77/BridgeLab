@@ -1,10 +1,10 @@
 {
-  "name": "@bridgelab/bots",
+  "name": "@contractplay/bots",
   "version": "0.1.0",
   "license": "MIT",
   "type": "module",
   "files": ["dist"],
   "scripts": { "build": "tsc -p tsconfig.build.json", "typecheck": "tsc --noEmit" },
-  "dependencies": { "@bridgelab/core": "workspace:*" },
+  "dependencies": { "@contractplay/core": "workspace:*" },
   "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } }
 }

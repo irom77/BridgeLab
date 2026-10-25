@@ -1,11 +1,11 @@
 // @vitest-environment jsdom
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
-import { applyAction, createGameState, deal, validatePlay } from "@bridgelab/core";
-import type { Solver } from "@bridgelab/core";
-import { exportPbn } from "@bridgelab/pbn";
+import { applyAction, createGameState, deal, validatePlay } from "@contractplay/core";
+import type { Solver } from "@contractplay/core";
+import { exportPbn } from "@contractplay/pbn";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { saveSoloData, type SoloData } from "@bridgelab/persistence";
+import { saveSoloData, type SoloData } from "@contractplay/persistence";
 import App from "./App.js";
 
 function completedGame() {
@@ -92,14 +92,14 @@ describe("bridge table", () => {
     await selectCall("pass");
     await selectCall("pass");
     await selectCall("pass");
-    const historyBefore = JSON.parse(window.localStorage.getItem("bridgelab.solo")!).currentGame.history;
+    const historyBefore = JSON.parse(window.localStorage.getItem("contractplay.solo")!).currentGame.history;
 
     await user.click(screen.getByRole("button", { name: "Show hint" }));
 
     expect(await screen.findByText("Legal cards are highlighted.")).toBeTruthy();
     expect(screen.getAllByRole("button", { name: /^Play / })).toHaveLength(13);
     expect(screen.getAllByRole("button", { name: /^Play / }).every((card) => card.classList.contains("hinted-card"))).toBe(true);
-    expect(JSON.parse(window.localStorage.getItem("bridgelab.solo")!).currentGame.history).toEqual(historyBefore);
+    expect(JSON.parse(window.localStorage.getItem("contractplay.solo")!).currentGame.history).toEqual(historyBefore);
   });
 
   it("shows optional solver recommendations when a solver is provided", async () => {
@@ -287,7 +287,7 @@ describe("bridge table", () => {
     fireEvent.click(screen.getByRole("button", { name: "Deal a new hand" }));
 
     await act(async () => { await vi.runAllTimersAsync(); });
-    const saved = JSON.parse(window.localStorage.getItem("bridgelab.solo")!);
+    const saved = JSON.parse(window.localStorage.getItem("contractplay.solo")!);
     expect(saved.currentGame.dealer).toBe("west");
     expect(saved.currentGame.auction[0].seat).toBe("west");
   });
@@ -317,7 +317,7 @@ describe("bridge table", () => {
     await user.selectOptions(screen.getByLabelText("Contract call"), "1clubs");
     await user.click(screen.getByRole("button", { name: "Make bid" }));
 
-    await waitFor(() => expect(JSON.parse(window.localStorage.getItem("bridgelab.solo")!).currentGame.auction).toHaveLength(1));
+    await waitFor(() => expect(JSON.parse(window.localStorage.getItem("contractplay.solo")!).currentGame.auction).toHaveLength(1));
     firstRender.unmount();
     render(<App />);
 
@@ -360,6 +360,6 @@ describe("bridge table", () => {
     await user.click(screen.getByRole("button", { name: "Exit review" }));
 
     expect(screen.getByText("East to bid")).toBeTruthy();
-    expect(JSON.parse(window.localStorage.getItem("bridgelab.solo")!).currentGame.currentActor).toBe("east");
+    expect(JSON.parse(window.localStorage.getItem("contractplay.solo")!).currentGame.currentActor).toBe("east");
   });
 });

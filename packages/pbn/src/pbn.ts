@@ -1,4 +1,4 @@
-import { SEATS, SUITS, RANKS, isValidDeal, type Card, type Deal, type Seat, type Suit, type Vulnerability, type Bid, type GameAction } from "@bridgelab/core";
+import { SEATS, SUITS, RANKS, isValidDeal, type Card, type Deal, type Seat, type Suit, type Vulnerability, type Bid, type GameAction } from "@contractplay/core";
 
 export type PbnTag = Readonly<{ name: string; value: string; line?: number }>;
 export type PbnDiagnostic = Readonly<{ severity: "error" | "warning"; message: string; line: number }>;

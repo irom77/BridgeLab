@@ -1,4 +1,4 @@
-import { deal, type Hand } from "@bridgelab/core";
+import { deal, type Hand } from "@contractplay/core";
 import { describe, expect, it } from "vitest";
 import { createBot } from "./player.js";
 

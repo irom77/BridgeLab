@@ -4,11 +4,11 @@
 
 **Goal:** Let a solo user play a hand against three deterministic beginner bots, while keeping bot decision inputs limited to private own-hand data and public game context.
 
-**Architecture:** Add `@bridgelab/bots` with a convention-system interface and a baseline SAYC/2/1 beginner implementation. The client will run bot turns through the existing immutable core reducer and expose the user's seat and bot convention in setup. Bots choose bids from their hand and public auction, and choose only legal cards from their own hand using current trick context.
+**Architecture:** Add `@contractplay/bots` with a convention-system interface and a baseline SAYC/2/1 beginner implementation. The client will run bot turns through the existing immutable core reducer and expose the user's seat and bot convention in setup. Bots choose bids from their hand and public auction, and choose only legal cards from their own hand using current trick context.
 
 **Tech Stack:** TypeScript, pnpm workspace, Vitest, React.
 
-**Spec:** Task 6 in `docs/superpowers/plans/2026-10-25-bridgelab-app.md`.
+**Spec:** Task 6 in `docs/superpowers/plans/2026-10-25-contractplay-app.md`.
 
 ## Global Constraints
 

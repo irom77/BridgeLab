@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="docs/bridgelab-logo.svg" alt="BridgeLab — play, learn, and review contract bridge" width="520" />
+  <img src="docs/contractplay-logo.svg" alt="ContractPlay — play, learn, and review contract bridge" width="520" />
 </p>
 
-<h1 align="center">BridgeLab</h1>
+<h1 align="center">ContractPlay</h1>
 
 <p align="center">A cross-platform home for contract bridge: play, learn, and review every hand.</p>
 
@@ -10,7 +10,7 @@
 
 ## Project status
 
-BridgeLab now has a responsive browser client for configured or imported local deals, autosaved play, take-back, hand review, beginner bots, and card-play hints. Without a solver, hints identify legal cards; hosts can optionally provide solver recommendations. Stronger bidding systems and platform builds remain planned work.
+ContractPlay now has a responsive browser client for configured or imported local deals, autosaved play, take-back, hand review, beginner bots, and card-play hints. Without a solver, hints identify legal cards; hosts can optionally provide solver recommendations. Stronger bidding systems and platform builds remain planned work.
 
 See [TODO.md](TODO.md) for the current roadmap and [CHANGES.md](CHANGES.md) for completed work.
 
@@ -46,7 +46,7 @@ The core is TypeScript and designed to stay independent of UI and platform APIs.
 
 Run `pnpm install` to install the development tools, then use `pnpm typecheck`, `pnpm lint`, `pnpm test`, and `pnpm build` from the repository root.
 
-Run `pnpm --filter @bridgelab/client dev` to start the web client.
+Run `pnpm --filter @contractplay/client dev` to start the web client.
 
 The client stores the current hand and up to 25 completed hands in browser local storage. PBN deals can be pasted into the import panel. Choose bots in setup to automate the three seats outside your selected seat, then choose Beginner or Intermediate skill. Intermediate bots currently use beginner bidding and a distinct card-play tactic. During card play, choose **Show hint** to highlight legal cards, or solver recommendations when a host has configured a solver.
 
@@ -58,4 +58,4 @@ The client stores the current hand and up to 25 completed hands in browser local
 
 ## License
 
-BridgeLab is licensed under the [MIT License](LICENSE).
+ContractPlay is licensed under the [MIT License](LICENSE).

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createDeck, deal } from "@bridgelab/core";
+import { createDeck, deal } from "@contractplay/core";
 import { exportPbn, parsePbn, pbnBoardToHand, serializePbn } from "./pbn.js";
 
 const normalizedDeal = (value: ReturnType<typeof deal>) => Object.fromEntries(
@@ -29,7 +29,7 @@ describe("PBN import and export", () => {
         { type: "bid", seat: "east", bid: "pass" },
         { type: "play", seat: "east", card: { suit: "spades", rank: "2" } }
       ],
-      tags: [{ name: "Event", value: "Practice" }, { name: "Annotator", value: "BridgeLab" }],
+      tags: [{ name: "Event", value: "Practice" }, { name: "Annotator", value: "ContractPlay" }],
       comments: ["review this hand"]
     });
     const board = parsePbn(source).boards[0]!;
