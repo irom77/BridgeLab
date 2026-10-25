@@ -4,6 +4,7 @@ Project changes are recorded here, newest first. Keep entries short and link imp
 
 ## Unreleased
 
+- Added natural, nonforcing 1NT responses after an opponent's double or one-level overcall in 2/1, requiring a balanced 6–9 HCP hand and a stopper over an overcall.
 - Added 2/1 forcing 1NT responses and continuations, including passed-hand exceptions; responder can invite in notrump, show a three-card limit raise, or rebid a five-card heart suit below direct 2/1 strength.
 - Corrected the SVG wordmark and app header mark to use ContractPlay branding.
 - Rebranded the app and workspace packages as ContractPlay; existing `bridgelab.solo` saves migrate to the new storage key.

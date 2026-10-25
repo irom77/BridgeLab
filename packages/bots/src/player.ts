@@ -97,6 +97,25 @@ export class BeginnerBot implements BotPlayer {
 
     const contractCalls = auction.filter(({ bid }) => bid !== "pass");
     const partner = SEATS[(SEATS.indexOf(seat) + 2) % SEATS.length]!;
+    if (this.convention.style === "2/1" && contractCalls.length === 2) {
+      const [opening, interference] = contractCalls;
+      const openingMajor = opening?.bid.match(/^1(hearts|spades)$/)?.[1] as Suit | undefined;
+      const overcallSuit = interference?.bid.match(/^1(clubs|diamonds|hearts|spades)$/)?.[1] as Suit | undefined;
+      const expectedResponder = opening ? SEATS[(SEATS.indexOf(opening.seat) + 2) % SEATS.length]! : undefined;
+      if (
+        opening?.seat === partner && expectedResponder === seat && openingMajor &&
+        (interference?.bid === "double" || overcallSuit) && interference?.seat !== seat
+      ) {
+        const balanced = isBalanced(hand);
+        const responderPoints = points(hand);
+        const overcallSuitCards = overcallSuit ? hand.filter((card) => card.suit === overcallSuit) : [];
+        const hasStopper = !overcallSuit || overcallSuitCards.some((card) => card.rank === "A") ||
+          (overcallSuitCards.length >= 2 && overcallSuitCards.some((card) => card.rank === "K")) ||
+          (overcallSuitCards.length >= 3 && overcallSuitCards.some((card) => card.rank === "Q"));
+        if (balanced && responderPoints >= 6 && responderPoints <= 9 && hasStopper) return "1notrump";
+        return "pass";
+      }
+    }
     if (contractCalls.length === 3) {
       const [opening, response, rebid] = contractCalls;
       if (

@@ -438,6 +438,27 @@ describe("beginner bot", () => {
     expect(await bot.chooseBid(responder, [{ seat: "north", bid: "1spades" }], "south")).toBe("1notrump");
   });
 
+  it("responds naturally with 1NT after an opponent's double in 2/1", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
+    const balanced = hand("spades:K", "spades:2", "spades:3", "spades:4", "hearts:A", "hearts:2", "hearts:3", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [{ seat: "north", bid: "1spades" as const }, { seat: "east", bid: "double" as const }] as const;
+    expect(await bot.chooseBid(balanced, auction, "south")).toBe("1notrump");
+  });
+
+  it("responds naturally with a stopper after a one-level overcall in 2/1", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
+    const balanced = hand("spades:K", "spades:2", "spades:3", "spades:4", "hearts:A", "hearts:2", "hearts:3", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [{ seat: "north", bid: "1spades" as const }, { seat: "east", bid: "1hearts" as const }] as const;
+    expect(await bot.chooseBid(balanced, auction, "south")).toBe("1notrump");
+  });
+
+  it("does not respond 1NT without a stopper in the overcalled suit", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
+    const balanced = hand("spades:K", "spades:2", "spades:3", "hearts:2", "hearts:3", "hearts:4", "diamonds:A", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:Q", "clubs:2", "clubs:3");
+    const auction = [{ seat: "north", bid: "1spades" as const }, { seat: "east", bid: "1hearts" as const }] as const;
+    expect(await bot.chooseBid(balanced, auction, "south")).toBe("pass");
+  });
+
   it("makes an artificial three-card minor rebid instead of passing a minimum after 2/1 forcing 1NT", async () => {
     const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
     const opener = hand("spades:A", "spades:K", "spades:Q", "spades:2", "spades:3", "clubs:K", "clubs:2", "clubs:3", "diamonds:Q", "diamonds:2", "diamonds:3", "hearts:2", "hearts:3");

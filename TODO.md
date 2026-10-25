@@ -41,7 +41,8 @@ The core rules, PBN package, and solo client are in place. Beginner bots support
   - [x] Add responder's 11–12 HCP 2NT invitation or three-card major limit raise after opener's natural minor rebid.
   - [x] Rebids a five-card heart suit below direct 2/1 strength after 1♠–1NT–2♣.
   - [x] Respect passed-hand exceptions: lower the direct two-level response threshold and do not force opener to rebid after a passed-hand 1NT response.
-  - [ ] Cover interference exceptions to the 2/1 forcing 1NT agreement.
+  - [x] Treat a 1NT response after an opponent's double or one-level overcall as natural and nonforcing in 2/1, with 6–9 balanced HCP and a stopper over an overcall.
+  - [ ] Cover remaining interference exceptions to the 2/1 forcing 1NT agreement.
   - [x] Add a natural two-level lower side-suit rebid after a major opening and an uncontested 1NT response.
   - [x] After 1♥–1NT, show a four-card spade suit with a 2♠ reverse and 16+ HCP, preferring a four-card lower side suit when available.
   - [ ] Add broader opener continuations and strength ranges.
