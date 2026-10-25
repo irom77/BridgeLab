@@ -52,4 +52,4 @@ The repository does not yet have root package scripts. Check `TODO.md` for the n
 
 ## License
 
-No project license has been selected yet.
+BridgeLab is licensed under the [MIT License](LICENSE).
