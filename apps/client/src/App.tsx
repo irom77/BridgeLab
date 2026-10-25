@@ -233,7 +233,7 @@ export default function App({ solver }: { solver?: Solver } = {}) {
   return (
     <main className="app-shell">
       <header className="site-header">
-        <a className="brand" href="#home" aria-label="ContractPlay home"><span className="brand-mark">B</span><span>ContractPlay</span></a>
+        <a className="brand" href="#home" aria-label="ContractPlay home"><span className="brand-mark">C</span><span>ContractPlay</span></a>
         <span className="header-note">Play · learn · review</span>
       </header>
 

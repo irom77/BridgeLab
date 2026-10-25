@@ -4,6 +4,7 @@ Project changes are recorded here, newest first. Keep entries short and link imp
 
 ## Unreleased
 
+- Corrected the SVG wordmark and app header mark to use ContractPlay branding.
 - Rebranded the app and workspace packages as ContractPlay; existing `bridgelab.solo` saves migrate to the new storage key.
 - Added a responder game acceptance: 3NT with 6+ HCP after 1M–1NT–2NT.
 - Added an invitational 3M responder rebid with a five-card major and 10–12 HCP after opener's uncontested 1NT rebid.

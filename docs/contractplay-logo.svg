@@ -24,6 +24,6 @@
     <path d="M34 108v17m100-17v17M24 126h120" fill="none" stroke="#7ce0c3" stroke-width="4" stroke-linecap="round"/>
     <circle cx="84" cy="78" r="6" fill="#f3ca78"/>
   </g>
-  <text x="258" y="104" fill="#f7f5ee" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="53" font-weight="750" letter-spacing="-2">Bridge<tspan fill="#7ce0c3">Lab</tspan></text>
+  <text x="258" y="104" fill="#f7f5ee" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="53" font-weight="750" letter-spacing="-2">Contract<tspan fill="#7ce0c3">Play</tspan></text>
   <text x="261" y="134" fill="#b8cbd1" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="15" letter-spacing="3.1">PLAY · LEARN · REVIEW</text>
 </svg>
