@@ -1,0 +1,10 @@
+{
+  "name": "@bridgelab/core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Cross-platform contract bridge rules and game state primitives",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

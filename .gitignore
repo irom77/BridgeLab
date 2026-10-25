@@ -1,0 +1,18 @@
+# Dependencies and build output
+node_modules/
+dist/
+build/
+coverage/
+target/
+
+# Local environment and credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.idea/
