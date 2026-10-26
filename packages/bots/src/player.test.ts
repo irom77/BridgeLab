@@ -3523,6 +3523,62 @@ describe("beginner bot", () => {
     expect(await bot.chooseBid(responder, auction, "south")).toBe("5notrump");
   });
 
+  it("asks the Grand Slam Force after a 2/1 major fit reaches game", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "2/1" });
+    const opener = hand("hearts:A", "hearts:K", "hearts:2", "spades:A", "spades:K", "spades:2", "diamonds:K", "diamonds:2", "clubs:A", "clubs:K", "clubs:Q", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "1spades" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2hearts" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "3hearts" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "4hearts" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe("5notrump");
+  });
+
+  it("does not use the 2/1 Grand Slam Force in SAYC or below 18 HCP", async () => {
+    const saycBot = createBot({ skill: "expert", biddingStyle: "SAYC" });
+    const twoOverOneBot = createBot({ skill: "expert", biddingStyle: "2/1" });
+    const strongOpener = hand("hearts:A", "hearts:K", "hearts:2", "spades:A", "spades:K", "spades:2", "diamonds:K", "diamonds:2", "clubs:A", "clubs:K", "clubs:Q", "clubs:3", "clubs:4");
+    const minimumOpener = hand("hearts:A", "hearts:K", "hearts:2", "spades:A", "spades:2", "spades:3", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
+    const auction = [
+      { seat: "north", bid: "1spades" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2hearts" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "3hearts" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "4hearts" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await saycBot.chooseBid(strongOpener, auction, "north")).not.toBe("5notrump");
+    expect(await twoOverOneBot.chooseBid(minimumOpener, auction, "north")).not.toBe("5notrump");
+  });
+
+  it.each([
+    ["hearts:A", "hearts:K", "7hearts"],
+    ["hearts:Q", "hearts:J", "6hearts"]
+  ] as const)("answers a 2/1 Grand Slam Force with %s and %s", async (firstHonor, secondHonor, expected) => {
+    const bot = createBot({ skill: "expert", biddingStyle: "2/1" });
+    const responder = hand(firstHonor, secondHonor, "hearts:2", "hearts:3", "spades:A", "spades:2", "spades:3", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:K", "clubs:2", "clubs:3");
+    const auction = [
+      { seat: "north", bid: "1spades" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2hearts" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "3hearts" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "4hearts" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "5notrump" as const }, { seat: "east", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe(expected);
+  });
+
+  it("keeps the 2/1 Grand Slam Force separate from the Blackwood king ask", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "2/1" });
+    const responder = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:2", "hearts:3", "spades:A", "spades:K", "spades:2", "diamonds:A", "diamonds:K", "diamonds:2", "clubs:Q", "clubs:2");
+    const auction = [
+      { seat: "north", bid: "1spades" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2hearts" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "3hearts" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "4notrump" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "5diamonds" as const }, { seat: "east", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("5notrump");
+  });
+
   it.each([
     ["hearts:A", "hearts:K", "7hearts"],
     ["hearts:Q", "hearts:J", "6hearts"]

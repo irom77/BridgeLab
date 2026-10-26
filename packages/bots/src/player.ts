@@ -2395,6 +2395,24 @@ export class ExpertBot implements BotPlayer {
       ) return Promise.resolve("5notrump");
     }
 
+    if (calls.length === 4 && this.config.biddingStyle === "2/1") {
+      const [opening, response, openerRaise, responderGame] = calls;
+      const openingMajor = opening?.bid.match(/^1(hearts|spades)$/)?.[1] as Suit | undefined;
+      const responseSuit = response?.bid.match(/^2(clubs|diamonds|hearts|spades)$/)?.[1] as Suit | undefined;
+      const responseMajor = response?.bid.match(/^2(hearts|spades)$/)?.[1] as Suit | undefined;
+      const agreedMajor = openerRaise?.bid === `3${openingMajor}`
+        ? openingMajor
+        : responseMajor && openerRaise?.bid === `3${responseMajor}` ? responseMajor : undefined;
+      const topTrumpHonors = agreedMajor
+        ? hand.filter((card) => card.suit === agreedMajor && ["A", "K", "Q"].includes(card.rank)).length
+        : 0;
+      if (
+        opening?.seat === seat && openingMajor && response?.seat === partner && responseSuit && responseSuit !== openingMajor &&
+        openerRaise?.seat === seat && agreedMajor && responderGame?.seat === partner &&
+        responderGame.bid === `4${agreedMajor}` && points(hand) >= 18 && topTrumpHonors >= 2
+      ) return Promise.resolve("5notrump");
+    }
+
     if (calls.length === 4) {
       const [opening, jacobyRaise, openerGame, grandSlamAsk] = calls;
       const major = opening?.bid.match(/^1(hearts|spades)$/)?.[1] as Suit | undefined;
@@ -2404,6 +2422,24 @@ export class ExpertBot implements BotPlayer {
       ) {
         const topTrumpHonors = hand.filter((card) => card.suit === major && ["A", "K", "Q"].includes(card.rank)).length;
         return Promise.resolve(`${topTrumpHonors >= 2 ? 7 : 6}${major}` as Bid);
+      }
+    }
+
+    if (calls.length === 5 && this.config.biddingStyle === "2/1") {
+      const [opening, response, openerRaise, responderGame, grandSlamAsk] = calls;
+      const openingMajor = opening?.bid.match(/^1(hearts|spades)$/)?.[1] as Suit | undefined;
+      const responseSuit = response?.bid.match(/^2(clubs|diamonds|hearts|spades)$/)?.[1] as Suit | undefined;
+      const responseMajor = response?.bid.match(/^2(hearts|spades)$/)?.[1] as Suit | undefined;
+      const agreedMajor = openerRaise?.bid === `3${openingMajor}`
+        ? openingMajor
+        : responseMajor && openerRaise?.bid === `3${responseMajor}` ? responseMajor : undefined;
+      if (
+        opening?.seat === partner && openingMajor && response?.seat === seat && responseSuit && responseSuit !== openingMajor &&
+        openerRaise?.seat === partner && agreedMajor && responderGame?.seat === seat &&
+        responderGame.bid === `4${agreedMajor}` && grandSlamAsk?.seat === partner && grandSlamAsk.bid === "5notrump"
+      ) {
+        const topTrumpHonors = hand.filter((card) => card.suit === agreedMajor && ["A", "K", "Q"].includes(card.rank)).length;
+        return Promise.resolve(`${topTrumpHonors >= 2 ? 7 : 6}${agreedMajor}` as Bid);
       }
     }
 
