@@ -1243,7 +1243,7 @@ export class BeginnerBot implements BotPlayer {
       }
       if (
         (twoOverOne.responseSuit === "clubs" || twoOverOne.responseSuit === "diamonds") &&
-        points(hand) >= 12 && points(hand) <= 17 &&
+        points(hand) >= 12 &&
         hand.filter((card) => card.suit === twoOverOne.responseSuit).length >= 4
       ) return `3${twoOverOne.responseSuit}` as Bid;
       if (

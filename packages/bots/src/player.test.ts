@@ -1675,6 +1675,16 @@ describe("beginner bot", () => {
     expect(await bot.chooseBid(responder, afterRaise, "south")).toBe(`5${suit}`);
   });
 
+  it("shows a four-card minor fit with an unbalanced 18-19 HCP opener in a 2/1 game force", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
+    const opener = hand("spades:A", "spades:K", "spades:Q", "spades:2", "spades:3", "hearts:J", "hearts:2", "diamonds:A", "diamonds:K", "diamonds:Q", "diamonds:2", "clubs:2", "clubs:3");
+    const auction = [
+      { seat: "north", bid: "1spades" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2diamonds" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe("3diamonds");
+  });
+
   it("shows four diamonds after 1H-2C in a direct 2/1 game force", async () => {
     const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
     const opener = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:2", "hearts:3", "diamonds:A", "diamonds:K", "diamonds:2", "diamonds:3", "spades:2", "spades:3", "clubs:2", "clubs:3");
