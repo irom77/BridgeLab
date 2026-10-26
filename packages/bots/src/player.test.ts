@@ -858,6 +858,17 @@ describe("beginner bot", () => {
     expect(await bot.chooseBid(opener, auction, "north")).toBe("3clubs");
   });
 
+  it.each([11, 12] as const)("shows invitational preference for opener's spades after SAYC 1S-2C-2H with %i HCP", async (hcp) => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
+    const responder = hand("spades:A", "spades:2", "hearts:K", "hearts:2", "hearts:3", hcp === 12 ? "diamonds:Q" : "diamonds:J", "diamonds:2", "diamonds:3", "clubs:K", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
+    const auction = [
+      { seat: "north", bid: "1spades" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2clubs" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "2hearts" as const }, { seat: "east", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("2spades");
+  });
+
   it("completes game after opener raises a SAYC 1S-2H response to 3H", async () => {
     const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
     const responder = hand("hearts:A", "hearts:Q", "hearts:2", "spades:A", "spades:2", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:K", "clubs:2", "clubs:3", "clubs:4", "clubs:5");

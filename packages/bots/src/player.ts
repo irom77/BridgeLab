@@ -340,6 +340,11 @@ export class BeginnerBot implements BotPlayer {
       contractCalls[2]?.bid === `2${saycMajorTwoLevelResponse.openingSuit === "hearts" ? "spades" : "hearts"}`
     ) {
       const alternateMajor = saycMajorTwoLevelResponse.openingSuit === "hearts" ? "spades" : "hearts";
+      if (
+        saycMajorTwoLevelResponse.openingSuit === "spades" && saycMajorTwoLevelResponse.responseSuit === "clubs" &&
+        points(hand) >= 11 && points(hand) <= 12 &&
+        hand.filter((card) => card.suit === "spades").length === 2
+      ) return "2spades";
       if (hand.filter((card) => card.suit === alternateMajor).length >= 4 && points(hand) >= 10) {
         return `3${alternateMajor}` as Bid;
       }
