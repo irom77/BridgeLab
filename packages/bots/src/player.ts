@@ -34,8 +34,14 @@ function twoOverOneAuction(auction: readonly PublicBid[], style: ConventionSyste
   const suitOrder: readonly Suit[] = ["clubs", "diamonds", "hearts", "spades"];
   const expectedResponder = SEATS[(SEATS.indexOf(opening.seat) + 2) % SEATS.length]!;
   if (!openingSuit || !responseSuit || response.seat !== expectedResponder || suitOrder.indexOf(responseSuit) >= suitOrder.indexOf(openingSuit)) return undefined;
-  if (contracts.length === 3 && (contracts[2]!.seat !== opening.seat || contracts[2]!.bid !== `2${openingSuit}`)) return undefined;
-  return { openingSeat: opening.seat, responderSeat: response.seat, openingSuit };
+  const sideMajor = openingSuit === "hearts" ? "spades" : "hearts";
+  const sideMinor = openingSuit === "hearts" && responseSuit === "clubs" ? "diamonds" : undefined;
+  if (contracts.length === 3 && (
+    contracts[2]!.seat !== opening.seat ||
+    (contracts[2]!.bid !== `2${openingSuit}` && contracts[2]!.bid !== "2notrump" &&
+      contracts[2]!.bid !== `2${sideMajor}` && (!sideMinor || contracts[2]!.bid !== `2${sideMinor}`))
+  )) return undefined;
+  return { openingSeat: opening.seat, responderSeat: response.seat, openingSuit, responseSuit };
 }
 
 function makeConvention(style: ConventionSystem["style"]): ConventionSystem {
@@ -80,6 +86,21 @@ function lowestCard(cards: Hand) {
   return [...cards].sort((a, b) => rankValue(a.rank) - rankValue(b.rank) || a.suit.localeCompare(b.suit))[0]!;
 }
 
+function topOfTouchingHonorSequence(cards: Hand) {
+  const sequenceLeads = cards.filter((card) =>
+    cards.some((other) => other.suit === card.suit && rankValue(card.rank) - rankValue(other.rank) === 1 && rankValue(card.rank) >= rankValue("J"))
+  );
+  return sequenceLeads.sort((a, b) => rankValue(b.rank) - rankValue(a.rank) || a.suit.localeCompare(b.suit))[0];
+}
+
+function fourthHighestFromLongestSuit(cards: Hand) {
+  const longestSuit = suits
+    .map((suit) => ({ suit, cards: cards.filter((card) => card.suit === suit) }))
+    .sort((a, b) => b.cards.length - a.cards.length || suits.indexOf(a.suit) - suits.indexOf(b.suit))[0];
+  if (!longestSuit || longestSuit.cards.length < 4) return undefined;
+  return [...longestSuit.cards].sort((a, b) => rankValue(b.rank) - rankValue(a.rank))[3];
+}
+
 export class BeginnerBot implements BotPlayer {
   readonly config: BotConfig;
   readonly convention: ConventionSystem;
@@ -97,10 +118,16 @@ export class BeginnerBot implements BotPlayer {
 
     const contractCalls = auction.filter(({ bid }) => bid !== "pass");
     const partner = SEATS[(SEATS.indexOf(seat) + 2) % SEATS.length]!;
+    const openingDouble = auction.length === 2 && auction[0]?.seat === partner &&
+      /^1(clubs|diamonds|hearts|spades)$/.test(auction[0].bid) && auction[1]?.bid === "double";
+    const expectedResponder = auction[0] ? SEATS[(SEATS.indexOf(auction[0].seat) + 2) % SEATS.length]! : undefined;
+    if (openingDouble && expectedResponder === seat && points(hand) >= 10) return "redouble";
     if (this.convention.style === "2/1" && contractCalls.length === 2) {
       const [opening, interference] = contractCalls;
       const openingMajor = opening?.bid.match(/^1(hearts|spades)$/)?.[1] as Suit | undefined;
-      const overcallSuit = interference?.bid.match(/^1(clubs|diamonds|hearts|spades)$/)?.[1] as Suit | undefined;
+      const overcall = interference?.bid.match(/^([12])(clubs|diamonds|hearts|spades)$/);
+      const overcallLevel = overcall?.[1];
+      const overcallSuit = overcall?.[2] as Suit | undefined;
       const expectedResponder = opening ? SEATS[(SEATS.indexOf(opening.seat) + 2) % SEATS.length]! : undefined;
       if (
         opening?.seat === partner && expectedResponder === seat && openingMajor &&
@@ -109,10 +136,15 @@ export class BeginnerBot implements BotPlayer {
         const balanced = isBalanced(hand);
         const responderPoints = points(hand);
         const overcallSuitCards = overcallSuit ? hand.filter((card) => card.suit === overcallSuit) : [];
-        const hasStopper = !overcallSuit || overcallSuitCards.some((card) => card.rank === "A") ||
+        const hasStopper = overcallSuitCards.some((card) => card.rank === "A") ||
           (overcallSuitCards.length >= 2 && overcallSuitCards.some((card) => card.rank === "K")) ||
           (overcallSuitCards.length >= 3 && overcallSuitCards.some((card) => card.rank === "Q"));
-        if (balanced && responderPoints >= 6 && responderPoints <= 9 && hasStopper) return "1notrump";
+        const majorSupport = hand.filter((card) => card.suit === openingMajor).length;
+        if (overcallLevel === "1" && overcallSuit && majorSupport >= 3 && responderPoints >= 6 && responderPoints <= 9) {
+          return `2${openingMajor}` as Bid;
+        }
+        if (balanced && responderPoints >= 6 && responderPoints <= 9 && (interference?.bid === "double" || (overcallLevel === "1" && hasStopper))) return "1notrump";
+        if (balanced && responderPoints >= 10 && responderPoints <= 12 && overcallLevel === "2" && hasStopper) return "2notrump";
         return "pass";
       }
     }
@@ -120,11 +152,23 @@ export class BeginnerBot implements BotPlayer {
       const [opening, response, rebid] = contractCalls;
       if (
         opening?.seat === partner && response?.seat === seat && rebid?.seat === partner &&
-        /^1(hearts|spades)$/.test(opening.bid) && response.bid === "1notrump" && rebid.bid === "2notrump"
+        /^1(clubs|diamonds|hearts|spades)$/.test(opening.bid) && response.bid === "1notrump" && rebid.bid === "2notrump"
       ) {
-        return points(hand) >= 6 ? "3notrump" : "pass";
+        const gameValues = opening.bid === "1clubs" || opening.bid === "1diamonds" ? 8 : 6;
+        return points(hand) >= gameValues ? "3notrump" : "pass";
       }
       const openingMajor = opening?.bid.match(/^1(hearts|spades)$/)?.[1] as Suit | undefined;
+      const repeatedMajor = rebid?.bid.match(/^2(hearts|spades)$/)?.[1] as Suit | undefined;
+      if (
+        opening?.seat === partner && response?.seat === seat && rebid?.seat === partner &&
+        openingMajor && repeatedMajor === openingMajor && response.bid === "1notrump"
+      ) {
+        const responderPoints = points(hand);
+        if (responderPoints >= 10 && responderPoints <= 12) {
+          if (hand.filter((card) => card.suit === openingMajor).length >= 3) return `3${openingMajor}` as Bid;
+          if (isBalanced(hand)) return "2notrump";
+        }
+      }
       const rebidSuit = rebid?.bid.match(/^2(clubs|diamonds)$/)?.[1] as Suit | undefined;
       if (
         opening?.seat === partner && response?.seat === seat && response.bid === "1notrump" &&
@@ -162,22 +206,46 @@ export class BeginnerBot implements BotPlayer {
     }
     const twoOverOne = twoOverOneAuction(auction, this.convention.style);
     if (twoOverOne && contractCalls.length === 2 && twoOverOne.openingSeat === seat) {
+      if (isBalanced(hand) && points(hand) >= 18 && points(hand) <= 19) return "2notrump";
+      const sideMajor = twoOverOne.openingSuit === "hearts" ? "spades" : "hearts";
+      if (points(hand) >= 12 && points(hand) <= 17 && hand.filter((card) => card.suit === sideMajor).length >= 4) {
+        return `2${sideMajor}` as Bid;
+      }
+      if (
+        twoOverOne.openingSuit === "hearts" && twoOverOne.responseSuit === "clubs" &&
+        points(hand) >= 12 && points(hand) <= 17 && hand.filter((card) => card.suit === "diamonds").length >= 4
+      ) return "2diamonds";
       return `2${twoOverOne.openingSuit}` as Bid;
     }
     if (twoOverOne && contractCalls.length === 3 && twoOverOne.responderSeat === seat) {
+      const shownSideMajor = twoOverOne.openingSuit === "hearts" ? "spades" : "hearts";
+      if (
+        contractCalls[2]?.bid === `2${shownSideMajor}` &&
+        hand.filter((card) => card.suit === shownSideMajor).length >= 4
+      ) return `4${shownSideMajor}` as Bid;
       const support = hand.filter((card) => card.suit === twoOverOne.openingSuit).length;
-      return support >= 3 ? `4${twoOverOne.openingSuit}` as Bid : "3notrump";
+      if (support >= 3) return `4${twoOverOne.openingSuit}` as Bid;
+      if (hand.filter((card) => card.suit === twoOverOne.responseSuit).length >= 6) return `3${twoOverOne.responseSuit}` as Bid;
+      const sideMajor = twoOverOne.openingSuit === "spades" ? "hearts" : "spades";
+      if (hand.filter((card) => card.suit === sideMajor).length >= 4) return `3${sideMajor}` as Bid;
+      return "3notrump";
     }
     if (contractCalls.length === 2) {
       const [opening, response] = contractCalls;
       const openingSuit = opening?.bid.match(/^1(clubs|diamonds|hearts|spades)$/)?.[1] as Suit | undefined;
       if (
         opening?.seat === seat && response?.seat === partner &&
+        (openingSuit === "clubs" || openingSuit === "diamonds") && response.bid === "1notrump" &&
+        isBalanced(hand) && points(hand) >= 18 && points(hand) <= 19
+      ) return "2notrump";
+      if (
+        opening?.seat === seat && response?.seat === partner &&
         (openingSuit === "hearts" || openingSuit === "spades") && response.bid === "1notrump"
       ) {
         const openerPoints = points(hand);
         if (isBalanced(hand) && openerPoints >= 18 && openerPoints <= 19) return "2notrump";
-        if (openerPoints >= 12 && openerPoints <= 17 && hand.filter((card) => card.suit === openingSuit).length >= 5) {
+        const maxMajorRebidPoints = this.convention.style === "SAYC" ? 18 : 17;
+        if (openerPoints >= 12 && openerPoints <= maxMajorRebidPoints && hand.filter((card) => card.suit === openingSuit).length >= 5) {
           const suitOrder: readonly Suit[] = ["clubs", "diamonds", "hearts", "spades"];
           const openingRank = suitOrder.indexOf(openingSuit);
           const secondSuit = suitOrder
@@ -186,7 +254,11 @@ export class BeginnerBot implements BotPlayer {
           if (secondSuit) return `2${secondSuit}` as Bid;
           const higherSecondSuit = suitOrder.find((suit) => suitOrder.indexOf(suit) > openingRank && hand.filter((card) => card.suit === suit).length >= 4);
           if (higherSecondSuit && openerPoints >= 16) return `2${higherSecondSuit}` as Bid;
+          if (!higherSecondSuit && openerPoints >= 16 && openerPoints <= 18 && hand.filter((card) => card.suit === openingSuit).length >= 6) {
+            return `3${openingSuit}` as Bid;
+          }
           if (hand.filter((card) => card.suit === openingSuit).length >= 6) return `2${openingSuit}` as Bid;
+          if (!higherSecondSuit && this.convention.style === "SAYC" && openerPoints >= 12 && openerPoints <= 15) return `2${openingSuit}` as Bid;
         }
         if (this.convention.style === "2/1" && !passedBeforeOpening(auction, partner, opening!) && openerPoints >= 12 && openerPoints <= 17) {
           if (hand.filter((card) => card.suit === "clubs").length >= 3) return "2clubs";
@@ -244,7 +316,8 @@ export class BeginnerBot implements BotPlayer {
       if (newSuit) return `1${newSuit}` as Bid;
       const hasMajorSupport = (openingSuit === "hearts" || openingSuit === "spades") && suitLength(openingSuit) >= 3;
       const twoLevelMinimum = this.convention.style === "2/1" && openedMajor && !passedHand ? 13 : 10;
-      if (responderPoints >= twoLevelMinimum && !hasMajorSupport) {
+      const mayStartTwoOverOne = !hasMajorSupport || (this.convention.style === "2/1" && openedMajor && !passedHand);
+      if (responderPoints >= twoLevelMinimum && mayStartTwoOverOne) {
         const twoLevelSuit = [...suitOrder]
           .filter((suit) => suit !== openingSuit && suitOrder.indexOf(suit) < openingRank && suitLength(suit) >= 4)
           .sort((a, b) => suitLength(b) - suitLength(a) || suitOrder.indexOf(b) - suitOrder.indexOf(a))[0];
@@ -279,7 +352,7 @@ export class BeginnerBot implements BotPlayer {
   }
 }
 
-/** Intermediate card play wins the current trick cheaply when partner is not already winning. */
+/** Intermediate card play uses simple honor leads and wins the current trick cheaply. */
 export class IntermediateBot implements BotPlayer {
   readonly config: BotConfig;
   private readonly biddingBot: BeginnerBot;
@@ -297,7 +370,9 @@ export class IntermediateBot implements BotPlayer {
   async chooseCard(context: PlayContext) {
     const choices = legalCards(context);
     const ledSuit = context.ledSuit ?? context.currentTrick[0]?.card.suit;
-    if (!ledSuit || context.currentTrick.length === 0) return lowestCard(choices);
+    if (!ledSuit || context.currentTrick.length === 0) {
+      return topOfTouchingHonorSequence(choices) ?? fourthHighestFromLongestSuit(choices) ?? lowestCard(choices);
+    }
 
     const currentWinner = winningPlay(context.currentTrick, ledSuit, context.trump);
     const partner = SEATS[(SEATS.indexOf(context.seat) + 2) % SEATS.length]!;

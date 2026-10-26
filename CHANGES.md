@@ -4,6 +4,21 @@ Project changes are recorded here, newest first. Keep entries short and link imp
 
 ## Unreleased
 
+- Improved intermediate opening leads: after honoring a touching sequence, the bot leads fourth-highest from its longest suit when that suit has at least four cards.
+- Added 10–12 HCP responder invitations after 1M–1NT–2M: raise with three-card support or invite with 2NT on a balanced hand.
+- Added a natural 2NT rebid with balanced 18–19 HCP after an uncontested direct 2/1 response.
+- Added a strength-showing redouble with 10+ HCP after an opponent doubles partner's one-level suit opening.
+- Added a 2/1 game-forcing continuation that shows a four-card side major when responder lacks support for opener's major.
+- Completed the responder's game continuation after a balanced 2NT rebid in a direct 2/1 sequence.
+- Added a six-card 2/1 response-suit rebid after opener repeats the major.
+- Added a natural 2NT opener rebid with a balanced 18–19 HCP hand after 1m–1NT; responder accepts with 8+ HCP.
+- Added a simple 2M raise with 6–9 HCP and three-card support after a one-level overcall in 2/1 style.
+
+- Allow a direct 2/1 game-forcing response with three-card support for opener's major.
+
+- Added the SAYC 3M invitational jump rebid with a six-card major and 16–18 HCP after 1M–1NT when no side suit takes priority.
+- Added a natural SAYC 2M rebid after 1M–1NT with 12–15 HCP and no side suit to show.
+- Added a natural, nonforcing 2NT response after a two-level overcall of a 2/1 major opening, with balanced 10–12 HCP and a stopper in the overcalled suit.
 - Added natural, nonforcing 1NT responses after an opponent's double or one-level overcall in 2/1, requiring a balanced 6–9 HCP hand and a stopper over an overcall.
 - Added 2/1 forcing 1NT responses and continuations, including passed-hand exceptions; responder can invite in notrump, show a three-card limit raise, or rebid a five-card heart suit below direct 2/1 strength.
 - Corrected the SVG wordmark and app header mark to use ContractPlay branding.
@@ -13,6 +28,10 @@ Project changes are recorded here, newest first. Keep entries short and link imp
 - Added a solo setup choice for Beginner or Intermediate bot skill; Intermediate bots still use beginner bidding.
 - Added the 1♥–1NT–2♠ opener reverse with 16+ HCP and four spades, after checking for an available lower side suit.
 - Added an initial intermediate bot skill that conserves high cards when partner is winning and takes a trick with the cheapest winning card when an opponent is ahead. Its bidding still uses beginner rules.
+- Added an intermediate opening lead that selects the top honor from a touching honor sequence.
+- Added a natural four-card side-major rebid by opener after a direct 2/1 response with 12–17 HCP.
+- Added responder's game raise of opener's shown side major with four-card support in a direct 2/1 game force.
+- Added a natural 2♦ opener rebid after 1♥–2♣ with four diamonds and 12–17 HCP, unless a four-card spade suit is available.
 - Added the natural 1♦–1♠–2♣ opener continuation with at least five diamonds, four clubs, and 12–17 HCP.
 - Added an invitational opener jump raise to 3M with four-card support and 16–18 HCP after an uncontested one-level major response.
 - Added balanced responder continuations after an uncontested opener 1NT rebid: 2NT with 10–12 HCP and 3NT with 13+ HCP.
