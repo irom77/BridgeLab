@@ -160,6 +160,23 @@ function saycJumpShiftAuction(auction: readonly PublicBid[], style: ConventionSy
   return { opening, response, openingSuit, responseSuit, responseLevel };
 }
 
+function saycMajorTwoLevelMinorAuction(auction: readonly PublicBid[], style: ConventionSystem["style"]) {
+  if (style !== "SAYC") return undefined;
+  const contracts = auction.filter(({ bid }) => bid !== "pass");
+  if (contracts.length < 2) return undefined;
+  const opening = contracts[0]!;
+  const response = contracts[1]!;
+  const openingSuit = opening.bid.match(/^1(hearts|spades)$/)?.[1] as Suit | undefined;
+  const responseSuit = response.bid.match(/^2(clubs|diamonds)$/)?.[1] as Suit | undefined;
+  const expectedResponder = SEATS[(SEATS.indexOf(opening.seat) + 2) % SEATS.length]!;
+  if (
+    !openingSuit || !responseSuit || response.seat !== expectedResponder ||
+    passedBeforeOpening(auction, response.seat, opening) ||
+    auction.some(({ seat, bid }) => bid !== "pass" && seat !== opening.seat && seat !== response.seat)
+  ) return undefined;
+  return { opening, response, openingSuit, responseSuit };
+}
+
 function makeConvention(style: ConventionSystem["style"]): ConventionSystem {
   return {
     style,
@@ -237,6 +254,19 @@ export class BeginnerBot implements BotPlayer {
     const contractCalls = auction.filter(({ bid }) => bid !== "pass");
     const partner = SEATS[(SEATS.indexOf(seat) + 2) % SEATS.length]!;
     const saycJumpShift = saycJumpShiftAuction(auction, this.convention.style);
+    const saycMajorTwoLevelMinor = saycMajorTwoLevelMinorAuction(auction, this.convention.style);
+    if (
+      saycMajorTwoLevelMinor && contractCalls.length === 2 && saycMajorTwoLevelMinor.opening.seat === seat &&
+      isBalanced(hand) && points(hand) >= 18 && points(hand) <= 19
+    ) return "2notrump";
+    if (
+      saycMajorTwoLevelMinor && contractCalls.length === 3 && saycMajorTwoLevelMinor.response.seat === seat &&
+      contractCalls[2]?.bid === "2notrump"
+    ) {
+      return hand.filter((card) => card.suit === saycMajorTwoLevelMinor.openingSuit).length >= 3
+        ? `4${saycMajorTwoLevelMinor.openingSuit}` as Bid
+        : "3notrump";
+    }
     if (saycJumpShift && contractCalls.length === 2 && saycJumpShift.opening.seat === seat) {
       const support = hand.filter((card) => card.suit === saycJumpShift.responseSuit).length;
       if ((saycJumpShift.responseSuit === "hearts" || saycJumpShift.responseSuit === "spades") && support >= 3) {
