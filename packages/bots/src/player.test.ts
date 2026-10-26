@@ -3782,6 +3782,38 @@ describe("beginner bot", () => {
     expect(await bot.chooseBid(opener, auction, "north")).toBe("4spades");
   });
 
+  it("transfers to a six-card major after Puppet Stayman denies an opener fit", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "SAYC" });
+    const responder = hand("hearts:K", "hearts:Q", "hearts:2", "hearts:3", "hearts:4", "hearts:5", "spades:K", "spades:Q", "spades:2", "spades:3", "diamonds:2", "clubs:2", "clubs:3");
+    const auction = [
+      { seat: "north", bid: "2notrump" as const }, { seat: "south", bid: "3clubs" as const },
+      { seat: "west", bid: "pass" as const }, { seat: "north", bid: "3notrump" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("4diamonds");
+  });
+
+  it("accepts a Texas transfer after Puppet Stayman denial", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "2/1" });
+    const auction = [
+      { seat: "north", bid: "2notrump" as const }, { seat: "south", bid: "3clubs" as const },
+      { seat: "west", bid: "pass" as const }, { seat: "north", bid: "3notrump" as const },
+      { seat: "east", bid: "pass" as const }, { seat: "south", bid: "4diamonds" as const }
+    ] as const;
+    expect(await bot.chooseBid(hand(), auction, "north")).toBe("4hearts");
+  });
+
+  it("passes after opener accepts a Texas transfer following Puppet Stayman", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "SAYC" });
+    const responder = hand("hearts:K", "hearts:Q", "hearts:2", "hearts:3", "hearts:4", "hearts:5", "spades:K", "spades:Q", "spades:2", "spades:3", "diamonds:2", "clubs:2", "clubs:3");
+    const auction = [
+      { seat: "north", bid: "2notrump" as const }, { seat: "south", bid: "3clubs" as const },
+      { seat: "west", bid: "pass" as const }, { seat: "north", bid: "3notrump" as const },
+      { seat: "east", bid: "pass" as const }, { seat: "south", bid: "4diamonds" as const },
+      { seat: "west", bid: "pass" as const }, { seat: "north", bid: "4hearts" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("pass");
+  });
+
   it("does not use Puppet Stayman after interference over 2NT", async () => {
     const bot = createBot({ skill: "expert", biddingStyle: "2/1" });
     const responder = hand("spades:Q", "spades:6", "spades:4", "hearts:8", "hearts:7", "diamonds:A", "diamonds:9", "diamonds:4", "diamonds:2", "clubs:Q", "clubs:5", "clubs:3", "clubs:2");

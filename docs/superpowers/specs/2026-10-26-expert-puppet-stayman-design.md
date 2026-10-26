@@ -10,6 +10,7 @@ Expert partnerships need to find both four-card and five-card major fits after a
 - Opener shows a five-card major at 3♥/3♠, shows one or more four-card majors with 3♦, and denies any four- or five-card major with 3NT.
 - Responder raises a shown five-card major to game with three-card support, or bids 3NT without a fit.
 - After 3♦, responder shows a four-card major by bidding the other major at the three level; opener raises with four-card support or bids 3NT. With both four-card majors, responder uses 4♦ to ask opener to choose a fit.
+- After 3NT denies opener's major, responder can use a Texas transfer to place game with a six-four major holding; opener accepts and responder passes.
 - Beginner, Intermediate, Advanced, 1NT, and competitive auctions retain their current methods.
 
 ## Approaches
@@ -19,8 +20,8 @@ Expert partnerships need to find both four-card and five-card major fits after a
 
 ## Constraints and non-goals
 
-Keep the logic in `packages/bots`; do not change core auction rules or other notrump methods. Do not add 3NT follow-up transfers for 6–4 hands in this slice.
+Keep the logic in `packages/bots`; do not change core auction rules or other notrump methods.
 
 ## Source
 
-ACBL, [Puppet Stayman](https://web2.acbl.org/documentlibrary/play/commonly_used_conventions/puppetstayman.pdf), describes the 3♣ inquiry and opener's 3♥/3♠, 3♦, and 3NT responses, plus responder's fit-showing continuations.
+ACBL, [Puppet Stayman](https://web2.acbl.org/documentlibrary/play/commonly_used_conventions/puppetstayman.pdf), describes the 3♣ inquiry and opener's 3♥/3♠, 3♦, and 3NT responses, responder's fit-showing continuations, and Texas transfers after 3NT denial with a 6–4 major holding.

@@ -1914,6 +1914,12 @@ export class ExpertBot implements BotPlayer {
     if (calls.length === 3) {
       const [opening, puppet, response] = calls;
       if (opening?.seat === partner && opening.bid === "2notrump" && puppet?.seat === seat && puppet.bid === "3clubs" && response?.seat === partner) {
+        if (response.bid === "3notrump") {
+          const hearts = hand.filter((card) => card.suit === "hearts").length;
+          const spades = hand.filter((card) => card.suit === "spades").length;
+          if (spades >= 6 && hearts >= 4) return Promise.resolve("4hearts");
+          if (hearts >= 6 && spades >= 4) return Promise.resolve("4diamonds");
+        }
         if (response.bid === "3hearts" || response.bid === "3spades") {
           const shownMajor = response.bid.slice(1) as Suit;
           return Promise.resolve(hand.filter((card) => card.suit === shownMajor).length >= 3 ? `4${shownMajor}` as Bid : "3notrump");
@@ -1933,6 +1939,13 @@ export class ExpertBot implements BotPlayer {
       const [opening, puppet, fourMajorReply, responderMajor] = calls;
       if (
         opening?.seat === seat && opening.bid === "2notrump" && puppet?.seat === partner && puppet.bid === "3clubs" &&
+        fourMajorReply?.seat === seat && fourMajorReply.bid === "3notrump" && responderMajor?.seat === partner
+      ) {
+        if (responderMajor.bid === "4diamonds") return Promise.resolve("4hearts");
+        if (responderMajor.bid === "4hearts") return Promise.resolve("4spades");
+      }
+      if (
+        opening?.seat === seat && opening.bid === "2notrump" && puppet?.seat === partner && puppet.bid === "3clubs" &&
         fourMajorReply?.seat === seat && fourMajorReply.bid === "3diamonds" && responderMajor?.seat === partner
       ) {
         if (responderMajor.bid === "4diamonds") {
@@ -1945,6 +1958,16 @@ export class ExpertBot implements BotPlayer {
         const shownMajor = responderMajor.bid === "3spades" ? "hearts" : responderMajor.bid === "3hearts" ? "spades" : undefined;
         if (shownMajor) return Promise.resolve(hand.filter((card) => card.suit === shownMajor).length >= 4 ? `4${shownMajor}` as Bid : "3notrump");
       }
+    }
+
+    if (calls.length === 5) {
+      const [opening, puppet, denial, transfer, acceptance] = calls;
+      if (
+        opening?.seat === partner && opening.bid === "2notrump" && puppet?.seat === seat && puppet.bid === "3clubs" &&
+        denial?.seat === partner && denial.bid === "3notrump" && transfer?.seat === seat && acceptance?.seat === partner &&
+        ((transfer.bid === "4diamonds" && acceptance.bid === "4hearts") ||
+          (transfer.bid === "4hearts" && acceptance.bid === "4spades"))
+      ) return Promise.resolve("pass");
     }
 
     if (calls.length === 3) {
