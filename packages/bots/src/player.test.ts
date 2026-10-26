@@ -891,15 +891,29 @@ describe("beginner bot", () => {
     expect(await bot.chooseBid(responder, auction, "south")).toBe("3hearts");
   });
 
-  it.each([11, 12] as const)("shows spade preference after SAYC opener rebids 2D on %i HCP", async (hcp) => {
+  it.each([10, 11, 12] as const)("shows spade preference after SAYC opener rebids 2D on %i HCP", async (hcp) => {
     const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
-    const responder = hand("spades:A", "spades:2", "hearts:K", "hearts:2", hcp === 12 ? "diamonds:Q" : "diamonds:J", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:K", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
+    const responder = hand(hcp === 10 ? "spades:Q" : "spades:A", "spades:2", "hearts:K", "hearts:2", "hearts:3", hcp === 11 ? "diamonds:J" : "diamonds:Q", "diamonds:3", "diamonds:4", "clubs:K", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
     const auction = [
       { seat: "north", bid: "1spades" as const }, { seat: "east", bid: "pass" as const },
       { seat: "south", bid: "2clubs" as const }, { seat: "west", bid: "pass" as const },
       { seat: "north", bid: "2diamonds" as const }, { seat: "east", bid: "pass" as const }
     ] as const;
     expect(await bot.chooseBid(responder, auction, "south")).toBe("2spades");
+  });
+
+  it.each([
+    ["a balanced hand", "2notrump", hand("spades:K", "spades:2", "spades:3", "hearts:K", "hearts:2", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:K", "clubs:2", "clubs:3", "clubs:4", "clubs:5")],
+    ["a six-card club suit", "3clubs", hand("spades:K", "spades:2", "spades:3", "hearts:Q", "hearts:2", "diamonds:J", "diamonds:2", "clubs:K", "clubs:Q", "clubs:J", "clubs:4", "clubs:3", "clubs:2")],
+    ["four-card diamond support", "3diamonds", hand("spades:K", "spades:2", "spades:3", "hearts:J", "diamonds:Q", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:K", "clubs:Q", "clubs:2", "clubs:3", "clubs:4")]
+  ] as const)("limits SAYC 1S-2C-2D with %s", async (_shape, expected, responder) => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
+    const auction = [
+      { seat: "north", bid: "1spades" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2clubs" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "2diamonds" as const }, { seat: "east", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe(expected);
   });
 
   it("completes game after opener raises a SAYC 1S-2H response to 3H", async () => {

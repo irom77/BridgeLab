@@ -361,9 +361,16 @@ export class BeginnerBot implements BotPlayer {
     if (
       saycMajorTwoLevelResponse && contractCalls.length === 3 && saycMajorTwoLevelResponse.response.seat === seat &&
       saycMajorTwoLevelResponse.openingSuit === "spades" && saycMajorTwoLevelResponse.responseSuit === "clubs" &&
-      contractCalls[2]?.bid === "2diamonds" && points(hand) >= 11 && points(hand) <= 12 &&
-      hand.filter((card) => card.suit === "spades").length === 2
-    ) return "2spades";
+      contractCalls[2]?.bid === "2diamonds" && points(hand) >= 10 && points(hand) <= 12
+    ) {
+      const spades = hand.filter((card) => card.suit === "spades").length;
+      const diamonds = hand.filter((card) => card.suit === "diamonds").length;
+      const clubs = hand.filter((card) => card.suit === "clubs").length;
+      if (points(hand) >= 11 && isBalanced(hand) && spades >= 3 && hasStopper(hand, "hearts")) return "2notrump";
+      if (points(hand) >= 11 && clubs >= 6) return "3clubs";
+      if (points(hand) >= 11 && diamonds >= 4) return "3diamonds";
+      if (spades === 2) return "2spades";
+    }
     if (
       saycMajorTwoLevelResponse && contractCalls.length === 3 && saycMajorTwoLevelResponse.response.seat === seat &&
       /^3(clubs|diamonds|hearts|spades)$/.test(contractCalls[2]?.bid ?? "")
