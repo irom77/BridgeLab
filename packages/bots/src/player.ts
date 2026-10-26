@@ -130,7 +130,8 @@ function twoOverOneAuction(auction: readonly PublicBid[], style: ConventionSyste
       !(sideMajor !== responseSuit && contracts[2]!.bid === `2${sideMajor}`) &&
       contracts[2]!.bid !== `3${sideMajor}` &&
       (!sideMinor || contracts[2]!.bid !== `2${sideMinor}`) &&
-      (!lowerMinorRebid || contracts[2]!.bid !== `3${lowerMinorRebid}`))
+      (!lowerMinorRebid || contracts[2]!.bid !== `3${lowerMinorRebid}`) &&
+      (!((responseSuit === "clubs" || responseSuit === "diamonds") && contracts[2]!.bid === `3${responseSuit}`)))
   )) return undefined;
   if (contracts.length >= 4 && (
     contracts[3]!.seat !== expectedResponder ||
@@ -1241,6 +1242,11 @@ export class BeginnerBot implements BotPlayer {
         return `2${sideMajor}` as Bid;
       }
       if (
+        (twoOverOne.responseSuit === "clubs" || twoOverOne.responseSuit === "diamonds") &&
+        points(hand) >= 12 && points(hand) <= 17 &&
+        hand.filter((card) => card.suit === twoOverOne.responseSuit).length >= 4
+      ) return `3${twoOverOne.responseSuit}` as Bid;
+      if (
         twoOverOne.responseSuit === "clubs" && points(hand) >= 12 && points(hand) <= 17 &&
         hand.filter((card) => card.suit === "diamonds").length >= 4
       ) return "2diamonds";
@@ -1268,6 +1274,11 @@ export class BeginnerBot implements BotPlayer {
       }
       const support = hand.filter((card) => card.suit === twoOverOne.openingSuit).length;
       if (support >= 3) return `4${twoOverOne.openingSuit}` as Bid;
+      if (
+        (twoOverOne.responseSuit === "clubs" || twoOverOne.responseSuit === "diamonds") &&
+        contractCalls[2]?.bid === `3${twoOverOne.responseSuit}` &&
+        hand.filter((card) => card.suit === twoOverOne.responseSuit).length >= 4
+      ) return `5${twoOverOne.responseSuit}` as Bid;
       const sideMajor = twoOverOne.openingSuit === "hearts" ? "spades" : "hearts";
       if (contractCalls[2]?.bid === "3clubs" && hand.filter((card) => card.suit === sideMajor).length >= 4) {
         return `3${sideMajor}` as Bid;

@@ -164,6 +164,7 @@ packages/
 - [x] Open unbalanced six-card-or-longer nine-playing-trick hands with strong 2♣ below 22 HCP; add natural positive responses and a supported major game raise.
 - [x] Continue after a waiting 2♦ response with Stayman/transfers over balanced 2NT, natural suit raises, and balanced 3NT placement with a stopper.
 - [x] Continue a direct 2/1 game force by showing opener's four-card side major with 12–17 HCP.
+- [x] After a direct 2/1 minor response, show a four-card fit with a three-level raise on 12–17 HCP; responder places the minor game with four-card support, retaining balanced 18–19 HCP 2NT rebids.
 - [x] After 1M–2♦ in 2/1, show four clubs with 3♣ on 12–17 HCP; responder shows a four-card side major, places 5♣ with four-card club support, rebids six diamonds, or places 3NT without a fit.
 - [x] Allow responder to raise opener's shown side major to game with four-card support in a direct 2/1 game force.
 - [x] After 1♥–2♣ or 1♠–2♣, show four diamonds with 12–17 HCP when a higher-priority four-card major is unavailable; raise opener's shown diamonds to game with four-card support.
