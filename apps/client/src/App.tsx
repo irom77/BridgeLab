@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   applyAction,
   cardId,
@@ -12,6 +12,7 @@ import {
   type Card,
   type GameState,
   type Seat,
+  type SkillLevel,
   type Solver,
   type Suit,
   type Vulnerability
@@ -61,12 +62,14 @@ function reviewState(hand: SavedHand, cursor: number): GameState {
 export default function App({ solver }: { solver?: Solver } = {}) {
   const [soloData, setSoloData] = useState<SoloData>(() => loadSoloData(window.localStorage));
   const [game, setGame] = useState<GameState | undefined>(() => soloData.currentGame ?? undefined);
+  const gameRef = useRef(game);
+  gameRef.current = game;
   const [currentHandId, setCurrentHandId] = useState(() => soloData.currentHandId ?? (soloData.currentGame ? createHandId() : ""));
   const [dealer, setDealer] = useState<Seat>(() => soloData.currentGame?.dealer ?? "north");
   const [vulnerability, setVulnerability] = useState<Vulnerability>(() => soloData.currentGame?.vulnerability ?? "None");
   const [playAgainstBots, setPlayAgainstBots] = useState(false);
   const [userSeat, setUserSeat] = useState<Seat>("north");
-  const [botSkill, setBotSkill] = useState<"beginner" | "intermediate">("beginner");
+  const [botSkill, setBotSkill] = useState<SkillLevel>("beginner");
   const [biddingStyle, setBiddingStyle] = useState<"SAYC" | "2/1">("SAYC");
   const [call, setCall] = useState<Bid>("pass");
   const [pbnInput, setPbnInput] = useState("");
@@ -176,15 +179,22 @@ export default function App({ solver }: { solver?: Solver } = {}) {
 
   async function showHint() {
     if (!game || game.phase !== "play") return;
-    const seat = game.currentActor;
-    const cards = await requestHint({
-      seat,
-      hand: game.hands[seat],
-      currentTrick: game.currentTrick,
-      ...(game.currentTrick[0] ? { ledSuit: game.currentTrick[0].card.suit } : {}),
-      ...(game.contract && game.contract.strain !== "notrump" ? { trump: game.contract.strain } : {})
-    }, solver);
-    setHint({ game, seat, cardIds: new Set(cards.map(cardId)), usesSolver: !!solver });
+    const requestedGame = game;
+    const seat = requestedGame.currentActor;
+    try {
+      const cards = await requestHint({
+        seat,
+        hand: requestedGame.hands[seat],
+        currentTrick: requestedGame.currentTrick,
+        ...(requestedGame.currentTrick[0] ? { ledSuit: requestedGame.currentTrick[0].card.suit } : {}),
+        ...(requestedGame.contract && requestedGame.contract.strain !== "notrump" ? { trump: requestedGame.contract.strain } : {})
+      }, solver);
+      if (gameRef.current !== requestedGame) return;
+      setHint({ game: requestedGame, seat, cardIds: new Set(cards.map(cardId)), usesSolver: !!solver });
+      setMessage("");
+    } catch {
+      if (gameRef.current === requestedGame) setMessage("Unable to get a hint. Please try again.");
+    }
   }
 
   function takeBack() {
@@ -256,7 +266,7 @@ export default function App({ solver }: { solver?: Solver } = {}) {
             <label>Dealer<select aria-label="Dealer" value={dealer} onChange={(event) => setDealer(event.target.value as Seat)}>{seats.map((seat) => <option key={seat} value={seat}>{seatNames[seat]}</option>)}</select></label>
             <label>Vulnerability<select aria-label="Vulnerability" value={vulnerability} onChange={(event) => setVulnerability(event.target.value as Vulnerability)}>{vulnerabilities.map((value) => <option key={value} value={value}>{value === "None" ? "None" : value === "Both" ? "Both" : `${value} vulnerable`}</option>)}</select></label>
             <label>Opponents<select aria-label="Opponents" value={playAgainstBots ? "bots" : "manual"} onChange={(event) => setPlayAgainstBots(event.target.value === "bots")}><option value="manual">Manual table</option><option value="bots">Bots</option></select></label>
-            {playAgainstBots ? <><label>Your seat<select aria-label="Your seat" value={userSeat} onChange={(event) => setUserSeat(event.target.value as Seat)}>{seats.map((seat) => <option key={seat} value={seat}>{seatNames[seat]}</option>)}</select></label><label>Bot skill<select aria-label="Bot skill" value={botSkill} onChange={(event) => setBotSkill(event.target.value as "beginner" | "intermediate")}><option value="beginner">Beginner</option><option value="intermediate">Intermediate</option></select></label><label>Bot bidding style<select aria-label="Bot bidding style" value={biddingStyle} onChange={(event) => setBiddingStyle(event.target.value as "SAYC" | "2/1")}><option value="SAYC">Basic SAYC</option><option value="2/1">Basic 2/1</option></select></label></> : null}
+            {playAgainstBots ? <><label>Your seat<select aria-label="Your seat" value={userSeat} onChange={(event) => setUserSeat(event.target.value as Seat)}>{seats.map((seat) => <option key={seat} value={seat}>{seatNames[seat]}</option>)}</select></label><label>Bot skill<select aria-label="Bot skill" value={botSkill} onChange={(event) => setBotSkill(event.target.value as SkillLevel)}><option value="beginner">Beginner</option><option value="intermediate">Intermediate</option><option value="advanced">Advanced</option><option value="expert">Expert</option></select></label><label>Bot bidding style<select aria-label="Bot bidding style" value={biddingStyle} onChange={(event) => setBiddingStyle(event.target.value as "SAYC" | "2/1")}><option value="SAYC">Basic SAYC</option><option value="2/1">Basic 2/1</option></select></label></> : null}
           </div>
           <button className="text-button" onClick={startHand}>Start a new hand <span aria-hidden="true">→</span></button>
           {pbnImportForm}
@@ -268,7 +278,7 @@ export default function App({ solver }: { solver?: Solver } = {}) {
           <label>Dealer<select aria-label="Dealer" value={dealer} onChange={(event) => setDealer(event.target.value as Seat)}>{seats.map((seat) => <option key={seat} value={seat}>{seatNames[seat]}</option>)}</select></label>
           <label>Vulnerability<select aria-label="Vulnerability" value={vulnerability} onChange={(event) => setVulnerability(event.target.value as Vulnerability)}>{vulnerabilities.map((value) => <option key={value} value={value}>{value === "None" ? "None" : value === "Both" ? "Both" : `${value} vulnerable`}</option>)}</select></label>
           <label>Opponents<select aria-label="Opponents" value={playAgainstBots ? "bots" : "manual"} onChange={(event) => setPlayAgainstBots(event.target.value === "bots")}><option value="manual">Manual table</option><option value="bots">Bots</option></select></label>
-          {playAgainstBots ? <><label>Your seat<select aria-label="Your seat" value={userSeat} onChange={(event) => setUserSeat(event.target.value as Seat)}>{seats.map((seat) => <option key={seat} value={seat}>{seatNames[seat]}</option>)}</select></label><label>Bot skill<select aria-label="Bot skill" value={botSkill} onChange={(event) => setBotSkill(event.target.value as "beginner" | "intermediate")}><option value="beginner">Beginner</option><option value="intermediate">Intermediate</option></select></label><label>Bot bidding style<select aria-label="Bot bidding style" value={biddingStyle} onChange={(event) => setBiddingStyle(event.target.value as "SAYC" | "2/1")}><option value="SAYC">Basic SAYC</option><option value="2/1">Basic 2/1</option></select></label></> : null}
+          {playAgainstBots ? <><label>Your seat<select aria-label="Your seat" value={userSeat} onChange={(event) => setUserSeat(event.target.value as Seat)}>{seats.map((seat) => <option key={seat} value={seat}>{seatNames[seat]}</option>)}</select></label><label>Bot skill<select aria-label="Bot skill" value={botSkill} onChange={(event) => setBotSkill(event.target.value as SkillLevel)}><option value="beginner">Beginner</option><option value="intermediate">Intermediate</option><option value="advanced">Advanced</option><option value="expert">Expert</option></select></label><label>Bot bidding style<select aria-label="Bot bidding style" value={biddingStyle} onChange={(event) => setBiddingStyle(event.target.value as "SAYC" | "2/1")}><option value="SAYC">Basic SAYC</option><option value="2/1">Basic 2/1</option></select></label></> : null}
           {pbnImportForm}
         </section> : null}
         <div className="game-layout">

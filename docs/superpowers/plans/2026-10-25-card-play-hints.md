@@ -25,6 +25,7 @@
 - Hint selection must not play a card or append history; UI test covers it.
 - Dummy control: the hint uses dummy's hand only when the user may control dummy; UI test covers it.
 - Invalid solver output: cards outside the legal set are filtered before display; core test covers it.
+- Solver failure: show a brief accessible message without affecting a replacement hand.
 
 ---
 
@@ -58,10 +59,11 @@
 - [x] Test that a queued hint is discarded after the hand/actor changes.
 - [x] Implement request context from only actor hand, current trick, led suit, and trump; hide recommendations when the relevant game snapshot changes.
 - [x] Run `pnpm test`, `pnpm typecheck`, `pnpm lint`, and `pnpm build`.
+- [x] Catch solver failures in the client, report the failure accessibly, and ignore failures from a replaced game; cover the failure message in a UI test.
 
-**Rulings:** The core fallback already met the legal-card behavior, so those tests are characterization coverage rather than a production change. The UI accepts an optional `Solver` prop for host-provided recommendations; this app does not bundle a solver. The final review found that solver output needed a legality filter; `requestHint` now intersects solver results with the acting hand's legal cards before the client highlights them.
+**Rulings:** The core fallback already met the legal-card behavior, so those tests are characterization coverage rather than a production change. The UI accepts an optional `Solver` prop for host-provided recommendations; this app does not bundle a solver. The final review found that solver output needed a legality filter; `requestHint` now intersects solver results with the acting hand's legal cards before the client highlights them. The client catches solver failures and reports them without letting an old request overwrite a replacement hand.
 
-**Deferred minor:** Solver failures are not caught in the UI yet; a failing host solver can leave the player without a hint and may surface an unhandled rejection.
+**Resolved review note:** Solver failures now produce a brief accessible message instead of an unhandled rejection.
 
 ## Self-review
 

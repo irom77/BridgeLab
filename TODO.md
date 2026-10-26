@@ -4,7 +4,7 @@ Status follows the app-wide plan in [`docs/superpowers/plans/2026-10-25-contract
 
 ## Current focus
 
-The core rules, PBN package, and solo client are in place. Beginner bots support basic opening bids and legal card play; Intermediate adds opening-lead and trick-play tactics and is selectable in solo setup. Card-play hints identify legal moves or optional solver recommendations. Next is broader SAYC / 2/1 bidding and more distinct strategy behavior.
+The core rules, PBN package, and solo client are in place. Beginner through Expert bots are selectable; Advanced adds third-hand honor-sequence play, and Expert adds Gerber and splinter raises. Card-play hints identify legal moves or optional solver recommendations. Next is broader SAYC / 2/1 bidding and strategy coverage.
 
 ## Foundation
 
@@ -20,8 +20,14 @@ The core rules, PBN package, and solo client are in place. Beginner bots support
 - [x] Add deterministic beginner bots with basic SAYC / 2/1 opening-and-pass bidding and legal card selection.
 - [ ] Implement intermediate through expert strategies and complete SAYC / 2/1 agreements.
   - [x] Refine beginner openings: 15–17 balanced 1NT, five-card majors, minor fallback.
+  - [x] Open balanced 20–21 HCP hands with 2NT and 22+ HCP hands with strong 2♣; respond to 2♣ with waiting 2♦ and rebid balanced 22–24 in 2NT or 25–27 in 3NT.
+  - [x] Open strong 2♣ with a six-card-or-longer hand estimated at 9+ playing tricks below 22 HCP; respond positively with an 8+ HCP five-card suit or balanced hand, and raise a supported positive major to game.
+  - [x] Continue after a waiting 2♦ response to strong 2♣: use Stayman/transfers over opener's balanced 2NT rebid, raise natural suit rebids with support, place 3NT with balanced values and a stopper, or pass a weak hand without a fit.
+  - [x] Over a 2NT opening, use Stayman with a four-card major, transfers with a five-card major, or 3NT with a balanced game hand; show or deny a major, find an alternate spade fit after a heart reply, and place the contract after the reply.
   - [x] Add a limited uncontested balanced 1NT response.
   - [x] Add basic uncontested raises after partner opens 1♥ or 1♠.
+  - [x] Make a weak 4M preemptive raise with 5+ card support, a singleton or void, and fewer than 10 HCP in SAYC and 2/1.
+  - [x] In SAYC, respond 3NT to a major opening with a balanced 16–18 HCP hand and two-card support when no four-card other major is available.
   - [x] Add a balanced 1NT response with 6–9 HCP after a major opening when responder has fewer than three-card support.
   - [x] Add a balanced 1NT response with 6–9 HCP after a minor opening when responder has fewer than five-card support.
   - [x] Add one-level new-suit responses with 4+ cards and 6+ HCP where a higher one-level suit is available.
@@ -31,8 +37,13 @@ The core rules, PBN package, and solo client are in place. Beginner bots support
   - [x] Extend balanced opener rebids after a one-level new-suit response: 12–14 HCP in 1NT and 18–19 HCP in 2NT.
   - [x] Add an uncontested minimum opener raise of responder's major with four-card support.
   - [x] Add an invitational opener jump raise of responder's major with four-card support and 16–18 HCP.
+    - [x] After an invitational opener jump raise to 3M, responder accepts game with 10+ HCP or passes with fewer points in both SAYC and 2/1.
+  - [x] After a one-level major response, place game with an unbalanced 19+ HCP opener and four-card support in both SAYC and 2/1.
   - [x] Add a natural 2♣ opener rebid after 1♦–1♠ with five diamonds and four clubs.
-  - [x] Add natural one-level opener rebids in a separate four-card higher suit.
+  - [x] After 1♦–2♣ in SAYC, rebid a five-card diamond suit naturally; responder raises with four-card support and 10+ HCP.
+  - [x] After an uncontested SAYC 1M–2m response, opener shows a natural four-card side suit with 13–18 HCP (reverse at 16–18), or repeats the five-card major with 12–18 HCP when no side suit applies; responder can raise a four-card fit, show an unbid four-card major with 10+ HCP, invite in 2NT, show preference for opener’s major, or place 3NT with balanced game values and stoppers. After a two-level alternate-major rebid, opener raises with three-card support or continues in the original major without a fit. After a repeated major, responder can invite in 2NT or raise the major, and opener accepts either invitation with 16+ HCP.
+  - [x] Add natural opener rebids in a separate four-card higher suit, including 16+ HCP reverses when responder's suit makes a one-level rebid unavailable.
+  - [x] After an uncontested one-level suit response, rebid a separate four-card lower-ranking suit naturally at the two level with an unbalanced 12–18 HCP hand in SAYC and 2/1.
   - [x] Add a balanced responder invitation or game bid after opener's uncontested 1NT rebid.
   - [x] Add a natural five-card major signoff after opener's uncontested 1NT rebid with a minimum responder hand.
   - [x] Invite game in a five-card major at 3M with 10–12 HCP after opener's uncontested 1NT rebid.
@@ -42,7 +53,7 @@ The core rules, PBN package, and solo client are in place. Beginner bots support
   - [x] Continue a 2/1 game force by showing a four-card side major when responder lacks three-card support for opener.
   - [x] Rebids a six-card 2/1 response suit after opener repeats the major.
   - [x] Show a four-card side major after a direct 2/1 response with 12–17 HCP.
-  - [x] After 1♥–2♣, show a four-card diamond suit with 12–17 HCP when no four-card spade suit takes priority.
+  - [x] After 1♥–2♣ or 1♠–2♣, show a four-card diamond suit with 12–17 HCP when a higher-priority four-card major is unavailable; responder can raise the shown diamonds with four-card support.
   - [x] Raise opener's shown side major to game with four-card support in a direct 2/1 game force.
   - [x] Continue to game after opener's balanced 2NT rebid in a direct 2/1 sequence.
   - [x] Add responder's 11–12 HCP 2NT invitation or three-card major limit raise after opener's natural minor rebid.
@@ -54,22 +65,81 @@ The core rules, PBN package, and solo client are in place. Beginner bots support
   - [x] Redouble an opponent's double of partner's one-level suit opening with 10+ HCP.
   - [x] Add a natural two-level lower side-suit rebid after a major opening and an uncontested 1NT response.
   - [x] After 1♥–1NT, show a four-card spade suit with a 2♠ reverse and 16+ HCP, preferring a four-card lower side suit when available.
-  - [ ] Add broader opener continuations and strength ranges.
+    - [x] After 1♥–1NT–2♠, responder shows a three-card heart or spade fit, rebids 2NT with values and a spade stopper, or continues naturally in a minor.
+  - [x] Add broader opener continuations and strength ranges, including the balanced 20–21 HCP 3NT rebid after 1M–1NT.
     - [x] After 1m–1NT, rebid 2NT with a balanced 18–19 HCP opener; responder accepts with 8+ HCP.
+    - [x] After 1m–1M–2NT in SAYC and 2/1, responder places 3NT with a balanced 8+ HCP hand and passes below that range.
+    - [x] After 1m–1NT, rebid a six-card minor with 12–17 HCP.
     - [x] After 1M–1NT, rebid a six-card opening major when no lower four-card side suit is available.
     - [x] After 1M–1NT in SAYC, jump rebid a six-card major with 16–18 HCP when no side suit takes priority.
+    - [x] After 1M–1NT, bid game directly with 19+ HCP and a six-card major when no side suit takes priority.
+    - [x] After opener's invitational 3M rebid, accept with 8+ HCP in SAYC or 10+ in 2/1, and pass below that range.
   - [x] After 1M–1NT in SAYC, rebid a five-card opening major with 12–15 HCP when no side suit is available.
     - [x] After 1M–1NT, rebid 2NT with a balanced 18–19 HCP hand.
     - [x] After 1M–1NT–2NT, responder bids 3NT with 6+ HCP to accept game.
   - [x] After 1M–1NT–2M, responder invites with 3M on 10–12 HCP and three-card support, or 2NT with a balanced hand.
-  - [ ] Implement distinct SAYC and 2/1 response agreements, including game-forcing 2/1 sequences. (2/1 now uses forcing 1NT with 6–12 HCP in the listed uncontested cases; direct 1M–2-over-1 responses require 13+ HCP, allow three-card major support, and continue to game. Opener can show balanced 18–19 HCP with 2NT after a direct 2/1 response. Broader continuations and complete SAYC agreements remain.)
+  - [x] After 1♠–1NT–2♥, responder raises with three-card heart support on 10–12 HCP or places 4♥ with 13+; a balanced responder without a heart fit invites in 2NT or bids 3NT.
+  - [ ] Implement distinct SAYC and 2/1 response agreements, including game-forcing 2/1 sequences. (2/1 now uses forcing 1NT with 6–12 HCP in the listed uncontested cases; direct 1M–2-over-1 responses require 13+ HCP, allow three-card major support, and continue to game. Opener can show balanced 18–19 HCP with 2NT after a direct 2/1 response. Further detailed continuations and complete SAYC agreements remain.)
+    - [x] After 1♠–2♥, opener raises to 3♥ with three-card support and responder completes 4♥ in the game force.
+    - [x] Keep the 2/1 force active after responder rebids a six-card minor; opener raises three-card support and responder places the minor game.
+    - [x] When opener lacks three-card support for that minor rebid, place the game force in 3NT.
+    - [x] After opener's balanced 2NT rebid, responder chooses 3NT without a three-card major fit, even with a six-card 2/1 minor.
+    - [x] After responder shows a four-card side major in a 2/1 game force, opener raises to game with three-card support.
+    - [x] Without three-card support for responder's side major, opener places the game force in 3NT.
+    - [x] Stop at 4M after opener accepts a major fit; continue to 5m only when a long minor fit remains below game.
+    - [x] Over an uncontested 1NT opening, use Stayman with a four-card major and 8+ HCP or transfer with a five-card major; opener shows a major or accepts the transfer, and responder places an invitation or game, including an alternate spade fit after a heart reply.
+    - [x] After a 1NT–2♣–2♦ Stayman denial, responder can show a five-card major naturally at the two level, and opener raises with three-card support.
+    - [x] Use quantitative 4NT with a balanced 16+ HCP hand without a major fit over 1NT, and accept with 6NT at 17 HCP; over 2NT, invite with a balanced 12+ HCP hand without a major fit and accept at 21 HCP.
+    - [x] In Expert, use direct 4♣ Gerber over 1NT with 19+ HCP or 2NT with 16+ HCP on a balanced hand without a four-card major; opener answers the ace count and responder places 4NT or 6NT.
+    - [x] Use Jacoby 2NT in uncontested auctions as a game-forcing raise with 13+ HCP and four-card major support in both styles; opener shows shortness or bids game, then responder places game.
   - [ ] Add intermediate, advanced, and expert bidding/play strategies with distinct tested behavior.
-    - [x] Add an initial intermediate card-play tactic: win cheaply when an opponent is winning, or play low when partner is winning; bidding still uses beginner rules.
+    - [x] Add an Advanced bot skill that follows Intermediate bidding and plays the top touching honor third hand when partner is winning.
+    - [x] Add an Expert bot skill that inherits Advanced play, uses direct Gerber over notrump openings, makes splinter raises with four-card major support and one singleton/void, and uses Blackwood after Jacoby shortness, accepted splinter raises, or a 2/1 game-forcing major fit with 18+ HCP; after a Jacoby game rebid, responder can use the Grand Slam Force with two top trump honors, and opener bids 7M with two of A/K/Q in trumps or 6M otherwise. Other expert bidding/play strategies remain planned.
+    - [x] Open a natural weak two in a six-card major or diamond suit with 5–11 HCP and at least two honors among ace through ten.
+    - [x] Respond to a forcing 2NT weak-two inquiry: rebid the suit with 5–8 HCP; with 9–11 show an ace/king feature or bid 3NT without one, then let responder choose game.
+    - [x] Allow preemptive 3M/4M raises of a weak two with trump support, and a natural 3NT response with a balanced game hand and no major fit.
+    - [x] Add initial intermediate bidding: make a natural direct overcall of an opponent's one-level suit opening with a five-card suit, 8+ HCP at the one level or 10+ HCP at the two level.
+    - [x] Make a natural 1NT overcall with a balanced 15–18 HCP hand and a stopper in opener's suit.
+    - [x] After a partner's 1NT overcall, use 2♣ Stayman with 8+ HCP and a four-card major; show a four-card major or deny one with 2♦, then invite or place game according to responder strength and fit.
+    - [x] Make natural suit responses after a partner's 1NT overcall with 6+ HCP: show a five-card suit at the two level, or a six-card club suit at 3♣ because 2♣ is Stayman.
+    - [x] After a partner's 1NT overcall, invite in 2NT with a balanced 8–9 HCP hand or bid 3NT with a balanced 10+ HCP hand when no four-card major is held.
+    - [x] After Stayman over a 1NT overcall, show four spades when a heart reply does not fit; let the overcaller raise spades or deny the fit in notrump, then let responder place game.
+    - [x] Add intermediate card-play tactics: win cheaply when an opponent is winning, or play low when partner is winning.
+    - [x] Raise partner's one- or two-level overcall with 3+ card support and 6–10 support points.
+    - [x] Cue-bid opener's suit with 3+ card support and 11+ support points after partner's one- or two-level overcall.
+    - [x] After advancer's strong-raise cue-bid, repeat the overcall with a minimum, show a three-card side suit with 11+ HCP, and bid game with 15+ HCP.
+    - [x] After a simple raise of an overcall, invite game at the three level with 11–14 HCP after a one-level overcall and bid game with 15+ HCP.
+    - [x] Advance a one-level overcall with natural 1NT on a balanced 8–11 HCP hand with a stopper in opener's suit.
+    - [x] Advance an overcall with a natural five-card new suit: 6+ HCP at the one level and 11+ HCP when bidding at the two level.
+    - [x] Make a direct takeout double with opening strength, shortness in opener's suit, and support for the unbid suits.
+    - [x] Advance partner's takeout double with minimum or jump suit bids, natural notrump with a stopper, or a strong cuebid.
+    - [x] After a major-suit advance of a takeout double, pass with a minimum, raise with 16–18 support points, jump-raise with 19+ support points, and accept game over a jump advance with 15+ support points.
+    - [x] After advancer's strong cuebid of opener's suit, name the doubler's longest available major, then longest available minor.
+    - [x] After opener's partner raises over a takeout double, compete in a natural four-card suit with 6–8 support points, jump with 9–11, or cue-bid the raised suit with 12+.
     - [x] Lead the top honor from a touching honor sequence when on lead.
     - [x] When no honor sequence applies, lead fourth-highest from the longest suit of four or more cards.
     - [x] Cover deterministic seeded deals for bid/card stability, legal card selection, and the bot's public play-context boundary.
-  - [x] Expose Beginner and Intermediate bot skill in solo setup; advanced and expert remain unavailable.
-  - [ ] Cover competitive auctions, doubles, interference, and convention edge cases.
+  - [x] Expose Beginner, Intermediate, Advanced, and Expert bot skills in solo setup.
+  - [x] Cover the currently scoped competitive auctions, doubles, interference, and convention edge cases.
+    - [x] Apply natural notrump responses with stoppers and simple major raises after one-level overcalls or takeout doubles in both SAYC and 2/1.
+    - [x] Add the same natural notrump responses after minor openings.
+    - [x] Raise a minor opening after a one-level overcall with 5+ support and 6–9 HCP.
+    - [x] After a minor opening and one-level major overcall, use 5+ cards for a natural one-level major response over 1♥ and a negative double to show 4+ cards in the unbid major with 6+ HCP.
+    - [x] After a minor opening and one-level minor overcall, bid an available four-card major at the one level with 6+ HCP.
+    - [x] After a minor opening is doubled, respond naturally in an available four-card suit at the one level with 6+ HCP.
+    - [x] Cue-bid a one-level overcall after a minor opening with three-card support and 10+ HCP to show a game-forcing raise.
+    - [x] Cue-bid one- or two-level overcalls after a major opening with three-card support and 10+ HCP to show a strong raise.
+    - [x] After a major opening and one-level overcall, make a natural two-level new-suit response with 5+ cards and 10+ HCP in both styles.
+    - [x] After a major opening and a one-level overcall, bid an available new suit at the one level with 4+ cards and 6+ HCP in both styles.
+    - [x] After a major opening and a one-level major overcall, use a negative double with 4+ diamonds and 6+ HCP in both styles.
+    - [x] After 1♥–(1♦)–1♠, opener raises with four-card support: 2♠ on 12–15 HCP, 3♠ on 16–18, and 4♠ with 19+; without four spades, opener rebids a six-card heart suit at 2♥ on 12–15 or 3♥ on 16–18, or shows a balanced hand with a diamond stopper at 1NT on 12–14 or 2NT on 18–19 HCP.
+    - [x] After 1♥–(1♦)–1♠–1NT, responder invites with 2NT on a balanced 10–12 HCP hand or 3♠ with five-card support, and places 3NT/4♠ with 13+ HCP.
+    - [x] After 1♠–(2♥), responder can make a negative double with 4+ diamonds and 6+ HCP in both SAYC and 2/1.
+    - [x] After a two-level overcall of a major opening, raise to the three level with 3+ card support and 6–9 HCP in both styles.
+    - [x] After a major opening and a two-level minor overcall, use a negative double with 4+ cards in the unbid major and 6+ HCP.
+    - [x] Add an Intermediate natural takeout double over a one-level suit opening, with 13+ total points including shortness and support for the unbid suits.
+    - [x] Add Intermediate advances after a takeout double: minimum bids with 0–8 HCP, jump bids with 9–11, natural 1NT/2NT with a stopper, and a cuebid with 12+ HCP.
+    - [x] Use 2NT after a takeout double to show a 10+ point limit raise or better with four-card major or five-card minor support in both styles; opener distinguishes minimum and maximum.
 - [x] Connect card-play hint UI to legal move generation and optional solver recommendations. (Without a solver, the client highlights all legal cards; it makes no strategic claim.)
 
 ## Platform delivery

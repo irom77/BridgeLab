@@ -124,6 +124,22 @@ describe("bridge table", () => {
     expect(solver.recommendPlays).toHaveBeenCalledTimes(1);
   });
 
+  it("shows a message when solver recommendations fail", async () => {
+    vi.spyOn(Math, "random").mockReturnValue(0);
+    const solver: Solver = { recommendPlays: vi.fn().mockRejectedValue(new Error("solver unavailable")) };
+    const user = userEvent.setup();
+    render(<App solver={solver} />);
+    await user.click(screen.getByRole("button", { name: "Start a new hand" }));
+    for (const call of ["1clubs", "pass", "pass", "pass"]) {
+      await user.selectOptions(screen.getByLabelText("Contract call"), call);
+      await user.click(screen.getByRole("button", { name: "Make bid" }));
+    }
+
+    await user.click(screen.getByRole("button", { name: "Show hint" }));
+
+    expect((await screen.findByRole("alert")).textContent).toContain("Unable to get a hint. Please try again.");
+  });
+
   it("limits a follow-suit hint to cards of the led suit", async () => {
     vi.spyOn(Math, "random").mockReturnValue(0);
     const user = userEvent.setup();
@@ -216,7 +232,7 @@ describe("bridge table", () => {
     await user.selectOptions(screen.getByLabelText("Opponents"), "bots");
     await user.selectOptions(screen.getByLabelText("Your seat"), "south");
     await user.selectOptions(screen.getByLabelText("Bot bidding style"), "2/1");
-    await user.selectOptions(screen.getByLabelText("Bot skill"), "intermediate");
+    await user.selectOptions(screen.getByLabelText("Bot skill"), "expert");
     await user.click(screen.getByRole("button", { name: "Start a new hand" }));
 
     await waitFor(() => expect(screen.getByText("South to bid")).toBeTruthy());
@@ -225,13 +241,15 @@ describe("bridge table", () => {
     expect(screen.getByLabelText("Contract call")).toBeTruthy();
   });
 
-  it("offers Beginner and Intermediate bot skills when bots are enabled", async () => {
+  it("offers Beginner through Expert bot skills when bots are enabled", async () => {
     const user = userEvent.setup();
     render(<App />);
     await user.selectOptions(screen.getByLabelText("Opponents"), "bots");
 
     expect(screen.getByLabelText("Bot skill").textContent).toContain("Beginner");
     expect(screen.getByLabelText("Bot skill").textContent).toContain("Intermediate");
+    expect(screen.getByLabelText("Bot skill").textContent).toContain("Advanced");
+    expect(screen.getByLabelText("Bot skill").textContent).toContain("Expert");
   });
 
   it("automates bot play and lets the user play the exposed dummy hand", async () => {

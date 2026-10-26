@@ -47,6 +47,251 @@ describe("beginner bot", () => {
     expect(await bot.chooseBid(openingHand, [], "north")).toBe("1diamonds");
   });
 
+  it.each([20, 21])("opens a balanced %i-HCP hand with 2NT", async (expectedHcp) => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
+    const handWith20 = hand("spades:A", "spades:K", "spades:Q", "hearts:A", "hearts:K", "hearts:2", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:J", "clubs:2", "clubs:3", "clubs:4");
+    const handWith21 = hand("spades:A", "spades:K", "spades:Q", "hearts:A", "hearts:K", "hearts:2", "diamonds:K", "diamonds:J", "diamonds:2", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
+    expect(await bot.chooseBid(expectedHcp === 20 ? handWith20 : handWith21, [], "north")).toBe("2notrump");
+  });
+
+  it("opens a balanced 22-HCP hand with strong 2 clubs", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
+    const strongBalanced = hand("spades:A", "spades:K", "spades:J", "spades:2", "spades:3", "hearts:A", "hearts:K", "hearts:2", "diamonds:A", "diamonds:Q", "diamonds:2", "clubs:J", "clubs:2");
+    expect(await bot.chooseBid(strongBalanced, [], "north")).toBe("2clubs");
+  });
+
+  it("opens a strong unbalanced hand with 2 clubs", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
+    const strongUnbalanced = hand("spades:A", "spades:K", "spades:Q", "spades:2", "spades:3", "spades:4", "hearts:A", "hearts:K", "hearts:2", "diamonds:A", "diamonds:K", "clubs:Q", "clubs:2");
+    expect(await bot.chooseBid(strongUnbalanced, [], "north")).toBe("2clubs");
+  });
+
+  it("opens 2 clubs with nine playing tricks below 22 HCP", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
+    const nineTrickHand = hand("spades:A", "spades:K", "spades:Q", "spades:J", "spades:2", "spades:3", "spades:4", "spades:5", "hearts:A", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3");
+    expect(await bot.chooseBid(nineTrickHand, [], "north")).toBe("2clubs");
+  });
+
+  it("uses a waiting 2 diamonds response to a strong 2 clubs opening", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
+    const responder = hand("spades:2", "spades:3", "spades:4", "hearts:2", "hearts:3", "hearts:4", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
+    expect(await bot.chooseBid(responder, [{ seat: "north", bid: "2clubs" }], "south")).toBe("2diamonds");
+  });
+
+  it("shows a five-card major positively over 2 clubs with 8+ HCP", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
+    const responder = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:2", "hearts:3", "spades:2", "spades:3", "spades:4", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4");
+    expect(await bot.chooseBid(responder, [{ seat: "north", bid: "2clubs" }], "south")).toBe("2hearts");
+  });
+
+  it("shows a balanced positive hand with 2NT over 2 clubs", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
+    const responder = hand("spades:A", "spades:2", "spades:3", "spades:4", "hearts:K", "hearts:2", "hearts:3", "diamonds:Q", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4");
+    expect(await bot.chooseBid(responder, [{ seat: "north", bid: "2clubs" }], "south")).toBe("2notrump");
+  });
+
+  it("uses Stayman after 2 clubs, waiting 2 diamonds, and a balanced 2NT rebid", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
+    const responder = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:2", "spades:2", "spades:3", "spades:4", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "2clubs" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2diamonds" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "2notrump" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("3clubs");
+  });
+
+  it("raises opener's natural major rebid to game with three-card support after waiting 2 diamonds", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
+    const responder = hand("hearts:2", "hearts:3", "hearts:4", "spades:2", "spades:3", "spades:4", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
+    const auction = [
+      { seat: "north", bid: "2clubs" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2diamonds" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "2hearts" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("4hearts");
+  });
+
+  it("raises opener's natural minor rebid to game with four-card support after waiting 2 diamonds", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
+    const responder = hand("clubs:2", "clubs:3", "clubs:4", "clubs:5", "spades:2", "spades:3", "spades:4", "hearts:2", "hearts:3", "hearts:4", "diamonds:2", "diamonds:3", "diamonds:4");
+    const auction = [
+      { seat: "north", bid: "2clubs" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2diamonds" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "3clubs" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("5clubs");
+  });
+
+  it("chooses 3NT after opener's natural suit rebid with balanced values and a stopper", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
+    const responder = hand("hearts:K", "hearts:2", "spades:A", "spades:2", "spades:3", "spades:4", "diamonds:J", "diamonds:2", "diamonds:3", "clubs:K", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "2clubs" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2diamonds" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "2hearts" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("3notrump");
+  });
+
+  it("passes a balanced hand without a stopper after opener's natural suit rebid", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
+    const responder = hand("hearts:2", "hearts:3", "spades:A", "spades:2", "spades:3", "spades:4", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:Q", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "2clubs" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2diamonds" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "2hearts" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("pass");
+  });
+
+  it("passes without a fit after opener's natural rebid and a weak waiting hand", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
+    const responder = hand("hearts:2", "hearts:3", "spades:2", "spades:3", "spades:4", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4", "clubs:5", "clubs:6");
+    const auction = [
+      { seat: "north", bid: "2clubs" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2diamonds" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "2hearts" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("pass");
+  });
+
+  it("accepts a heart transfer and places game after a strong 2 clubs balanced rebid", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
+    const responder = hand("hearts:A", "hearts:K", "hearts:2", "hearts:3", "hearts:4", "spades:2", "spades:3", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4");
+    const afterRebid = [
+      { seat: "north", bid: "2clubs" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2diamonds" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "2notrump" as const }, { seat: "east", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, afterRebid, "south")).toBe("3diamonds");
+    const afterTransfer = [...afterRebid, { seat: "south", bid: "3diamonds" as const }, { seat: "west", bid: "pass" as const }, { seat: "north", bid: "3hearts" as const }] as const;
+    expect(await bot.chooseBid(responder, afterTransfer, "south")).toBe("4hearts");
+  });
+
+  it("denies a major over Stayman and places 3NT after the strong 2 clubs rebid", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
+    const responder = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:2", "spades:2", "spades:3", "spades:4", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4");
+    const opener = hand("spades:A", "spades:K", "spades:Q", "hearts:A", "hearts:K", "hearts:2", "diamonds:A", "diamonds:Q", "diamonds:2", "clubs:Q", "clubs:2", "clubs:3", "clubs:4");
+    const afterStayman = [
+      { seat: "north", bid: "2clubs" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2diamonds" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "2notrump" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "3clubs" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, afterStayman, "north")).toBe("3diamonds");
+    const afterDenial = [...afterStayman, { seat: "north", bid: "3diamonds" as const } ] as const;
+    expect(await bot.chooseBid(responder, afterDenial, "south")).toBe("3notrump");
+  });
+
+  it("raises a positive major response to game with three-card support", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
+    const opener = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:J", "spades:A", "spades:K", "spades:Q", "diamonds:A", "diamonds:K", "diamonds:2", "clubs:J", "clubs:2", "clubs:3");
+    const auction = [
+      { seat: "north", bid: "2clubs" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2hearts" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe("4hearts");
+  });
+
+  it.each([22, 25])("rebids notrump at the right level after 2 clubs and waiting 2 diamonds with %i HCP", async (expectedHcp) => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
+    const handWith22 = hand("spades:A", "spades:K", "spades:J", "spades:2", "spades:3", "hearts:A", "hearts:K", "hearts:2", "diamonds:A", "diamonds:Q", "diamonds:2", "clubs:J", "clubs:2");
+    const handWith25 = hand("spades:A", "spades:K", "spades:Q", "spades:2", "spades:3", "hearts:A", "hearts:K", "hearts:2", "diamonds:A", "diamonds:K", "diamonds:2", "clubs:Q", "clubs:2");
+    const opener = expectedHcp === 22 ? handWith22 : handWith25;
+    const auction = [
+      { seat: "north", bid: "2clubs" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2diamonds" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe(expectedHcp === 22 ? "2notrump" : "3notrump");
+  });
+
+  it("uses Stayman with a four-card major over partner's 2NT opening", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
+    const responder = hand("hearts:K", "hearts:Q", "hearts:J", "hearts:2", "spades:2", "spades:3", "spades:4", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4");
+    expect(await bot.chooseBid(responder, [{ seat: "north", bid: "2notrump" }], "south")).toBe("3clubs");
+  });
+
+  it("transfers to a five-card major over partner's 2NT opening", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
+    const responder = hand("hearts:K", "hearts:Q", "hearts:2", "hearts:3", "hearts:4", "spades:2", "spades:3", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4");
+    expect(await bot.chooseBid(responder, [{ seat: "north", bid: "2notrump" }], "south")).toBe("3diamonds");
+  });
+
+  it("transfers to spades and accepts the transfer over a 2NT opening", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
+    const responder = hand("spades:K", "spades:Q", "spades:J", "spades:2", "spades:3", "hearts:2", "hearts:3", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4");
+    expect(await bot.chooseBid(responder, [{ seat: "north", bid: "2notrump" }], "south")).toBe("3hearts");
+    const auction = [
+      { seat: "north", bid: "2notrump" as const }, { seat: "south", bid: "3hearts" as const }
+    ] as const;
+    const opener = hand("spades:A", "spades:K", "spades:2", "spades:3", "hearts:A", "hearts:K", "hearts:2", "diamonds:A", "diamonds:2", "diamonds:3", "clubs:K", "clubs:2", "clubs:3");
+    expect(await bot.chooseBid(opener, auction, "north")).toBe("3spades");
+  });
+
+  it("bids 3NT directly over 2NT with a balanced game hand and no major", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
+    const responder = hand("spades:K", "spades:2", "spades:3", "hearts:Q", "hearts:2", "hearts:3", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:Q", "clubs:2", "clubs:3", "clubs:4");
+    expect(await bot.chooseBid(responder, [{ seat: "north", bid: "2notrump" }], "south")).toBe("3notrump");
+  });
+
+  it("shows a four-card major over Stayman after a 2NT opening", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
+    const opener = hand("hearts:A", "hearts:K", "hearts:2", "hearts:3", "spades:A", "spades:K", "spades:2", "spades:3", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3");
+    const auction = [{ seat: "north", bid: "2notrump" as const }, { seat: "south", bid: "3clubs" as const }] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe("3hearts");
+  });
+
+  it("shows responder's spades after 2NT Stayman finds hearts but no heart fit", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
+    const responder = hand("spades:K", "spades:Q", "spades:2", "spades:3", "hearts:J", "hearts:2", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:Q", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "2notrump" as const }, { seat: "south", bid: "3clubs" as const },
+      { seat: "west", bid: "pass" as const }, { seat: "north", bid: "3hearts" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("3spades");
+  });
+
+  it("raises responder's spades after the 2NT Stayman alternate-major continuation", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
+    const opener = hand("spades:A", "spades:K", "spades:2", "spades:3", "hearts:A", "hearts:K", "hearts:2", "hearts:3", "diamonds:A", "diamonds:2", "diamonds:3", "clubs:K", "clubs:2");
+    const auction = [
+      { seat: "north", bid: "2notrump" as const }, { seat: "south", bid: "3clubs" as const },
+      { seat: "west", bid: "pass" as const }, { seat: "north", bid: "3hearts" as const },
+      { seat: "east", bid: "pass" as const }, { seat: "south", bid: "3spades" as const },
+      { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe("4spades");
+  });
+
+  it("denies a four-card major over Stayman after a 2NT opening", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
+    const opener = hand("clubs:A", "clubs:2", "clubs:3", "clubs:4", "diamonds:K", "diamonds:Q", "diamonds:2", "diamonds:3", "hearts:K", "hearts:J", "hearts:2", "spades:Q", "spades:2");
+    const auction = [{ seat: "north", bid: "2notrump" as const }, { seat: "south", bid: "3clubs" as const }] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe("3diamonds");
+  });
+
+  it("places 3NT after Stayman denial over a 2NT opening", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
+    const responder = hand("hearts:K", "hearts:Q", "hearts:J", "hearts:2", "spades:2", "spades:3", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
+    const auction = [
+      { seat: "north", bid: "2notrump" as const }, { seat: "south", bid: "3clubs" as const },
+      { seat: "west", bid: "pass" as const }, { seat: "north", bid: "3diamonds" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("3notrump");
+  });
+
+  it("accepts a heart transfer and places game with five hearts and game values", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
+    const responder = hand("hearts:K", "hearts:Q", "hearts:2", "hearts:3", "hearts:4", "spades:2", "spades:3", "diamonds:A", "diamonds:2", "diamonds:3", "clubs:K", "clubs:2", "clubs:3");
+    const auction = [
+      { seat: "north", bid: "2notrump" as const }, { seat: "south", bid: "3diamonds" as const },
+      { seat: "west", bid: "pass" as const }, { seat: "north", bid: "3hearts" as const },
+      { seat: "east", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("4hearts");
+  });
+
   it("accepts either configured convention and passes a weak hand", async () => {
     const weak = deal().north.map(() => ({ suit: "clubs" as const, rank: "2" as const }));
     for (const biddingStyle of ["SAYC", "2/1"] as const) {
@@ -64,14 +309,36 @@ describe("beginner bot", () => {
 
   it("responds 2NT with 8-9 HCP to partner’s uncontested 1NT", async () => {
     const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
-    const balanced = hand("spades:A", "spades:2", "spades:3", "spades:4", "hearts:K", "hearts:2", "hearts:3", "diamonds:Q", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4");
+    const balanced = hand("spades:A", "spades:2", "spades:3", "hearts:K", "hearts:2", "hearts:3", "diamonds:Q", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
     expect(await bot.chooseBid(balanced, [{ seat: "north", bid: "1notrump" }, { seat: "east", bid: "pass" }], "south")).toBe("2notrump");
   });
 
   it("responds 3NT with 10 or more HCP to partner’s uncontested 1NT", async () => {
     const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
-    const balanced = hand("spades:A", "spades:2", "spades:3", "spades:4", "hearts:K", "hearts:Q", "hearts:2", "diamonds:J", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4");
+    const balanced = hand("spades:A", "spades:2", "spades:3", "hearts:K", "hearts:Q", "hearts:2", "diamonds:J", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
     expect(await bot.chooseBid(balanced, [{ seat: "north", bid: "1notrump" }], "south")).toBe("3notrump");
+  });
+
+  it("uses quantitative 4NT with a balanced 16-count and no major fit over 1NT", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
+    const responder = hand("spades:A", "spades:K", "spades:2", "hearts:A", "hearts:2", "hearts:3", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:Q", "clubs:2", "clubs:3", "clubs:4");
+    expect(await bot.chooseBid(responder, [{ seat: "north", bid: "1notrump" }], "south")).toBe("4notrump");
+  });
+
+  it("accepts a quantitative 4NT invitation with a 17-HCP 1NT opener", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
+    const opener = hand("spades:A", "spades:K", "spades:Q", "hearts:A", "hearts:K", "hearts:2", "diamonds:J", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
+    const auction = [
+      { seat: "north", bid: "1notrump" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "4notrump" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe("6notrump");
+  });
+
+  it("uses quantitative 4NT with a balanced 12-count and no major fit over 2NT", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
+    const responder = hand("spades:A", "spades:2", "spades:3", "hearts:K", "hearts:2", "hearts:3", "diamonds:Q", "diamonds:2", "diamonds:3", "clubs:K", "clubs:2", "clubs:3", "clubs:4");
+    expect(await bot.chooseBid(responder, [{ seat: "north", bid: "2notrump" }], "south")).toBe("4notrump");
   });
 
   it("passes when 1NT was opened by an opponent", async () => {
@@ -80,16 +347,122 @@ describe("beginner bot", () => {
     expect(await bot.chooseBid(strong, [{ seat: "east", bid: "1notrump" }], "south")).toBe("pass");
   });
 
-  it("passes on an unbalanced hand after partner opens 1NT", async () => {
+  it("transfers a long major even on an unbalanced hand after partner opens 1NT", async () => {
     const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
     const unbalanced = hand("spades:A", "spades:K", "spades:Q", "spades:J", "spades:T", "spades:9", "hearts:A", "hearts:K", "hearts:Q", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3");
-    expect(await bot.chooseBid(unbalanced, [{ seat: "north", bid: "1notrump" }], "south")).toBe("pass");
+    expect(await bot.chooseBid(unbalanced, [{ seat: "north", bid: "1notrump" }], "south")).toBe("2hearts");
+  });
+
+  it("uses Stayman with a four-card major over partner's 1NT opening", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
+    const responder = hand("hearts:K", "hearts:Q", "hearts:2", "hearts:3", "spades:A", "spades:2", "spades:3", "spades:4", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3");
+    expect(await bot.chooseBid(responder, [{ seat: "north", bid: "1notrump" }], "south")).toBe("2clubs");
+  });
+
+  it("transfers to hearts with a five-card major over partner's 1NT opening", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
+    const responder = hand("hearts:2", "hearts:3", "hearts:4", "hearts:5", "hearts:6", "spades:2", "spades:3", "spades:4", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4");
+    expect(await bot.chooseBid(responder, [{ seat: "north", bid: "1notrump" }], "south")).toBe("2diamonds");
+  });
+
+  it("shows a four-card heart suit after Stayman over 1NT", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
+    const opener = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:2", "spades:2", "spades:3", "spades:4", "diamonds:A", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "1notrump" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2clubs" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe("2hearts");
+  });
+
+  it("shows a five-card major after Stayman denial over 1NT", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
+    const responder = hand("spades:K", "spades:Q", "spades:J", "spades:9", "spades:2", "hearts:2", "hearts:3", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:J", "clubs:2", "clubs:3");
+    const auction = [
+      { seat: "north", bid: "1notrump" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2clubs" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "2diamonds" as const }, { seat: "east", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("2spades");
+  });
+
+  it("raises responder's five-card major after Stayman denial with three-card support", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
+    const opener = hand("hearts:A", "hearts:Q", "hearts:3", "spades:K", "spades:Q", "spades:2", "diamonds:K", "diamonds:J", "diamonds:3", "clubs:K", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "1notrump" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2clubs" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "2diamonds" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2hearts" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe("3hearts");
+  });
+
+  it("accepts an invitational major raise after Stayman with a maximum and four-card fit", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
+    const opener = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:2", "spades:A", "spades:2", "spades:3", "diamonds:J", "diamonds:2", "diamonds:3", "clubs:Q", "clubs:2", "clubs:3");
+    const auction = [
+      { seat: "north", bid: "1notrump" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2clubs" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "2hearts" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "3hearts" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe("4hearts");
+  });
+
+  it("places game in a six-card major after a transfer and 10+ HCP", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
+    const responder = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:J", "hearts:2", "hearts:3", "spades:2", "spades:3", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3");
+    const auction = [
+      { seat: "north", bid: "1notrump" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2diamonds" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "2hearts" as const }, { seat: "east", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("4hearts");
+  });
+
+  it("places 3NT with a five-card major and game values after a transfer", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
+    const responder = hand("hearts:A", "hearts:K", "hearts:2", "hearts:3", "hearts:4", "spades:Q", "spades:2", "diamonds:A", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "1notrump" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2diamonds" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "2hearts" as const }, { seat: "east", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("3notrump");
+  });
+
+  it("finds an alternate spade fit after Stayman discovers hearts over 1NT", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
+    const opener = hand("hearts:A", "hearts:K", "hearts:2", "spades:A", "spades:K", "spades:2", "diamonds:Q", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
+    const responder = hand("spades:Q", "spades:J", "spades:T", "spades:9", "hearts:K", "hearts:Q", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
+    const afterSpadeReveal = [
+      { seat: "north", bid: "1notrump" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2clubs" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "2hearts" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2spades" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, afterSpadeReveal, "north")).toBe("3spades");
+    const afterRaise = [...afterSpadeReveal, { seat: "west", bid: "pass" as const }, { seat: "north", bid: "3spades" as const } ] as const;
+    expect(await bot.chooseBid(responder, afterRaise, "south")).toBe("4spades");
   });
 
   it("raises partner’s major to the two level with 6-9 HCP and three-card support", async () => {
     const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
     const handWithSupport = hand("hearts:A", "hearts:2", "hearts:3", "spades:K", "spades:2", "spades:3", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
     expect(await bot.chooseBid(handWithSupport, [{ seat: "north", bid: "1hearts" }], "south")).toBe("2hearts");
+  });
+
+  it.each(["SAYC", "2/1"] as const)("makes a weak preemptive game raise with five-card support and shortness in %s", async (biddingStyle) => {
+    const bot = createBot({ skill: "beginner", biddingStyle });
+    const responder = hand("hearts:K", "hearts:Q", "hearts:J", "hearts:2", "hearts:3", "spades:K", "spades:2", "diamonds:2", "clubs:2", "clubs:3", "clubs:4", "clubs:5", "clubs:6");
+    expect(await bot.chooseBid(responder, [{ seat: "north", bid: "1hearts" }], "south")).toBe("4hearts");
+  });
+
+  it.each(["SAYC", "2/1"] as const)("keeps a 10-HCP five-card major raise at the three level in %s", async (biddingStyle) => {
+    const bot = createBot({ skill: "beginner", biddingStyle });
+    const responder = hand("hearts:K", "hearts:Q", "hearts:J", "hearts:2", "hearts:3", "spades:K", "spades:2", "diamonds:J", "clubs:2", "clubs:3", "clubs:4", "clubs:5", "clubs:6");
+    expect(await bot.chooseBid(responder, [{ seat: "north", bid: "1hearts" }], "south")).toBe("3hearts");
   });
 
   it("makes a limit raise with 10-12 HCP and three-card support", async () => {
@@ -164,6 +537,32 @@ describe("beginner bot", () => {
     expect(await bot.chooseBid(opener, auction, "north")).toBe("1spades");
   });
 
+  it.each(["SAYC", "2/1"] as const)("rebids a natural lower four-card side suit in %s", async (biddingStyle) => {
+    const bot = createBot({ skill: "beginner", biddingStyle });
+    const opener = hand("hearts:A", "hearts:K", "hearts:8", "hearts:4", "hearts:2", "diamonds:A", "diamonds:K", "diamonds:8", "diamonds:4", "spades:Q", "spades:2", "clubs:3", "clubs:2");
+    const auction = [
+      { seat: "north", bid: "1hearts" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "1spades" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe("2diamonds");
+  });
+
+  it.each([
+    ["SAYC", 7, "pass"], ["SAYC", 8, "3notrump"],
+    ["2/1", 7, "pass"], ["2/1", 8, "3notrump"]
+  ] as const)("places the notrump game at the 8-HCP acceptance boundary after 1m–1M–2NT in %s (%i HCP)", async (biddingStyle, hcp, expected) => {
+    const bot = createBot({ skill: "beginner", biddingStyle });
+    const responder = hcp === 7
+      ? hand("spades:A", "spades:2", "spades:3", "hearts:K", "hearts:2", "hearts:3", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4", "clubs:5")
+      : hand("spades:A", "spades:2", "spades:3", "hearts:K", "hearts:2", "hearts:3", "diamonds:J", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
+    const auction = [
+      { seat: "north", bid: "1diamonds" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "1spades" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "2notrump" as const }, { seat: "east", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe(expected);
+  });
+
   it("does not repeat responder's suit as opener's second suit", async () => {
     const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
     const opener = hand("clubs:A", "clubs:K", "clubs:Q", "clubs:2", "hearts:A", "hearts:2", "hearts:3", "hearts:4", "spades:2", "spades:3", "spades:4", "diamonds:2", "diamonds:3");
@@ -214,6 +613,26 @@ describe("beginner bot", () => {
     expect(await bot.chooseBid(opener, auction, "north")).toBe("1notrump");
   });
 
+  it.each(["SAYC", "2/1"] as const)("shows a four-card heart reverse after 1 diamond–1 spade with 16+ HCP in %s", async (biddingStyle) => {
+    const bot = createBot({ skill: "beginner", biddingStyle });
+    const opener = hand("diamonds:A", "diamonds:K", "diamonds:Q", "diamonds:2", "diamonds:3", "hearts:A", "hearts:K", "hearts:Q", "hearts:2", "spades:2", "spades:3", "clubs:2", "clubs:3");
+    const auction = [
+      { seat: "north", bid: "1diamonds" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "1spades" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe("2hearts");
+  });
+
+  it.each(["SAYC", "2/1"] as const)("does not show a reverse after 1 diamond–1 spade below 16 HCP in %s", async (biddingStyle) => {
+    const bot = createBot({ skill: "beginner", biddingStyle });
+    const opener = hand("diamonds:K", "diamonds:Q", "diamonds:J", "diamonds:2", "diamonds:3", "hearts:A", "hearts:K", "hearts:2", "hearts:3", "spades:2", "spades:3", "clubs:Q", "clubs:2");
+    const auction = [
+      { seat: "north", bid: "1diamonds" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "1spades" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).not.toBe("2hearts");
+  });
+
   it("rebids 2NT with a balanced 18-19 HCP hand after a one-level response", async () => {
     const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
     const opener = hand("diamonds:K", "diamonds:2", "diamonds:3", "diamonds:4", "hearts:A", "hearts:K", "hearts:Q", "spades:A", "spades:K", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
@@ -254,6 +673,28 @@ describe("beginner bot", () => {
     expect(await bot.chooseBid(opener, auction, "north")).toBe("pass");
   });
 
+  it("shows a four-card spade fit after opener reverses to 2 spades", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
+    const responder = hand("spades:K", "spades:Q", "spades:J", "spades:2", "hearts:2", "hearts:3", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
+    const auction = [
+      { seat: "north", bid: "1hearts" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "1notrump" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "2spades" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("3spades");
+  });
+
+  it("continues in notrump without a major fit after opener reverses to 2 spades", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
+    const responder = hand("spades:K", "spades:2", "hearts:2", "hearts:3", "diamonds:K", "diamonds:Q", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4", "clubs:5", "clubs:6");
+    const auction = [
+      { seat: "north", bid: "1hearts" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "1notrump" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "2spades" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("2notrump");
+  });
+
   it("rebids a six-card major after 1NT when no lower side suit is available", async () => {
     const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
     const opener = hand("spades:A", "spades:K", "spades:Q", "spades:J", "spades:T", "spades:9", "hearts:K", "hearts:2", "hearts:3", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3");
@@ -274,6 +715,30 @@ describe("beginner bot", () => {
     expect(await bot.chooseBid(opener, auction, "north")).toBe("3hearts");
   });
 
+  it.each([
+    ["SAYC", ["hearts:K", "hearts:2", "spades:K", "spades:2", "spades:3", "spades:4", "diamonds:Q", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4"], ["hearts:K", "hearts:2", "spades:Q", "spades:2", "spades:3", "spades:4", "diamonds:Q", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4"]],
+    ["2/1", ["hearts:K", "hearts:2", "spades:A", "spades:2", "spades:3", "spades:4", "diamonds:Q", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:J", "clubs:2", "clubs:3"], ["hearts:K", "hearts:2", "spades:A", "spades:2", "spades:3", "spades:4", "diamonds:Q", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4"]]
+  ] as const)("accepts a major jump rebid at the style-specific threshold and declines below it", async (biddingStyle, acceptCards, declineCards) => {
+    const bot = createBot({ skill: "beginner", biddingStyle });
+    const auction = [
+      { seat: "north", bid: "1hearts" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "1notrump" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "3hearts" as const }, { seat: "east", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(hand(...acceptCards), auction, "south")).toBe("4hearts");
+    expect(await bot.chooseBid(hand(...declineCards), auction, "south")).toBe("pass");
+  });
+
+  it.each(["2/1", "SAYC"] as const)("places game with a six-card opening major and 19+ HCP after 1NT in %s", async (biddingStyle) => {
+    const bot = createBot({ skill: "beginner", biddingStyle });
+    const opener = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:J", "hearts:9", "hearts:8", "spades:A", "spades:2", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:Q", "clubs:2");
+    const auction = [
+      { seat: "north", bid: "1hearts" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "1notrump" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe("4hearts");
+  });
+
   it("rebids a five-card major with minimum strength after 1M-1NT when no side suit is available", async () => {
     const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
     const opener = hand("hearts:A", "hearts:K", "hearts:2", "hearts:3", "hearts:4", "spades:A", "spades:2", "spades:3", "diamonds:J", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3");
@@ -282,6 +747,39 @@ describe("beginner bot", () => {
       { seat: "south", bid: "1notrump" as const }, { seat: "west", bid: "pass" as const }
     ] as const;
     expect(await bot.chooseBid(opener, auction, "north")).toBe("2hearts");
+  });
+
+  it.each(["2/1", "SAYC"] as const)("invites with a three-card heart fit after 1S-1NT-2H in %s", async (biddingStyle) => {
+    const bot = createBot({ skill: "beginner", biddingStyle });
+    const responder = hand("hearts:K", "hearts:Q", "hearts:J", "spades:2", "spades:3", "diamonds:K", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:Q", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "1spades" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "1notrump" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "2hearts" as const }, { seat: "east", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("3hearts");
+  });
+
+  it.each(["2/1", "SAYC"] as const)("places game in hearts with 13+ HCP after 1S-1NT-2H in %s", async (biddingStyle) => {
+    const bot = createBot({ skill: "beginner", biddingStyle });
+    const responder = hand("hearts:A", "hearts:K", "hearts:Q", "spades:K", "spades:2", "diamonds:2", "diamonds:3", "diamonds:4", "diamonds:5", "clubs:A", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "1spades" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "1notrump" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "2hearts" as const }, { seat: "east", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("4hearts");
+  });
+
+  it("invites in notrump without a heart fit after 1S-1NT-2H", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
+    const responder = hand("spades:K", "spades:Q", "spades:J", "spades:2", "hearts:K", "hearts:2", "diamonds:K", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "1spades" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "1notrump" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "2hearts" as const }, { seat: "east", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("2notrump");
   });
 
   it("rebids 2NT with a balanced 18-19 HCP hand after a major opening and 1NT response", async () => {
@@ -294,6 +792,16 @@ describe("beginner bot", () => {
     expect(await bot.chooseBid(opener, auction, "north")).toBe("2notrump");
   });
 
+  it.each(["SAYC", "2/1"] as const)("rebids 3NT with a balanced 20-21 HCP hand after a major opening and 1NT response in %s", async (biddingStyle) => {
+    const bot = createBot({ skill: "beginner", biddingStyle });
+    const opener = hand("spades:A", "spades:K", "spades:J", "spades:8", "spades:2", "hearts:A", "hearts:Q", "hearts:2", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:K", "clubs:2");
+    const auction = [
+      { seat: "north", bid: "1spades" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "1notrump" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe("3notrump");
+  });
+
   it("rebids 2NT with a balanced 18-19 HCP hand after a minor opening and 1NT response", async () => {
     const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
     const opener = hand("clubs:A", "clubs:K", "clubs:Q", "clubs:2", "spades:A", "spades:K", "spades:2", "hearts:K", "hearts:2", "hearts:3", "diamonds:2", "diamonds:3", "diamonds:4");
@@ -302,6 +810,26 @@ describe("beginner bot", () => {
       { seat: "south", bid: "1notrump" as const }, { seat: "west", bid: "pass" as const }
     ] as const;
     expect(await bot.chooseBid(opener, auction, "north")).toBe("2notrump");
+  });
+
+  it.each(["SAYC", "2/1"] as const)("rebids a six-card minor with an opening hand after 1m-1NT in %s", async (biddingStyle) => {
+    const bot = createBot({ skill: "beginner", biddingStyle });
+    const opener = hand("clubs:A", "clubs:K", "clubs:Q", "clubs:2", "clubs:3", "clubs:4", "spades:K", "spades:2", "spades:3", "hearts:A", "hearts:2", "diamonds:2", "diamonds:3");
+    const auction = [
+      { seat: "north", bid: "1clubs" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "1notrump" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe("2clubs");
+  });
+
+  it.each(["SAYC", "2/1"] as const)("does not repeat a five-card minor after 1m-1NT in %s", async (biddingStyle) => {
+    const bot = createBot({ skill: "beginner", biddingStyle });
+    const opener = hand("clubs:A", "clubs:K", "clubs:Q", "clubs:2", "clubs:3", "spades:K", "spades:2", "spades:3", "spades:4", "hearts:A", "hearts:2", "diamonds:2", "diamonds:3");
+    const auction = [
+      { seat: "north", bid: "1clubs" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "1notrump" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe("pass");
   });
 
   it("accepts opener's 2NT rebid with 8 HCP after a minor opening", async () => {
@@ -336,6 +864,16 @@ describe("beginner bot", () => {
     expect(await bot.chooseBid(opener, auction, "north")).toBe("2hearts");
   });
 
+  it.each(["SAYC", "2/1"] as const)("places game with four-card support and 19+ HCP after a one-level major response in %s", async (biddingStyle) => {
+    const bot = createBot({ skill: "beginner", biddingStyle });
+    const opener = hand("clubs:A", "hearts:A", "hearts:K", "hearts:Q", "hearts:J", "diamonds:2", "diamonds:3", "diamonds:4", "diamonds:5", "spades:K", "spades:Q", "spades:3", "spades:4");
+    const auction = [
+      { seat: "north", bid: "1clubs" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "1hearts" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe("4hearts");
+  });
+
   it("does not raise responder's major with only three-card support", async () => {
     const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
     const opener = hand("clubs:A", "clubs:K", "clubs:Q", "clubs:2", "hearts:A", "hearts:2", "hearts:3", "spades:2", "spades:3", "spades:4", "diamonds:2", "diamonds:3", "diamonds:4");
@@ -350,6 +888,22 @@ describe("beginner bot", () => {
     const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
     const balanced = hand("spades:A", "spades:2", "hearts:K", "hearts:2", "hearts:3", "diamonds:Q", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
     expect(await bot.chooseBid(balanced, [{ seat: "north", bid: "1spades" }], "south")).toBe("1notrump");
+  });
+
+  it.each([
+    [15, "2diamonds", hand("spades:Q", "spades:2", "hearts:K", "hearts:2", "hearts:3", "diamonds:K", "diamonds:Q", "diamonds:2", "diamonds:3", "clubs:A", "clubs:J", "clubs:2", "clubs:3")],
+    [16, "3notrump", hand("spades:Q", "spades:2", "hearts:A", "hearts:2", "hearts:3", "diamonds:K", "diamonds:Q", "diamonds:2", "diamonds:3", "clubs:A", "clubs:J", "clubs:2", "clubs:3")],
+    [17, "3notrump", hand("spades:Q", "spades:2", "hearts:K", "hearts:2", "hearts:3", "diamonds:A", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:A", "clubs:J", "clubs:2", "clubs:3")],
+    [18, "3notrump", hand("spades:K", "spades:2", "hearts:K", "hearts:2", "hearts:3", "diamonds:A", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:A", "clubs:J", "clubs:2", "clubs:3")]
+  ] as const)("uses the SAYC direct 3NT response at %i HCP", async (_hcp, expected, balanced) => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
+    expect(await bot.chooseBid(balanced, [{ seat: "north", bid: "1spades" }], "south")).toBe(expected);
+  });
+
+  it("keeps a 15-17 HCP balanced hand in a 2/1 game-forcing response", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
+    const balanced = hand("spades:Q", "spades:2", "hearts:K", "hearts:2", "hearts:3", "diamonds:K", "diamonds:Q", "diamonds:2", "diamonds:3", "clubs:A", "clubs:Q", "clubs:2", "clubs:3");
+    expect(await bot.chooseBid(balanced, [{ seat: "north", bid: "1spades" }], "south")).toBe("2diamonds");
   });
 
   it("uses an invitational rather than minimum raise with 16 HCP", async () => {
@@ -370,6 +924,28 @@ describe("beginner bot", () => {
       { seat: "south", bid: "1hearts" as const }, { seat: "west", bid: "pass" as const }
     ] as const;
     expect(await bot.chooseBid(opener, auction, "north")).toBe("3hearts");
+  });
+
+  it.each(["SAYC", "2/1"] as const)("accepts opener's invitational major jump raise with 10+ HCP in %s", async (biddingStyle) => {
+    const bot = createBot({ skill: "beginner", biddingStyle });
+    const responder = hand("hearts:A", "hearts:K", "hearts:2", "hearts:3", "spades:A", "spades:2", "spades:3", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "1clubs" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "1hearts" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "3hearts" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("4hearts");
+  });
+
+  it("declines opener's invitational major jump raise with fewer than 10 HCP", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
+    const responder = hand("hearts:A", "hearts:K", "hearts:2", "hearts:3", "spades:2", "spades:3", "spades:4", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "1clubs" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "1hearts" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "3hearts" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("pass");
   });
 
   it("keeps a balanced 18-19 HCP hand in the 2NT rebid range despite four-card support", async () => {
@@ -488,6 +1064,27 @@ describe("beginner bot", () => {
     expect(await bot.chooseBid(thirteenPoints, responderAuction, "south")).toBe("4spades");
   });
 
+  it("raises a 1S-2H game-forcing response with three-card heart support", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
+    const opener = hand("spades:A", "spades:K", "spades:2", "spades:3", "spades:4", "hearts:K", "hearts:Q", "hearts:J", "hearts:2", "diamonds:Q", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "1spades" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2hearts" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe("3hearts");
+  });
+
+  it("places game in responder's hearts after opener raises a 1S-2H game force", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
+    const responder = hand("hearts:A", "hearts:Q", "hearts:2", "hearts:3", "hearts:4", "spades:A", "spades:K", "spades:2", "diamonds:K", "diamonds:2", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "1spades" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2hearts" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "3hearts" as const }, { seat: "east", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("4hearts");
+  });
+
   it("rebids 2NT with a balanced 18-19 HCP opener after a direct 2/1 response", async () => {
     const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
     const opener = hand("spades:A", "spades:K", "spades:Q", "spades:J", "spades:2", "hearts:A", "hearts:K", "diamonds:Q", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4");
@@ -518,6 +1115,55 @@ describe("beginner bot", () => {
     expect(await bot.chooseBid(opener, auction, "north")).toBe("2diamonds");
   });
 
+  it("shows a four-card diamond suit after 1S-2C in a direct 2/1 game force", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
+    const opener = hand("spades:A", "spades:K", "spades:2", "spades:3", "hearts:K", "hearts:2", "hearts:3", "diamonds:A", "diamonds:Q", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3");
+    const auction = [
+      { seat: "north", bid: "1spades" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2clubs" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe("2diamonds");
+  });
+
+  it("keeps a 1S-2D game force alive after responder rebids diamonds", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
+    const opener = hand("spades:A", "spades:K", "spades:Q", "spades:J", "spades:2", "diamonds:A", "diamonds:K", "diamonds:Q", "diamonds:2", "hearts:2", "hearts:3", "clubs:K", "clubs:2");
+    const responder = hand("diamonds:A", "diamonds:K", "diamonds:Q", "diamonds:J", "diamonds:2", "diamonds:3", "spades:2", "spades:3", "hearts:A", "hearts:2", "clubs:K", "clubs:Q", "clubs:2");
+    const openerAuction = [
+      { seat: "north", bid: "1spades" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2diamonds" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "2spades" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "3diamonds" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, openerAuction, "north")).toBe("4diamonds");
+    expect(await bot.chooseBid(responder, [
+      ...openerAuction, { seat: "north", bid: "4diamonds" as const }, { seat: "east", bid: "pass" as const }
+    ], "south")).toBe("5diamonds");
+  });
+
+  it("places a 2/1 game force in 3NT when opener cannot support responder's rebid minor", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
+    const opener = hand("spades:A", "spades:K", "spades:Q", "spades:J", "spades:2", "diamonds:2", "diamonds:3", "hearts:2", "hearts:3", "hearts:4", "clubs:K", "clubs:2", "clubs:3");
+    const auction = [
+      { seat: "north", bid: "1spades" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2diamonds" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "2spades" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "3diamonds" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe("3notrump");
+  });
+
+  it("raises opener's shown diamonds in a 1S-2C game force with four-card support", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
+    const responder = hand("diamonds:A", "diamonds:K", "diamonds:Q", "diamonds:2", "clubs:K", "clubs:Q", "clubs:2", "clubs:3", "hearts:A", "hearts:2", "hearts:3", "spades:2", "spades:3");
+    const auction = [
+      { seat: "north", bid: "1spades" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2clubs" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "2diamonds" as const }, { seat: "east", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("5diamonds");
+  });
+
   it("raises opener's shown side major to game with four-card support in a 2/1 force", async () => {
     const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
     const responder = hand("spades:A", "spades:K", "spades:Q", "spades:J", "hearts:2", "hearts:3", "clubs:K", "clubs:Q", "clubs:J", "diamonds:A", "diamonds:K", "diamonds:Q", "diamonds:J");
@@ -533,6 +1179,43 @@ describe("beginner bot", () => {
     const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
     const responder = hand("spades:A", "spades:K", "spades:2", "hearts:A", "hearts:2", "diamonds:K", "diamonds:Q", "diamonds:2", "diamonds:3", "clubs:K", "clubs:2", "clubs:3", "clubs:4");
     expect(await bot.chooseBid(responder, [{ seat: "north", bid: "1spades" }], "south")).toBe("2diamonds");
+  });
+
+  it.each(["SAYC", "2/1"] as const)("uses Jacoby 2NT with 13+ HCP and four-card support in %s", async (biddingStyle) => {
+    const bot = createBot({ skill: "beginner", biddingStyle });
+    const responder = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:2", "spades:A", "spades:2", "spades:3", "spades:4", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4");
+    expect(await bot.chooseBid(responder, [{ seat: "north", bid: "1hearts" }], "south")).toBe("2notrump");
+  });
+
+  it("shows a singleton spade after a Jacoby 2NT major raise", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
+    const opener = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:2", "hearts:3", "spades:2", "diamonds:A", "diamonds:J", "diamonds:2", "diamonds:3", "clubs:K", "clubs:2", "clubs:3");
+    const auction = [
+      { seat: "north", bid: "1hearts" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2notrump" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe("3spades");
+  });
+
+  it("bids game after a Jacoby 2NT raise when opener has no shortness to show", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
+    const opener = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:2", "hearts:3", "spades:K", "spades:Q", "spades:2", "diamonds:Q", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3");
+    const auction = [
+      { seat: "north", bid: "1hearts" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2notrump" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe("4hearts");
+  });
+
+  it("places game in opener's major after a Jacoby shortness rebid", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
+    const responder = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:2", "spades:A", "spades:2", "spades:3", "spades:4", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "1hearts" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2notrump" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "3spades" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("4hearts");
   });
 
   it("continues a 2/1 game force in notrump without major support", async () => {
@@ -568,6 +1251,43 @@ describe("beginner bot", () => {
     expect(await bot.chooseBid(responder, auction, "south")).toBe("3hearts");
   });
 
+  it("raises responder's four-card side major to game after a 2/1 rebid", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
+    const opener = hand("spades:A", "spades:K", "spades:Q", "spades:J", "spades:2", "hearts:A", "hearts:K", "hearts:2", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "1spades" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2diamonds" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "2spades" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "3hearts" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe("4hearts");
+  });
+
+  it("places 3NT after a side-major rebid in a 2/1 force without three-card support", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
+    const opener = hand("spades:A", "spades:K", "spades:Q", "spades:J", "spades:9", "spades:2", "hearts:K", "hearts:2", "diamonds:A", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3");
+    const auction = [
+      { seat: "north", bid: "1spades" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2diamonds" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "2spades" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "3hearts" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe("3notrump");
+  });
+
+  it("stops at four of a major after opener raises responder's six-card suit to game", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
+    const responder = hand("hearts:A", "hearts:Q", "hearts:J", "hearts:T", "hearts:9", "hearts:8", "spades:2", "spades:3", "diamonds:A", "diamonds:K", "diamonds:2", "clubs:Q", "clubs:2");
+    const auction = [
+      { seat: "north", bid: "1spades" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2hearts" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "2spades" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "3hearts" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "4hearts" as const }, { seat: "east", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("pass");
+  });
+
   it("reaches game in opener's major after a balanced 2NT rebid with three-card support", async () => {
     const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
     const responder = hand("spades:A", "spades:K", "spades:2", "hearts:A", "hearts:2", "diamonds:K", "diamonds:Q", "diamonds:2", "diamonds:3", "clubs:K", "clubs:2", "clubs:3", "clubs:4");
@@ -590,59 +1310,343 @@ describe("beginner bot", () => {
     expect(await bot.chooseBid(responder, auction, "south")).toBe("3notrump");
   });
 
+  it("places 3NT after a balanced 2NT rebid without a major fit even with a six-card 2/1 minor", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
+    const responder = hand("spades:K", "spades:2", "hearts:A", "hearts:2", "hearts:3", "diamonds:K", "diamonds:Q", "diamonds:J", "diamonds:9", "diamonds:8", "diamonds:7", "clubs:Q", "clubs:2");
+    const auction = [
+      { seat: "north", bid: "1spades" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2diamonds" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "2notrump" as const }, { seat: "east", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("3notrump");
+  });
+
   it("uses a forcing 1NT response with 6-12 HCP in 2/1 when no other response fits", async () => {
     const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
     const responder = hand("spades:2", "spades:3", "hearts:A", "hearts:J", "hearts:2", "diamonds:K", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:Q", "clubs:J", "clubs:2", "clubs:3");
     expect(await bot.chooseBid(responder, [{ seat: "north", bid: "1spades" }], "south")).toBe("1notrump");
   });
 
-  it("responds naturally with 1NT after an opponent's double in 2/1", async () => {
-    const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
-    const balanced = hand("spades:K", "spades:2", "spades:3", "spades:4", "hearts:A", "hearts:2", "hearts:3", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4");
+  it.each(["2/1", "SAYC"] as const)("responds naturally with 1NT after an opponent's double in %s", async (biddingStyle) => {
+    const bot = createBot({ skill: "beginner", biddingStyle });
+    const balanced = hand("spades:K", "spades:2", "hearts:A", "hearts:2", "hearts:3", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4", "clubs:5", "clubs:6");
     const auction = [{ seat: "north", bid: "1spades" as const }, { seat: "east", bid: "double" as const }] as const;
     expect(await bot.chooseBid(balanced, auction, "south")).toBe("1notrump");
   });
 
   it("redoubles an opponent's double of partner's one-level opening with 10+ HCP", async () => {
     const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
-    const strong = hand("spades:A", "spades:K", "spades:Q", "spades:2", "hearts:A", "hearts:K", "hearts:2", "diamonds:A", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4");
+    const strong = hand("spades:A", "spades:K", "spades:2", "hearts:A", "hearts:K", "hearts:2", "diamonds:A", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
     const auction = [{ seat: "north", bid: "1spades" as const }, { seat: "east", bid: "double" as const }] as const;
     expect(await bot.chooseBid(strong, auction, "south")).toBe("redouble");
   });
 
-  it("responds naturally with a stopper after a one-level overcall in 2/1", async () => {
-    const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
-    const balanced = hand("spades:K", "spades:2", "hearts:A", "hearts:2", "hearts:3", "diamonds:2", "diamonds:3", "diamonds:4", "diamonds:5", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
+  it.each(["2/1", "SAYC"] as const)("uses 2NT for a four-card major limit raise after a takeout double in %s", async (biddingStyle) => {
+    const bot = createBot({ skill: "beginner", biddingStyle });
+    const responder = hand("spades:A", "spades:K", "spades:2", "spades:3", "hearts:Q", "hearts:2", "hearts:3", "diamonds:A", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [{ seat: "north", bid: "1spades" as const }, { seat: "east", bid: "double" as const }] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("2notrump");
+  });
+
+  it.each(["2/1", "SAYC"] as const)("uses 2NT for a five-card minor limit raise after a takeout double in %s", async (biddingStyle) => {
+    const bot = createBot({ skill: "beginner", biddingStyle });
+    const responder = hand("diamonds:A", "diamonds:K", "diamonds:2", "diamonds:3", "diamonds:4", "spades:K", "spades:2", "hearts:2", "hearts:3", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
+    const auction = [{ seat: "north", bid: "1diamonds" as const }, { seat: "east", bid: "double" as const }] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("2notrump");
+  });
+
+  it.each(["2/1", "SAYC"] as const)("shows a minimum or maximum after a major 2NT limit raise in %s", async (biddingStyle) => {
+    const bot = createBot({ skill: "beginner", biddingStyle });
+    const minimum = hand("spades:A", "spades:K", "spades:2", "spades:3", "spades:4", "hearts:A", "hearts:2", "hearts:3", "diamonds:Q", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3");
+    const maximum = hand("spades:A", "spades:K", "spades:Q", "spades:2", "spades:3", "hearts:A", "hearts:2", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [{ seat: "north", bid: "1spades" as const }, { seat: "east", bid: "double" as const }, { seat: "south", bid: "2notrump" as const }] as const;
+    expect(await bot.chooseBid(minimum, auction, "north")).toBe("3spades");
+    expect(await bot.chooseBid(maximum, auction, "north")).toBe("4spades");
+  });
+
+  it.each(["2/1", "SAYC"] as const)("accepts the major game after opener shows a maximum over a 2NT limit raise in %s", async (biddingStyle) => {
+    const bot = createBot({ skill: "beginner", biddingStyle });
+    const responder = hand("spades:A", "spades:K", "spades:2", "spades:3", "hearts:Q", "hearts:2", "hearts:3", "diamonds:A", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "1spades" as const }, { seat: "east", bid: "double" as const },
+      { seat: "south", bid: "2notrump" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "3spades" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("4spades");
+  });
+
+  it.each(["2/1", "SAYC"] as const)("responds naturally with a stopper after a one-level overcall in %s", async (biddingStyle) => {
+    const bot = createBot({ skill: "beginner", biddingStyle });
+    const balanced = hand("spades:K", "spades:2", "hearts:A", "hearts:2", "hearts:3", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4", "clubs:5", "clubs:6");
     const auction = [{ seat: "north", bid: "1spades" as const }, { seat: "east", bid: "1hearts" as const }] as const;
     expect(await bot.chooseBid(balanced, auction, "south")).toBe("1notrump");
   });
 
-  it("makes a simple major raise after a one-level overcall with three-card support", async () => {
-    const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
+  it.each(["2/1", "SAYC"] as const)("makes a simple major raise after a one-level overcall in %s", async (biddingStyle) => {
+    const bot = createBot({ skill: "beginner", biddingStyle });
     const responder = hand("spades:A", "spades:2", "spades:3", "hearts:K", "hearts:2", "hearts:3", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
     const auction = [{ seat: "north", bid: "1spades" as const }, { seat: "east", bid: "1hearts" as const }] as const;
     expect(await bot.chooseBid(responder, auction, "south")).toBe("2spades");
   });
 
-  it("does not respond 1NT without a stopper in the overcalled suit", async () => {
-    const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
-    const balanced = hand("spades:K", "spades:2", "hearts:2", "hearts:3", "hearts:4", "diamonds:A", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:Q", "clubs:2", "clubs:3", "clubs:4");
+  it.each(["2/1", "SAYC"] as const)("raises a major to the three level with 6-9 HCP after a two-level overcall in %s", async (biddingStyle) => {
+    const bot = createBot({ skill: "beginner", biddingStyle });
+    const responder = hand("spades:A", "spades:2", "spades:3", "hearts:K", "hearts:2", "hearts:3", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
+    const auction = [{ seat: "north", bid: "1spades" as const }, { seat: "east", bid: "2clubs" as const }] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("3spades");
+  });
+
+  it.each(["2/1", "SAYC"] as const)("cue-bids one- and two-level overcalls to show a strong major raise in %s", async (biddingStyle) => {
+    const responder = hand("spades:A", "spades:K", "spades:2", "hearts:Q", "hearts:2", "hearts:3", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
+    const bot = createBot({ skill: "beginner", biddingStyle });
+    const oneLevelAuction = [{ seat: "north", bid: "1spades" as const }, { seat: "east", bid: "1hearts" as const }] as const;
+    const twoLevelAuction = [{ seat: "north", bid: "1spades" as const }, { seat: "east", bid: "2clubs" as const }] as const;
+    expect(await bot.chooseBid(responder, oneLevelAuction, "south")).toBe("2hearts");
+    expect(await bot.chooseBid(responder, twoLevelAuction, "south")).toBe("3clubs");
+  });
+
+  it.each(["2/1", "SAYC"] as const)("responds naturally at the two level with 10+ HCP and five cards after a one-level overcall in %s", async (biddingStyle) => {
+    const bot = createBot({ skill: "beginner", biddingStyle });
+    const responder = hand("clubs:A", "clubs:K", "clubs:2", "clubs:3", "clubs:4", "diamonds:K", "diamonds:2", "diamonds:3", "hearts:2", "hearts:3", "hearts:4", "spades:2", "spades:3");
+    const auction = [{ seat: "north", bid: "1spades" as const }, { seat: "east", bid: "1hearts" as const }] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("2clubs");
+  });
+
+  it.each(["2/1", "SAYC"] as const)("does not make a direct two-level new-suit response with only four cards in %s", async (biddingStyle) => {
+    const bot = createBot({ skill: "beginner", biddingStyle });
+    const responder = hand("clubs:A", "clubs:K", "clubs:2", "clubs:3", "diamonds:K", "diamonds:2", "diamonds:3", "hearts:2", "hearts:3", "hearts:4", "hearts:5", "spades:2", "spades:3");
+    const auction = [{ seat: "north", bid: "1spades" as const }, { seat: "east", bid: "1hearts" as const }] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("pass");
+  });
+
+  it.each(["2/1", "SAYC"] as const)("raises partner's major with three-card support after a double in %s", async (biddingStyle) => {
+    const bot = createBot({ skill: "beginner", biddingStyle });
+    const responder = hand("spades:A", "spades:2", "spades:3", "hearts:K", "hearts:2", "hearts:3", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
+    const auction = [{ seat: "north", bid: "1spades" as const }, { seat: "east", bid: "double" as const }] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("2spades");
+  });
+
+  it.each(["2/1", "SAYC"] as const)("does not respond 1NT without a stopper in the overcalled suit in %s", async (biddingStyle) => {
+    const bot = createBot({ skill: "beginner", biddingStyle });
+    const balanced = hand("spades:K", "spades:2", "hearts:2", "hearts:3", "hearts:4", "diamonds:A", "diamonds:2", "diamonds:3", "clubs:Q", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
     const auction = [{ seat: "north", bid: "1spades" as const }, { seat: "east", bid: "1hearts" as const }] as const;
     expect(await bot.chooseBid(balanced, auction, "south")).toBe("pass");
   });
 
-  it("responds naturally with 2NT after a two-level overcall with balanced 10-12 HCP and a stopper", async () => {
-    const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
-    const balanced = hand("spades:K", "spades:2", "spades:3", "spades:4", "hearts:A", "hearts:2", "hearts:3", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:Q", "clubs:2", "clubs:3");
+  it.each(["2/1", "SAYC"] as const)("responds naturally with 2NT after a two-level overcall in %s", async (biddingStyle) => {
+    const bot = createBot({ skill: "beginner", biddingStyle });
+    const balanced = hand("spades:K", "spades:2", "hearts:A", "hearts:2", "hearts:3", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:Q", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
     const auction = [{ seat: "north", bid: "1spades" as const }, { seat: "east", bid: "2clubs" as const }] as const;
     expect(await bot.chooseBid(balanced, auction, "south")).toBe("2notrump");
   });
 
-  it("does not respond 2NT without a stopper after a two-level overcall", async () => {
-    const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
-    const balanced = hand("spades:K", "spades:2", "spades:3", "spades:4", "hearts:A", "hearts:2", "hearts:3", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4");
+  it.each(["2/1", "SAYC"] as const)("does not respond 2NT without a stopper after a two-level overcall in %s", async (biddingStyle) => {
+    const bot = createBot({ skill: "beginner", biddingStyle });
+    const balanced = hand("spades:K", "spades:2", "hearts:A", "hearts:2", "hearts:3", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4", "clubs:5", "clubs:6");
     const auction = [{ seat: "north", bid: "1spades" as const }, { seat: "east", bid: "2clubs" as const }] as const;
     expect(await bot.chooseBid(balanced, auction, "south")).toBe("pass");
+  });
+
+  it.each(["2/1", "SAYC"] as const)("responds naturally with 1NT after a double of a minor opening in %s", async (biddingStyle) => {
+    const bot = createBot({ skill: "beginner", biddingStyle });
+    const balanced = hand("spades:K", "spades:2", "spades:3", "hearts:A", "hearts:2", "hearts:3", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
+    const auction = [{ seat: "north", bid: "1clubs" as const }, { seat: "east", bid: "double" as const }] as const;
+    expect(await bot.chooseBid(balanced, auction, "south")).toBe("1notrump");
+  });
+
+  it.each(["2/1", "SAYC"] as const)("bids a four-card major naturally after a takeout double when available in %s", async (biddingStyle) => {
+    const bot = createBot({ skill: "beginner", biddingStyle });
+    const responder = hand("hearts:K", "hearts:Q", "hearts:J", "hearts:2", "spades:2", "spades:3", "spades:4", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [{ seat: "north", bid: "1clubs" as const }, { seat: "east", bid: "double" as const }] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("1hearts");
+  });
+
+  it.each(["2/1", "SAYC"] as const)("responds naturally with 1NT and a stopper after a minor opening overcall in %s", async (biddingStyle) => {
+    const bot = createBot({ skill: "beginner", biddingStyle });
+    const balanced = hand("spades:K", "spades:2", "hearts:A", "hearts:2", "hearts:3", "diamonds:2", "diamonds:3", "diamonds:4", "diamonds:5", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
+    const auction = [{ seat: "north", bid: "1clubs" as const }, { seat: "east", bid: "1hearts" as const }] as const;
+    expect(await bot.chooseBid(balanced, auction, "south")).toBe("1notrump");
+  });
+
+  it.each(["2/1", "SAYC"] as const)("raises a minor opening after a one-level overcall with five-card support and 6-9 HCP in %s", async (biddingStyle) => {
+    const bot = createBot({ skill: "beginner", biddingStyle });
+    const responder = hand("clubs:A", "clubs:2", "clubs:3", "clubs:4", "clubs:5", "spades:K", "spades:2", "hearts:2", "hearts:3", "diamonds:2", "diamonds:3", "diamonds:4", "diamonds:5");
+    const auction = [{ seat: "north", bid: "1clubs" as const }, { seat: "east", bid: "1hearts" as const }] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("2clubs");
+  });
+
+  it.each(["2/1", "SAYC"] as const)("cue-bids the overcall to show a strong minor raise in %s", async (biddingStyle) => {
+    const bot = createBot({ skill: "beginner", biddingStyle });
+    const responder = hand("diamonds:K", "diamonds:2", "diamonds:3", "spades:K", "spades:Q", "spades:2", "hearts:A", "hearts:2", "hearts:3", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
+    const auction = [{ seat: "north", bid: "1diamonds" as const }, { seat: "east", bid: "1hearts" as const }] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("2hearts");
+  });
+
+  it.each(["2/1", "SAYC"] as const)("makes a negative double with four cards in the other major after a minor opening in %s", async (biddingStyle) => {
+    const bot = createBot({ skill: "beginner", biddingStyle });
+    const responder = hand("spades:K", "spades:2", "spades:3", "spades:4", "hearts:2", "hearts:3", "hearts:4", "diamonds:Q", "diamonds:J", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3");
+    const auction = [{ seat: "north", bid: "1clubs" as const }, { seat: "east", bid: "1hearts" as const }] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("double");
+  });
+
+  it.each(["2/1", "SAYC"] as const)("makes a negative double with four hearts after a minor opening and 1-spade overcall in %s", async (biddingStyle) => {
+    const bot = createBot({ skill: "beginner", biddingStyle });
+    const responder = hand("hearts:K", "hearts:Q", "hearts:2", "hearts:3", "spades:2", "spades:3", "spades:4", "diamonds:J", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [{ seat: "north", bid: "1clubs" as const }, { seat: "east", bid: "1spades" as const }] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("double");
+  });
+
+  it.each(["2/1", "SAYC"] as const)("responds in an available five-card major at the one level after a major overcall in %s", async (biddingStyle) => {
+    const bot = createBot({ skill: "beginner", biddingStyle });
+    const responder = hand("spades:K", "spades:2", "spades:3", "spades:4", "spades:5", "hearts:2", "hearts:3", "diamonds:Q", "diamonds:J", "diamonds:2", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [{ seat: "north", bid: "1clubs" as const }, { seat: "east", bid: "1hearts" as const }] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("1spades");
+  });
+
+  it.each(["2/1", "SAYC"] as const)("does not raise a minor opening after an overcall with only four-card support in %s", async (biddingStyle) => {
+    const bot = createBot({ skill: "beginner", biddingStyle });
+    const responder = hand("clubs:A", "clubs:2", "clubs:3", "clubs:4", "spades:K", "spades:2", "spades:3", "hearts:2", "hearts:3", "diamonds:2", "diamonds:3", "diamonds:4", "diamonds:5");
+    const auction = [{ seat: "north", bid: "1clubs" as const }, { seat: "east", bid: "1hearts" as const }] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("pass");
+  });
+
+  it.each(["2/1", "SAYC"] as const)("responds naturally with 2NT after a two-level overcall of a minor opening in %s", async (biddingStyle) => {
+    const bot = createBot({ skill: "beginner", biddingStyle });
+    const balanced = hand("spades:K", "spades:2", "spades:3", "spades:4", "hearts:A", "hearts:2", "hearts:3", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:Q", "clubs:2", "clubs:3");
+    const auction = [{ seat: "north", bid: "1clubs" as const }, { seat: "east", bid: "2hearts" as const }] as const;
+    expect(await bot.chooseBid(balanced, auction, "south")).toBe("2notrump");
+  });
+
+  it.each(["2/1", "SAYC"] as const)("uses a negative double with four diamonds after 1 spade and a 2 heart overcall in %s", async (biddingStyle) => {
+    const bot = createBot({ skill: "intermediate", biddingStyle });
+    const responder = hand("spades:2", "spades:3", "hearts:2", "hearts:3", "diamonds:A", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:Q", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
+    const auction = [
+      { seat: "north", bid: "1spades" as const }, { seat: "east", bid: "2hearts" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("double");
+  });
+
+  it.each(["2/1", "SAYC"] as const)("uses a negative double with four diamonds after a one-level major overcall in %s", async (biddingStyle) => {
+    const bot = createBot({ skill: "intermediate", biddingStyle });
+    const responder = hand("diamonds:K", "diamonds:Q", "diamonds:J", "diamonds:2", "hearts:2", "hearts:3", "spades:2", "spades:3", "spades:4", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
+    const auctions = [
+      [{ seat: "north", bid: "1hearts" as const }, { seat: "east", bid: "1spades" as const }],
+      [{ seat: "north", bid: "1spades" as const }, { seat: "east", bid: "1hearts" as const }]
+    ] as const;
+    for (const auction of auctions) {
+      expect(await bot.chooseBid(responder, auction, "south")).toBe("double");
+    }
+  });
+
+  it.each(["2/1", "SAYC"] as const)("uses negative doubles after a major opening and two-level minor overcall in %s", async (biddingStyle) => {
+    const bot = createBot({ skill: "intermediate", biddingStyle });
+    const cases = [
+      ["1hearts", "2diamonds", ["spades:K", "spades:Q", "spades:J", "spades:2", "hearts:2", "hearts:3", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4", "clubs:5"]],
+      ["1spades", "2clubs", ["hearts:K", "hearts:Q", "hearts:J", "hearts:2", "spades:2", "spades:3", "clubs:2", "clubs:3", "clubs:4", "clubs:5", "diamonds:2", "diamonds:3", "diamonds:4"]]
+    ] as const;
+    for (const [openingBid, overcall, cards] of cases) {
+      const responder = hand(...cards);
+      const auction = [
+        { seat: "north", bid: openingBid }, { seat: "east", bid: overcall }
+      ] as const;
+      expect(await bot.chooseBid(responder, auction, "south")).toBe("double");
+    }
+  });
+
+  it.each(["2/1", "SAYC"] as const)("responds naturally at the one level with four spades after 1 heart and 1 diamond in %s", async (biddingStyle) => {
+    const bot = createBot({ skill: "beginner", biddingStyle });
+    const responder = hand("spades:A", "spades:J", "spades:2", "spades:3", "hearts:2", "hearts:3", "diamonds:2", "diamonds:3", "clubs:K", "clubs:J", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "1hearts" as const }, { seat: "east", bid: "1diamonds" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("1spades");
+  });
+
+  it.each(["2/1", "SAYC"] as const)("bids an available four-card suit at the one level after a major opening and one-level overcall in %s", async (biddingStyle) => {
+    const bot = createBot({ skill: "beginner", biddingStyle });
+    const cases = [
+      ["1hearts", "1clubs", "1spades", ["spades:K", "spades:Q", "spades:J", "spades:2", "hearts:2", "hearts:3", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4", "clubs:5"]],
+      ["1spades", "1diamonds", "1hearts", ["hearts:K", "hearts:Q", "hearts:J", "hearts:2", "spades:2", "spades:3", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4", "clubs:5", "clubs:6"]],
+      ["1spades", "1clubs", "1hearts", ["hearts:K", "hearts:Q", "hearts:J", "hearts:2", "spades:2", "spades:3", "clubs:2", "clubs:3", "clubs:4", "clubs:5", "diamonds:2", "diamonds:3", "diamonds:4"]]
+    ] as const;
+    for (const [openingBid, overcall, expectedBid, cards] of cases) {
+      const responder = hand(...cards);
+      const auction = [
+        { seat: "north", bid: openingBid }, { seat: "east", bid: overcall }
+      ] as const;
+      expect(await bot.chooseBid(responder, auction, "south")).toBe(expectedBid);
+    }
+  });
+
+  it.each(["2/1", "SAYC"] as const)("raises responder's one-spade bid after 1 heart and 1 diamond interference in %s", async (biddingStyle) => {
+    const bot = createBot({ skill: "beginner", biddingStyle });
+    const opener = hand("hearts:A", "hearts:K", "hearts:2", "hearts:3", "hearts:4", "spades:K", "spades:Q", "spades:2", "spades:3", "diamonds:Q", "diamonds:2", "clubs:2", "clubs:3");
+    const auction = [
+      { seat: "north", bid: "1hearts" as const }, { seat: "east", bid: "1diamonds" as const },
+      { seat: "south", bid: "1spades" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe("2spades");
+  });
+
+  it.each(["2/1", "SAYC"] as const)("shows invitational and game-strength spade raises after the same interference in %s", async (biddingStyle) => {
+    const bot = createBot({ skill: "beginner", biddingStyle });
+    const auction = [
+      { seat: "north", bid: "1hearts" as const }, { seat: "east", bid: "1diamonds" as const },
+      { seat: "south", bid: "1spades" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    const invitational = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:2", "hearts:3", "spades:K", "spades:Q", "spades:2", "spades:3", "diamonds:K", "diamonds:2", "clubs:2", "clubs:3");
+    const gameValues = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:2", "hearts:3", "spades:A", "spades:K", "spades:2", "spades:3", "diamonds:K", "diamonds:2", "clubs:2", "clubs:3");
+    expect(await bot.chooseBid(invitational, auction, "north")).toBe("3spades");
+    expect(await bot.chooseBid(gameValues, auction, "north")).toBe("4spades");
+  });
+
+  it.each(["2/1", "SAYC"] as const)("rebids 1NT with a balanced minimum and a diamond stopper after 1H-(1D)-1S in %s", async (biddingStyle) => {
+    const bot = createBot({ skill: "beginner", biddingStyle });
+    const opener = hand("hearts:A", "hearts:K", "hearts:2", "hearts:3", "hearts:4", "spades:J", "spades:2", "spades:3", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:Q", "clubs:2");
+    const auction = [
+      { seat: "north", bid: "1hearts" as const }, { seat: "east", bid: "1diamonds" as const },
+      { seat: "south", bid: "1spades" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe("1notrump");
+  });
+
+  it.each(["2/1", "SAYC"] as const)("rebids 2NT with a balanced 18-19 HCP hand after 1H-(1D)-1S in %s", async (biddingStyle) => {
+    const bot = createBot({ skill: "beginner", biddingStyle });
+    const opener = hand("hearts:A", "hearts:K", "hearts:2", "hearts:3", "hearts:4", "spades:K", "spades:Q", "spades:2", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:K", "clubs:2");
+    const auction = [
+      { seat: "north", bid: "1hearts" as const }, { seat: "east", bid: "1diamonds" as const },
+      { seat: "south", bid: "1spades" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe("2notrump");
+  });
+
+  it.each(["2/1", "SAYC"] as const)("rebids a six-card heart suit after 1H-(1D)-1S in %s", async (biddingStyle) => {
+    const bot = createBot({ skill: "beginner", biddingStyle });
+    const auction = [
+      { seat: "north", bid: "1hearts" as const }, { seat: "east", bid: "1diamonds" as const },
+      { seat: "south", bid: "1spades" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    const minimum = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:2", "hearts:3", "hearts:4", "spades:K", "spades:Q", "spades:2", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3");
+    const invitational = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:J", "hearts:2", "hearts:3", "spades:K", "spades:Q", "spades:2", "diamonds:K", "diamonds:2", "clubs:2", "clubs:3");
+    expect(await bot.chooseBid(minimum, auction, "north")).toBe("2hearts");
+    expect(await bot.chooseBid(invitational, auction, "north")).toBe("3hearts");
+  });
+
+  it.each(["2/1", "SAYC"] as const)("places responder's invitation or game after 1H-(1D)-1S-1NT in %s", async (biddingStyle) => {
+    const bot = createBot({ skill: "beginner", biddingStyle });
+    const auction = [
+      { seat: "north", bid: "1hearts" as const }, { seat: "east", bid: "1diamonds" as const },
+      { seat: "south", bid: "1spades" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "1notrump" as const }, { seat: "east", bid: "pass" as const }
+    ] as const;
+    const balancedInvitation = hand("spades:K", "spades:Q", "spades:2", "spades:3", "hearts:K", "hearts:2", "hearts:3", "diamonds:Q", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4");
+    const balancedGame = hand("spades:K", "spades:Q", "spades:2", "spades:3", "hearts:K", "hearts:2", "hearts:3", "diamonds:A", "diamonds:2", "diamonds:3", "clubs:J", "clubs:2", "clubs:3");
+    const spadeInvitation = hand("spades:K", "spades:Q", "spades:J", "spades:4", "spades:2", "hearts:K", "hearts:2", "diamonds:Q", "diamonds:2", "diamonds:3", "clubs:J", "clubs:2", "clubs:3");
+    const spadeGame = hand("spades:A", "spades:K", "spades:Q", "spades:2", "spades:3", "hearts:K", "hearts:2", "diamonds:A", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4");
+    expect(await bot.chooseBid(balancedInvitation, auction, "south")).toBe("2notrump");
+    expect(await bot.chooseBid(balancedGame, auction, "south")).toBe("3notrump");
+    expect(await bot.chooseBid(spadeInvitation, auction, "south")).toBe("3spades");
+    expect(await bot.chooseBid(spadeGame, auction, "south")).toBe("4spades");
   });
 
   it("makes an artificial three-card minor rebid instead of passing a minimum after 2/1 forcing 1NT", async () => {
@@ -818,6 +1822,623 @@ describe("beginner bot", () => {
     expect(await bot.chooseBid(unbalanced, auction, "south")).toBe("pass");
   });
 
+  it("makes a natural one-level overcall with 8+ HCP and a five-card suit", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const overcaller = hand("hearts:A", "hearts:Q", "hearts:2", "hearts:3", "hearts:4", "spades:K", "spades:2", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4");
+    expect(await bot.chooseBid(overcaller, [{ seat: "north", bid: "1diamonds" }], "east")).toBe("1hearts");
+  });
+
+  it.each([15, 18])("makes a natural 1NT overcall with a balanced %i-HCP hand and opener-suit stopper", async (expectedHcp) => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const overcaller = expectedHcp === 15
+      ? hand("spades:K", "spades:J", "spades:2", "spades:3", "hearts:A", "hearts:K", "hearts:2", "diamonds:A", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4")
+      : hand("spades:K", "spades:J", "spades:2", "spades:3", "hearts:A", "hearts:K", "hearts:2", "diamonds:A", "diamonds:2", "diamonds:3", "clubs:Q", "clubs:J", "clubs:2");
+    expect(await bot.chooseBid(overcaller, [{ seat: "north", bid: "1spades" }], "east")).toBe("1notrump");
+  });
+
+  it.each([
+    ["minimum", hand("hearts:A", "hearts:J", "hearts:2", "hearts:3", "hearts:4", "hearts:5", "spades:2", "spades:3", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4")],
+    ["maximum", hand("spades:Q", "spades:2", "spades:3", "hearts:A", "hearts:K", "hearts:Q", "hearts:2", "hearts:3", "hearts:4", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3")]
+  ] as const)("opens a six-card major weak two with %s SAYC strength", async (_range, weakTwo) => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    expect(await bot.chooseBid(weakTwo, [], "north")).toBe("2hearts");
+  });
+
+  it("does not open a weak two without a six-card suit of reasonable quality", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "2/1" });
+    const weakSuit = hand("hearts:K", "hearts:2", "hearts:3", "hearts:4", "hearts:5", "spades:Q", "spades:2", "diamonds:Q", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4");
+    expect(await bot.chooseBid(weakSuit, [], "north")).toBe("pass");
+  });
+
+  it("opens a six-card diamond weak two in 2/1 style", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "2/1" });
+    const weakTwo = hand("diamonds:A", "diamonds:J", "diamonds:2", "diamonds:3", "diamonds:4", "diamonds:5", "spades:2", "spades:3", "hearts:2", "hearts:3", "clubs:2", "clubs:3", "clubs:4");
+    expect(await bot.chooseBid(weakTwo, [], "north")).toBe("2diamonds");
+  });
+
+  it("asks for a feature with 2NT over partner's weak two when holding game interest", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const responder = hand("hearts:K", "hearts:Q", "hearts:J", "spades:A", "spades:2", "diamonds:K", "diamonds:Q", "diamonds:2", "clubs:2", "clubs:3", "clubs:4", "clubs:5", "clubs:6");
+    expect(await bot.chooseBid(responder, [{ seat: "north", bid: "2hearts" }], "south")).toBe("2notrump");
+  });
+
+  it("raises a weak two to the three level with three-card support and no game interest", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "2/1" });
+    const responder = hand("hearts:Q", "hearts:2", "hearts:3", "spades:J", "spades:2", "spades:3", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
+    expect(await bot.chooseBid(responder, [{ seat: "north", bid: "2hearts" }], "south")).toBe("3hearts");
+  });
+
+  it("raises a weak two preemptively to game with five-card support", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const responder = hand("hearts:Q", "hearts:2", "hearts:3", "hearts:4", "hearts:5", "spades:2", "spades:3", "spades:4", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4");
+    expect(await bot.chooseBid(responder, [{ seat: "north", bid: "2hearts" }], "south")).toBe("4hearts");
+  });
+
+  it("plays 3NT directly over a weak two with a balanced hand and no major fit", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const responder = hand("spades:A", "spades:K", "spades:Q", "spades:2", "hearts:J", "hearts:2", "diamonds:A", "diamonds:2", "diamonds:3", "clubs:Q", "clubs:2", "clubs:3", "clubs:4");
+    expect(await bot.chooseBid(responder, [{ seat: "north", bid: "2hearts" }], "south")).toBe("3notrump");
+  });
+
+  it("rebids a minimum weak two suit after the 2NT feature inquiry", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "2/1" });
+    const opener = hand("hearts:A", "hearts:J", "hearts:2", "hearts:3", "hearts:4", "hearts:5", "spades:K", "spades:2", "spades:3", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3");
+    const auction = [{ seat: "north", bid: "2hearts" as const }, { seat: "south", bid: "2notrump" as const }] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe("3hearts");
+  });
+
+  it("shows a side-suit feature with a maximum weak two after the 2NT inquiry", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const opener = hand("spades:K", "spades:2", "spades:3", "hearts:K", "hearts:Q", "hearts:J", "hearts:2", "hearts:3", "hearts:4", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3");
+    const auction = [{ seat: "north", bid: "2hearts" as const }, { seat: "south", bid: "2notrump" as const }] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe("3spades");
+  });
+
+  it("bids 3NT with a maximum weak two and no outside feature", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "2/1" });
+    const opener = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:2", "hearts:3", "hearts:4", "spades:Q", "spades:2", "spades:3", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3");
+    const auction = [{ seat: "north", bid: "2hearts" as const }, { seat: "south", bid: "2notrump" as const }] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe("3notrump");
+  });
+
+  it("places game in a supported weak-two major after opener shows a minimum", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const responder = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:2", "spades:A", "spades:K", "spades:2", "diamonds:Q", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "2hearts" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2notrump" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "3hearts" as const }, { seat: "east", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("4hearts");
+  });
+
+  it("does not overcall 1NT below 15 HCP", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "2/1" });
+    const overcaller = hand("spades:K", "spades:J", "spades:2", "spades:3", "hearts:A", "hearts:2", "hearts:3", "diamonds:A", "diamonds:2", "diamonds:3", "clubs:Q", "clubs:2", "clubs:3");
+    expect(await bot.chooseBid(overcaller, [{ seat: "north", bid: "1spades" }], "east")).toBe("pass");
+  });
+
+  it("requires an opener-suit stopper for a natural 1NT overcall", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const noStopper = hand("spades:2", "spades:3", "spades:4", "spades:5", "hearts:A", "hearts:K", "hearts:2", "diamonds:A", "diamonds:K", "diamonds:2", "clubs:J", "clubs:2", "clubs:3");
+    expect(await bot.chooseBid(noStopper, [{ seat: "north", bid: "1spades" }], "east")).toBe("pass");
+  });
+
+  it("uses Stayman with 8+ HCP and a four-card major after partner's 1NT overcall", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const responder = hand("hearts:K", "hearts:Q", "hearts:J", "hearts:2", "spades:K", "spades:2", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
+    const auction = [
+      { seat: "north", bid: "1diamonds" as const }, { seat: "east", bid: "1notrump" as const },
+      { seat: "south", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "west")).toBe("2clubs");
+  });
+
+  it("passes Stayman with fewer than 8 HCP after partner's 1NT overcall", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
+    const responder = hand("hearts:K", "hearts:J", "hearts:2", "hearts:3", "spades:2", "spades:3", "spades:4", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "1diamonds" as const }, { seat: "east", bid: "1notrump" as const },
+      { seat: "south", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "west")).toBe("pass");
+  });
+
+  it("bids a natural five-card major below Stayman strength after a 1NT overcall", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const responder = hand("hearts:K", "hearts:Q", "hearts:2", "hearts:3", "hearts:4", "spades:J", "spades:2", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "1clubs" as const }, { seat: "east", bid: "1notrump" as const },
+      { seat: "south", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "west")).toBe("2hearts");
+  });
+
+  it("bids a natural five-card diamond suit after a 1NT overcall", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
+    const responder = hand("diamonds:K", "diamonds:Q", "diamonds:2", "diamonds:3", "diamonds:4", "hearts:J", "hearts:2", "hearts:3", "spades:2", "spades:3", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "1hearts" as const }, { seat: "east", bid: "1notrump" as const },
+      { seat: "south", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "west")).toBe("2diamonds");
+  });
+
+  it("bids three clubs naturally when clubs are responder's only long suit over 1NT", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "2/1" });
+    const responder = hand("clubs:K", "clubs:Q", "clubs:2", "clubs:3", "clubs:4", "clubs:5", "hearts:J", "hearts:2", "spades:2", "spades:3", "diamonds:2", "diamonds:3", "diamonds:4");
+    const auction = [
+      { seat: "north", bid: "1diamonds" as const }, { seat: "east", bid: "1notrump" as const },
+      { seat: "south", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "west")).toBe("3clubs");
+  });
+
+  it("invites in notrump after a 1NT overcall with a balanced 8-9 HCP hand and no four-card major", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const responder = hand("hearts:K", "hearts:Q", "hearts:2", "spades:J", "spades:2", "spades:3", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:Q", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "1diamonds" as const }, { seat: "east", bid: "1notrump" as const },
+      { seat: "south", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "west")).toBe("2notrump");
+  });
+
+  it("shows a natural five-card minor before inviting in notrump after a 1NT overcall", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const responder = hand("diamonds:K", "diamonds:Q", "diamonds:2", "diamonds:3", "diamonds:4", "spades:J", "spades:2", "spades:3", "hearts:2", "hearts:3", "clubs:Q", "clubs:2", "clubs:3");
+    const auction = [
+      { seat: "north", bid: "1clubs" as const }, { seat: "east", bid: "1notrump" as const },
+      { seat: "south", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "west")).toBe("2diamonds");
+  });
+
+  it("bids 3NT after a 1NT overcall with a balanced 10+ HCP hand and no four-card major", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
+    const responder = hand("hearts:K", "hearts:Q", "hearts:2", "spades:K", "spades:2", "spades:3", "diamonds:Q", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
+    const auction = [
+      { seat: "north", bid: "1hearts" as const }, { seat: "east", bid: "1notrump" as const },
+      { seat: "south", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "west")).toBe("3notrump");
+  });
+
+  it("shows a four-card major after responder uses Stayman over a 1NT overcall", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const overcaller = hand("hearts:A", "hearts:K", "hearts:2", "hearts:3", "spades:A", "spades:K", "spades:2", "spades:3", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3");
+    const auction = [
+      { seat: "north", bid: "1diamonds" as const }, { seat: "east", bid: "1notrump" as const },
+      { seat: "south", bid: "pass" as const }, { seat: "west", bid: "2clubs" as const },
+      { seat: "north", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(overcaller, auction, "east")).toBe("2hearts");
+  });
+
+  it("denies a four-card major after Stayman over a 1NT overcall", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
+    const overcaller = hand("clubs:A", "clubs:2", "clubs:3", "clubs:4", "diamonds:K", "diamonds:Q", "diamonds:2", "diamonds:3", "hearts:K", "hearts:J", "hearts:2", "spades:Q", "spades:2");
+    const auction = [
+      { seat: "north", bid: "1clubs" as const }, { seat: "east", bid: "1notrump" as const },
+      { seat: "south", bid: "pass" as const }, { seat: "west", bid: "2clubs" as const },
+      { seat: "north", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(overcaller, auction, "east")).toBe("2diamonds");
+  });
+
+  it("invites game in a shown major after Stayman with 8-9 HCP", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
+    const responder = hand("hearts:K", "hearts:Q", "hearts:J", "hearts:2", "spades:K", "spades:2", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
+    const auction = [
+      { seat: "north", bid: "1diamonds" as const }, { seat: "east", bid: "1notrump" as const },
+      { seat: "south", bid: "pass" as const }, { seat: "west", bid: "2clubs" as const },
+      { seat: "north", bid: "pass" as const }, { seat: "east", bid: "2hearts" as const },
+      { seat: "south", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "west")).toBe("3hearts");
+  });
+
+  it("places game in a shown major after Stayman with 10+ HCP and support", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
+    const responder = hand("hearts:A", "hearts:K", "hearts:2", "hearts:3", "spades:Q", "spades:2", "diamonds:J", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
+    const auction = [
+      { seat: "north", bid: "1diamonds" as const }, { seat: "east", bid: "1notrump" as const },
+      { seat: "south", bid: "pass" as const }, { seat: "west", bid: "2clubs" as const },
+      { seat: "north", bid: "pass" as const }, { seat: "east", bid: "2hearts" as const },
+      { seat: "south", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "west")).toBe("4hearts");
+  });
+
+  it("invites in notrump when Stayman finds no fit and responder has 8-9 HCP", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
+    const responder = hand("hearts:K", "hearts:Q", "hearts:J", "hearts:2", "spades:K", "spades:2", "diamonds:2", "diamonds:3", "diamonds:4", "diamonds:5", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "1diamonds" as const }, { seat: "east", bid: "1notrump" as const },
+      { seat: "south", bid: "pass" as const }, { seat: "west", bid: "2clubs" as const },
+      { seat: "north", bid: "pass" as const }, { seat: "east", bid: "2spades" as const },
+      { seat: "south", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "west")).toBe("2notrump");
+  });
+
+  it("places game in notrump after Stayman denial with a balanced 10+ HCP hand", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
+    const responder = hand("hearts:K", "hearts:Q", "hearts:J", "hearts:2", "spades:Q", "spades:2", "diamonds:J", "diamonds:2", "diamonds:3", "clubs:J", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "1diamonds" as const }, { seat: "east", bid: "1notrump" as const },
+      { seat: "south", bid: "pass" as const }, { seat: "west", bid: "2clubs" as const },
+      { seat: "north", bid: "pass" as const }, { seat: "east", bid: "2diamonds" as const },
+      { seat: "south", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "west")).toBe("3notrump");
+  });
+
+  it("shows four spades after Stayman when partner shows hearts and responder has no heart fit", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const responder = hand("spades:K", "spades:Q", "spades:2", "spades:3", "hearts:J", "hearts:2", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:Q", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "1diamonds" as const }, { seat: "east", bid: "1notrump" as const },
+      { seat: "south", bid: "pass" as const }, { seat: "west", bid: "2clubs" as const },
+      { seat: "north", bid: "pass" as const }, { seat: "east", bid: "2hearts" as const },
+      { seat: "south", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "west")).toBe("2spades");
+  });
+
+  it("raises responder's alternate major with a fit after Stayman", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "2/1" });
+    const overcaller = hand("spades:A", "spades:K", "spades:2", "spades:3", "hearts:A", "hearts:K", "hearts:2", "hearts:3", "diamonds:A", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3");
+    const auction = [
+      { seat: "north", bid: "1diamonds" as const }, { seat: "east", bid: "1notrump" as const },
+      { seat: "south", bid: "pass" as const }, { seat: "west", bid: "2clubs" as const },
+      { seat: "north", bid: "pass" as const }, { seat: "east", bid: "2hearts" as const },
+      { seat: "south", bid: "pass" as const }, { seat: "west", bid: "2spades" as const },
+      { seat: "north", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(overcaller, auction, "east")).toBe("3spades");
+  });
+
+  it("places game after the 1NT overcaller raises responder's alternate major", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const responder = hand("spades:A", "spades:K", "spades:Q", "spades:2", "hearts:J", "hearts:2", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:Q", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "1diamonds" as const }, { seat: "east", bid: "1notrump" as const },
+      { seat: "south", bid: "pass" as const }, { seat: "west", bid: "2clubs" as const },
+      { seat: "north", bid: "pass" as const }, { seat: "east", bid: "2hearts" as const },
+      { seat: "south", bid: "pass" as const }, { seat: "west", bid: "2spades" as const },
+      { seat: "north", bid: "pass" as const }, { seat: "east", bid: "3spades" as const },
+      { seat: "south", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "west")).toBe("4spades");
+  });
+
+  it("shows no spade fit after responder's alternate-major Stayman continuation", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const overcaller = hand("spades:A", "spades:K", "hearts:K", "hearts:Q", "hearts:J", "hearts:2", "diamonds:A", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
+    const auction = [
+      { seat: "north", bid: "1diamonds" as const }, { seat: "east", bid: "1notrump" as const },
+      { seat: "south", bid: "pass" as const }, { seat: "west", bid: "2clubs" as const },
+      { seat: "north", bid: "pass" as const }, { seat: "east", bid: "2hearts" as const },
+      { seat: "south", bid: "pass" as const }, { seat: "west", bid: "2spades" as const },
+      { seat: "north", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(overcaller, auction, "east")).toBe("2notrump");
+  });
+
+  it("places 3NT with a balanced game hand after the overcaller denies a spade fit", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "2/1" });
+    const responder = hand("spades:A", "spades:K", "spades:2", "spades:3", "hearts:J", "hearts:2", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:Q", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "1diamonds" as const }, { seat: "east", bid: "1notrump" as const },
+      { seat: "south", bid: "pass" as const }, { seat: "west", bid: "2clubs" as const },
+      { seat: "north", bid: "pass" as const }, { seat: "east", bid: "2hearts" as const },
+      { seat: "south", bid: "pass" as const }, { seat: "west", bid: "2spades" as const },
+      { seat: "north", bid: "pass" as const }, { seat: "east", bid: "2notrump" as const },
+      { seat: "south", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "west")).toBe("3notrump");
+  });
+
+  it("requires 10+ HCP for a two-level overcall and shows a five-card suit", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "2/1" });
+    const overcaller = hand("clubs:A", "clubs:K", "clubs:Q", "clubs:2", "clubs:3", "diamonds:K", "diamonds:2", "diamonds:3", "hearts:2", "hearts:3", "hearts:4", "spades:2", "spades:3");
+    expect(await bot.chooseBid(overcaller, [{ seat: "north", bid: "1spades" }], "east")).toBe("2clubs");
+  });
+
+  it("passes a direct overcall with fewer than five cards in every suit", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const balanced = hand("spades:A", "spades:2", "spades:3", "spades:4", "hearts:K", "hearts:2", "hearts:3", "diamonds:Q", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4");
+    expect(await bot.chooseBid(balanced, [{ seat: "north", bid: "1clubs" }], "east")).toBe("pass");
+  });
+
+  it("makes a takeout double with opening strength, shortness, and support for the unbid suits", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const doubler = hand("hearts:K", "hearts:Q", "hearts:2", "hearts:3", "diamonds:K", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:Q", "clubs:2", "clubs:3", "clubs:4", "spades:2");
+    expect(await bot.chooseBid(doubler, [{ seat: "north", bid: "1spades" }], "east")).toBe("double");
+  });
+
+  it("makes a takeout double of a minor opening with four-card support for both majors", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "2/1" });
+    const doubler = hand("hearts:A", "hearts:K", "hearts:2", "hearts:3", "spades:A", "spades:2", "spades:3", "spades:4", "clubs:K", "clubs:2", "clubs:3", "diamonds:2", "diamonds:3");
+    expect(await bot.chooseBid(doubler, [{ seat: "north", bid: "1diamonds" }], "east")).toBe("double");
+  });
+
+  it("does not make a takeout double when an unbid major has fewer than four cards", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const unsuitable = hand("hearts:K", "hearts:2", "hearts:3", "diamonds:A", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:A", "clubs:K", "clubs:2", "clubs:3", "spades:2", "spades:3");
+    expect(await bot.chooseBid(unsuitable, [{ seat: "north", bid: "1spades" }], "east")).toBe("pass");
+  });
+
+  it("advances partner's takeout double in a four-card major with a minimum hand", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const advancer = hand("hearts:K", "hearts:Q", "hearts:2", "hearts:3", "spades:J", "spades:2", "spades:3", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [{ seat: "north", bid: "1clubs" as const }, { seat: "east", bid: "double" as const }, { seat: "south", bid: "pass" as const }] as const;
+    expect(await bot.chooseBid(advancer, auction, "west")).toBe("1hearts");
+  });
+
+  it("jumps in a four-card major with 9-11 HCP after partner's takeout double", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "2/1" });
+    const advancer = hand("hearts:A", "hearts:Q", "hearts:J", "hearts:2", "spades:K", "spades:2", "spades:3", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [{ seat: "north", bid: "1clubs" as const }, { seat: "east", bid: "double" as const }, { seat: "south", bid: "pass" as const }] as const;
+    expect(await bot.chooseBid(advancer, auction, "west")).toBe("2hearts");
+  });
+
+  it("responds notrump to partner's takeout double with a balanced hand and stopper", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const advancer = hand("clubs:K", "clubs:2", "clubs:3", "hearts:2", "hearts:3", "hearts:4", "diamonds:A", "diamonds:2", "diamonds:3", "diamonds:4", "spades:K", "spades:2", "spades:3");
+    const auction = [{ seat: "north", bid: "1clubs" as const }, { seat: "east", bid: "double" as const }, { seat: "south", bid: "pass" as const }] as const;
+    expect(await bot.chooseBid(advancer, auction, "west")).toBe("1notrump");
+  });
+
+  it("cue-bids opener's suit with 12+ HCP after partner's takeout double", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "2/1" });
+    const advancer = hand("spades:A", "spades:K", "spades:2", "spades:3", "hearts:K", "hearts:2", "hearts:3", "diamonds:2", "diamonds:3", "clubs:Q", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [{ seat: "north", bid: "1diamonds" as const }, { seat: "east", bid: "double" as const }, { seat: "south", bid: "pass" as const }] as const;
+    expect(await bot.chooseBid(advancer, auction, "west")).toBe("2diamonds");
+  });
+
+  it("competes naturally in a major after opener's partner raises over a takeout double", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const advancer = hand("spades:K", "spades:Q", "spades:2", "spades:3", "hearts:2", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4", "clubs:5", "clubs:6");
+    const auction = [
+      { seat: "north", bid: "1clubs" as const }, { seat: "east", bid: "double" as const },
+      { seat: "south", bid: "2clubs" as const }
+    ] as const;
+    expect(await bot.chooseBid(advancer, auction, "west")).toBe("2spades");
+  });
+
+  it("passes a very weak hand when opener's partner raises over a takeout double", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "2/1" });
+    const advancer = hand("spades:K", "spades:2", "spades:3", "hearts:2", "hearts:3", "hearts:4", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
+    const auction = [
+      { seat: "north", bid: "1clubs" as const }, { seat: "east", bid: "double" as const },
+      { seat: "south", bid: "2clubs" as const }
+    ] as const;
+    expect(await bot.chooseBid(advancer, auction, "west")).toBe("pass");
+  });
+
+  it("cue-bids the raised opening suit with a strong hand after partner's takeout double", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const advancer = hand("spades:A", "spades:K", "spades:Q", "spades:2", "hearts:A", "hearts:K", "hearts:2", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
+    const auction = [
+      { seat: "north", bid: "1clubs" as const }, { seat: "east", bid: "double" as const },
+      { seat: "south", bid: "2clubs" as const }
+    ] as const;
+    expect(await bot.chooseBid(advancer, auction, "west")).toBe("3clubs");
+  });
+
+  it("raises a minimum suit advance after a takeout double with medium support points", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const doubler = hand("hearts:K", "hearts:Q", "hearts:J", "hearts:2", "spades:A", "spades:K", "diamonds:2", "clubs:2", "clubs:3", "clubs:4", "clubs:5", "clubs:6", "clubs:7");
+    const auction = [
+      { seat: "north", bid: "1clubs" as const }, { seat: "east", bid: "double" as const },
+      { seat: "south", bid: "pass" as const }, { seat: "west", bid: "1hearts" as const },
+      { seat: "north", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(doubler, auction, "east")).toBe("2hearts");
+  });
+
+  it("jump-raises a minimum suit advance after a maximum takeout double", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "2/1" });
+    const doubler = hand("hearts:K", "hearts:Q", "hearts:J", "hearts:2", "spades:A", "spades:K", "diamonds:2", "clubs:K", "clubs:2", "clubs:3", "clubs:4", "clubs:5", "clubs:6");
+    const auction = [
+      { seat: "north", bid: "1clubs" as const }, { seat: "east", bid: "double" as const },
+      { seat: "south", bid: "pass" as const }, { seat: "west", bid: "1hearts" as const },
+      { seat: "north", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(doubler, auction, "east")).toBe("3hearts");
+  });
+
+  it("passes with a minimum takeout double after advancer's jump response", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const doubler = hand("hearts:K", "hearts:Q", "hearts:J", "hearts:2", "spades:A", "spades:2", "diamonds:2", "clubs:2", "clubs:3", "clubs:4", "clubs:5", "clubs:6", "clubs:7");
+    const auction = [
+      { seat: "north", bid: "1clubs" as const }, { seat: "east", bid: "double" as const },
+      { seat: "south", bid: "pass" as const }, { seat: "west", bid: "2hearts" as const },
+      { seat: "north", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(doubler, auction, "east")).toBe("pass");
+  });
+
+  it("accepts game after advancer's jump response when the takeout doubler has extras", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "2/1" });
+    const doubler = hand("hearts:A", "hearts:Q", "hearts:J", "hearts:2", "spades:A", "spades:2", "diamonds:2", "clubs:2", "clubs:3", "clubs:4", "clubs:5", "clubs:6", "clubs:7");
+    const auction = [
+      { seat: "north", bid: "1clubs" as const }, { seat: "east", bid: "double" as const },
+      { seat: "south", bid: "pass" as const }, { seat: "west", bid: "2hearts" as const },
+      { seat: "north", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(doubler, auction, "east")).toBe("4hearts");
+  });
+
+  it("names a preferred major after advancer's strong cuebid of the opening suit", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const doubler = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:2", "hearts:3", "spades:K", "spades:Q", "spades:2", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "1clubs" as const }, { seat: "east", bid: "double" as const },
+      { seat: "south", bid: "pass" as const }, { seat: "west", bid: "2clubs" as const },
+      { seat: "north", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(doubler, auction, "east")).toBe("2hearts");
+  });
+
+  it("names the longest minor after a strong cuebid when it has no four-card major", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "2/1" });
+    const doubler = hand("hearts:A", "hearts:K", "hearts:2", "spades:Q", "spades:J", "spades:2", "diamonds:K", "diamonds:Q", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "1hearts" as const }, { seat: "east", bid: "double" as const },
+      { seat: "south", bid: "pass" as const }, { seat: "west", bid: "2hearts" as const },
+      { seat: "north", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(doubler, auction, "east")).toBe("3diamonds");
+  });
+
+  it("raises partner's one-level overcall with three-card support and 6-10 HCP", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const advancer = hand("hearts:K", "hearts:Q", "hearts:2", "spades:J", "spades:2", "spades:3", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
+    const auction = [{ seat: "north", bid: "1clubs" as const }, { seat: "east", bid: "1hearts" as const }] as const;
+    expect(await bot.chooseBid(advancer, auction, "west")).toBe("2hearts");
+  });
+
+  it("raises partner's two-level overcall to the three level with three-card support", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "2/1" });
+    const advancer = hand("clubs:K", "clubs:Q", "clubs:J", "spades:A", "spades:2", "spades:3", "spades:4", "hearts:2", "hearts:3", "hearts:4", "diamonds:2", "diamonds:3", "diamonds:4");
+    const auction = [{ seat: "north", bid: "1spades" as const }, { seat: "east", bid: "2clubs" as const }] as const;
+    expect(await bot.chooseBid(advancer, auction, "west")).toBe("3clubs");
+  });
+
+  it("does not raise partner's overcall without three-card support", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const advancer = hand("hearts:K", "hearts:Q", "spades:A", "spades:K", "spades:2", "spades:3", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
+    const auction = [{ seat: "north", bid: "1clubs" as const }, { seat: "east", bid: "1hearts" as const }] as const;
+    expect(await bot.chooseBid(advancer, auction, "west")).toBe("pass");
+  });
+
+  it("cue-bids opener's suit with a strong three-card raise after a one-level overcall", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const advancer = hand("hearts:A", "hearts:K", "hearts:2", "spades:Q", "spades:2", "spades:3", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
+    const auction = [{ seat: "north", bid: "1clubs" as const }, { seat: "east", bid: "1hearts" as const }, { seat: "south", bid: "pass" as const }] as const;
+    expect(await bot.chooseBid(advancer, auction, "west")).toBe("2clubs");
+  });
+
+  it("cue-bids at the two level when opener's suit ranks above partner's two-level overcall", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "2/1" });
+    const advancer = hand("clubs:A", "clubs:K", "clubs:2", "hearts:K", "hearts:2", "hearts:3", "diamonds:A", "diamonds:2", "diamonds:3", "spades:2", "spades:3", "spades:4", "spades:5");
+    const auction = [{ seat: "north", bid: "1spades" as const }, { seat: "east", bid: "2clubs" as const }, { seat: "south", bid: "pass" as const }] as const;
+    expect(await bot.chooseBid(advancer, auction, "west")).toBe("2spades");
+  });
+
+  it("counts a singleton as support points for a simple competitive raise", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const advancer = hand("hearts:K", "hearts:Q", "hearts:2", "spades:2", "diamonds:2", "diamonds:3", "diamonds:4", "diamonds:5", "diamonds:6", "clubs:J", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [{ seat: "north", bid: "1clubs" as const }, { seat: "east", bid: "1hearts" as const }, { seat: "south", bid: "pass" as const }] as const;
+    expect(await bot.chooseBid(advancer, auction, "west")).toBe("2hearts");
+  });
+
+  it("cue-bids when distribution lifts a three-card raise to 11 support points", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "2/1" });
+    const advancer = hand("hearts:K", "hearts:Q", "hearts:2", "spades:2", "diamonds:K", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4", "clubs:5", "clubs:6");
+    const auction = [{ seat: "north", bid: "1clubs" as const }, { seat: "east", bid: "1hearts" as const }, { seat: "south", bid: "pass" as const }] as const;
+    expect(await bot.chooseBid(advancer, auction, "west")).toBe("2clubs");
+  });
+
+  it("repeats a minimum overcall after partner's strong-raise cuebid", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const overcaller = hand("hearts:K", "hearts:Q", "hearts:J", "hearts:2", "hearts:3", "diamonds:K", "diamonds:2", "spades:2", "spades:3", "spades:4", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "1clubs" as const }, { seat: "east", bid: "1hearts" as const },
+      { seat: "south", bid: "pass" as const }, { seat: "west", bid: "2clubs" as const }
+    ] as const;
+    expect(await bot.chooseBid(overcaller, auction, "east")).toBe("2hearts");
+  });
+
+  it("accepts game after partner's strong-raise cuebid with 15+ HCP", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "2/1" });
+    const overcaller = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:2", "hearts:3", "diamonds:K", "diamonds:2", "spades:K", "spades:2", "spades:3", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "1clubs" as const }, { seat: "east", bid: "1hearts" as const },
+      { seat: "south", bid: "pass" as const }, { seat: "west", bid: "2clubs" as const }
+    ] as const;
+    expect(await bot.chooseBid(overcaller, auction, "east")).toBe("4hearts");
+  });
+
+  it("shows a three-card side suit with extra strength after partner's strong-raise cuebid", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const overcaller = hand("hearts:K", "hearts:Q", "hearts:J", "hearts:2", "hearts:3", "spades:Q", "spades:2", "spades:3", "diamonds:K", "diamonds:2", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "1clubs" as const }, { seat: "east", bid: "1hearts" as const },
+      { seat: "south", bid: "pass" as const }, { seat: "west", bid: "2clubs" as const }
+    ] as const;
+    expect(await bot.chooseBid(overcaller, auction, "east")).toBe("2spades");
+  });
+
+  it("invites game after a simple raise of a one-level overcall with 11-14 HCP", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const overcaller = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:2", "hearts:3", "diamonds:K", "diamonds:2", "spades:2", "spades:3", "spades:4", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "1clubs" as const }, { seat: "east", bid: "1hearts" as const },
+      { seat: "south", bid: "pass" as const }, { seat: "west", bid: "2hearts" as const }
+    ] as const;
+    expect(await bot.chooseBid(overcaller, auction, "east")).toBe("3hearts");
+  });
+
+  it("accepts game after a simple raise of an overcall with 15+ HCP", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "2/1" });
+    const overcaller = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:2", "hearts:3", "diamonds:A", "diamonds:K", "spades:2", "spades:3", "spades:4", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "1clubs" as const }, { seat: "east", bid: "1hearts" as const },
+      { seat: "south", bid: "pass" as const }, { seat: "west", bid: "2hearts" as const }
+    ] as const;
+    expect(await bot.chooseBid(overcaller, auction, "east")).toBe("4hearts");
+  });
+
+  it("rebids a minimum two-level overcall above a partner's cuebid", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const overcaller = hand("clubs:K", "clubs:Q", "clubs:2", "clubs:3", "clubs:4", "spades:K", "spades:2", "spades:3", "hearts:2", "hearts:3", "hearts:4", "diamonds:2", "diamonds:3");
+    const auction = [
+      { seat: "north", bid: "1hearts" as const }, { seat: "east", bid: "2clubs" as const },
+      { seat: "south", bid: "pass" as const }, { seat: "west", bid: "2hearts" as const }
+    ] as const;
+    expect(await bot.chooseBid(overcaller, auction, "east")).toBe("3clubs");
+  });
+
+  it("advances partner's one-level overcall with natural 1NT on a balanced hand and stopper", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const advancer = hand("clubs:A", "clubs:2", "clubs:3", "clubs:4", "hearts:2", "hearts:3", "diamonds:J", "diamonds:2", "diamonds:3", "spades:K", "spades:2", "spades:3", "spades:4");
+    const auction = [
+      { seat: "north", bid: "1clubs" as const }, { seat: "east", bid: "1hearts" as const }, { seat: "south", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(advancer, auction, "west")).toBe("1notrump");
+  });
+
+  it("does not advance partner's one-level overcall in notrump without an opening-suit stopper", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "2/1" });
+    const advancer = hand("clubs:2", "clubs:3", "clubs:4", "clubs:5", "hearts:2", "hearts:3", "diamonds:A", "diamonds:2", "diamonds:3", "spades:K", "spades:Q", "spades:2", "spades:4");
+    const auction = [
+      { seat: "north", bid: "1clubs" as const }, { seat: "east", bid: "1hearts" as const }, { seat: "south", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(advancer, auction, "west")).toBe("pass");
+  });
+
+  it("shows a five-card new suit at the one level with 6+ HCP after partner's overcall", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const advancer = hand("spades:A", "spades:K", "spades:2", "spades:3", "spades:4", "hearts:2", "hearts:3", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "1clubs" as const }, { seat: "east", bid: "1hearts" as const }, { seat: "south", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(advancer, auction, "west")).toBe("1spades");
+  });
+
+  it("shows a five-card new suit at the two level with 11+ HCP after partner's overcall", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "2/1" });
+    const advancer = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:2", "hearts:3", "diamonds:K", "diamonds:2", "diamonds:3", "spades:2", "spades:3", "spades:4", "clubs:2", "clubs:3");
+    const auction = [
+      { seat: "north", bid: "1spades" as const }, { seat: "east", bid: "2clubs" as const }, { seat: "south", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(advancer, auction, "west")).toBe("2hearts");
+  });
+
   it("selects only a card in hand and follows suit when able", async () => {
     const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
     const cards = hand("spades:2", "hearts:A", "hearts:3");
@@ -831,6 +2452,44 @@ describe("beginner bot", () => {
     const cards = hand("spades:2", "clubs:A");
     const choice = await bot.chooseCard({ seat: "east", hand: cards, currentTrick: [{ seat: "north", card: { suit: "hearts", rank: "2" } }], ledSuit: "hearts" });
     expect(cards).toContainEqual(choice);
+  });
+
+  it("plays the top touching honor third hand when partner is winning", async () => {
+    const intermediate = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const advanced = createBot({ skill: "advanced", biddingStyle: "SAYC" });
+    const cards = hand("hearts:K", "hearts:Q", "hearts:2");
+    const context = {
+      seat: "south" as const,
+      hand: cards,
+      currentTrick: [
+        { seat: "north" as const, card: { suit: "hearts" as const, rank: "4" as const } },
+        { seat: "east" as const, card: { suit: "hearts" as const, rank: "3" as const } }
+      ],
+      ledSuit: "hearts" as const
+    };
+    expect(await intermediate.chooseCard(context)).toEqual({ suit: "hearts", rank: "2" });
+    expect(await advanced.chooseCard(context)).toEqual({ suit: "hearts", rank: "K" });
+  });
+
+  it("uses Intermediate play when third hand has no touching honor sequence", async () => {
+    const advanced = createBot({ skill: "advanced", biddingStyle: "2/1" });
+    const cards = hand("hearts:A", "hearts:Q", "hearts:2");
+    const choice = await advanced.chooseCard({
+      seat: "south",
+      hand: cards,
+      currentTrick: [
+        { seat: "north", card: { suit: "hearts", rank: "4" } },
+        { seat: "east", card: { suit: "hearts", rank: "3" } }
+      ],
+      ledSuit: "hearts"
+    });
+    expect(choice).toEqual({ suit: "hearts", rank: "2" });
+  });
+
+  it("delegates Advanced bidding to Intermediate with the selected convention", async () => {
+    const advanced = createBot({ skill: "advanced", biddingStyle: "2/1" });
+    const weakTwo = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:J", "hearts:9", "hearts:8", "spades:2", "spades:3", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4");
+    expect(await advanced.chooseBid(weakTwo, [], "north")).toBe("2hearts");
   });
 
   it("lets an intermediate bot win with its cheapest card when partner is not winning", async () => {
@@ -876,7 +2535,433 @@ describe("beginner bot", () => {
     const choice = await bot.chooseCard({ seat: "south", hand: cards, currentTrick: [] });
     expect(choice).toEqual({ suit: "hearts", rank: "4" });
   });
+
+  it("uses Gerber with a balanced 19-HCP hand over a 1NT opening", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "SAYC" });
+    const responder = hand("spades:A", "spades:K", "spades:Q", "hearts:A", "hearts:K", "hearts:2", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
+    expect(await bot.chooseBid(responder, [{ seat: "north", bid: "1notrump" }], "south")).toBe("4clubs");
+  });
+
+  it("uses a splinter raise with four-card support and shortness over a major opening", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "SAYC" });
+    const responder = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:2", "clubs:K", "spades:A", "spades:K", "spades:2", "spades:3", "diamonds:2", "diamonds:3", "diamonds:4", "diamonds:5");
+    expect(await bot.chooseBid(responder, [{ seat: "north", bid: "1hearts" }], "south")).toBe("3clubs");
+  });
+
+  it("shows a short major splinter after a 1-spade opening", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "2/1" });
+    const responder = hand("spades:A", "spades:K", "spades:Q", "spades:2", "hearts:K", "clubs:A", "clubs:K", "clubs:2", "clubs:3", "diamonds:K", "diamonds:Q", "diamonds:2", "diamonds:3");
+    expect(await bot.chooseBid(responder, [{ seat: "north", bid: "1spades" }], "south")).toBe("4hearts");
+  });
+
+  it("asks for aces with 4NT after Jacoby shortness with a strong responder", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "2/1" });
+    const responder = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:J", "spades:A", "spades:K", "spades:2", "diamonds:Q", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "1hearts" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2notrump" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "3clubs" as const }, { seat: "east", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("4notrump");
+  });
+
+  it("asks for aces after opener accepts an expert splinter with game", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "SAYC" });
+    const responder = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:J", "spades:A", "spades:2", "spades:3", "diamonds:K", "diamonds:Q", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2");
+    const auction = [
+      { seat: "north", bid: "1hearts" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "3clubs" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "4hearts" as const }, { seat: "east", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("4notrump");
+  });
+
+  it("answers ace-asking after accepting a splinter", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "2/1" });
+    const opener = hand("hearts:A", "hearts:K", "hearts:2", "hearts:3", "spades:Q", "spades:2", "spades:3", "diamonds:A", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "1hearts" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "3clubs" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "4hearts" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "4notrump" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe("5hearts");
+  });
+
+  it("places a splinter slam when three aces are known", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "SAYC" });
+    const responder = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:J", "spades:A", "spades:K", "spades:2", "diamonds:Q", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "1hearts" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "3clubs" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "4hearts" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "4notrump" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "5diamonds" as const }, { seat: "east", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("6hearts");
+  });
+
+  it("uses Blackwood after a 2/1 game force establishes a major fit", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "2/1" });
+    const responder = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:J", "hearts:T", "spades:A", "spades:2", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:K", "clubs:2", "clubs:3");
+    const auction = [
+      { seat: "north", bid: "1spades" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2hearts" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "3hearts" as const }, { seat: "east", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("4notrump");
+  });
+
+  it("asks the Grand Slam Force after Jacoby game with two top trump honors", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "SAYC" });
+    const responder = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:J", "spades:A", "spades:2", "spades:3", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:J", "clubs:2", "clubs:3");
+    const auction = [
+      { seat: "north", bid: "1hearts" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2notrump" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "4hearts" as const }, { seat: "east", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("5notrump");
+  });
+
+  it.each([
+    ["hearts:A", "hearts:K", "7hearts"],
+    ["hearts:Q", "hearts:J", "6hearts"]
+  ] as const)("answers the Grand Slam Force with %s and %s", async (firstHonor, secondHonor, expected) => {
+    const bot = createBot({ skill: "expert", biddingStyle: "2/1" });
+    const opener = hand(firstHonor, secondHonor, "hearts:2", "hearts:3", "spades:Q", "spades:2", "spades:3", "diamonds:Q", "diamonds:2", "diamonds:3", "clubs:Q", "clubs:4", "clubs:5");
+    const auction = [
+      { seat: "north", bid: "1hearts" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2notrump" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "4hearts" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "5notrump" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe(expected);
+  });
+
+  it("answers Blackwood after a 2/1 game-forcing major raise", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "2/1" });
+    const opener = hand("spades:A", "spades:K", "spades:2", "spades:3", "hearts:A", "hearts:K", "hearts:2", "diamonds:Q", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "1spades" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2hearts" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "3hearts" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "4notrump" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe("5hearts");
+  });
+
+  it("places a 2/1 slam when the Blackwood response confirms three aces", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "2/1" });
+    const responder = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:J", "hearts:T", "spades:A", "spades:2", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:K", "clubs:2", "clubs:3");
+    const auction = [
+      { seat: "north", bid: "1spades" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2hearts" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "3hearts" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "4notrump" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "5diamonds" as const }, { seat: "east", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("6hearts");
+  });
+
+  it("answers ace-asking after Jacoby shortness", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "SAYC" });
+    const opener = hand("hearts:A", "hearts:K", "hearts:2", "hearts:3", "spades:Q", "spades:2", "spades:3", "diamonds:A", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "1hearts" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2notrump" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "3clubs" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "4notrump" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe("5hearts");
+  });
+
+  it("uses the ambiguous 5 clubs response for zero aces", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "SAYC" });
+    const opener = hand("hearts:K", "hearts:Q", "hearts:J", "hearts:2", "spades:K", "spades:Q", "spades:J", "spades:2", "diamonds:K", "diamonds:Q", "diamonds:J", "diamonds:2", "clubs:K");
+    const auction = [
+      { seat: "north", bid: "1hearts" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2notrump" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "3clubs" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "4notrump" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe("5clubs");
+  });
+
+  it("places a Jacoby slam only when three aces are known", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "SAYC" });
+    const responder = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:J", "spades:A", "spades:K", "spades:2", "diamonds:Q", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "1hearts" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2notrump" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "3clubs" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "4notrump" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "5hearts" as const }, { seat: "east", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("6hearts");
+  });
+
+  it("does not splinter a three-card major fit", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "SAYC" });
+    const responder = hand("hearts:A", "hearts:K", "hearts:2", "clubs:K", "spades:A", "spades:K", "spades:2", "spades:3", "diamonds:2", "diamonds:3", "diamonds:4", "diamonds:5", "diamonds:6");
+    expect(await bot.chooseBid(responder, [{ seat: "north", bid: "1hearts" }], "south")).not.toBe("3clubs");
+  });
+
+  it.each([
+    ["1hearts", "3clubs", "4hearts", ["hearts:A", "hearts:K", "hearts:2", "hearts:3", "spades:Q", "spades:2", "spades:3", "diamonds:A", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4"]],
+    ["1spades", "4hearts", "4spades", ["spades:A", "spades:K", "spades:Q", "spades:J", "hearts:A", "hearts:K", "hearts:2", "hearts:3", "diamonds:Q", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3"]]
+  ] as const)("completes game after partner's splinter raise", async (openingBid, splinterBid, expected, cards) => {
+    const bot = createBot({ skill: "expert", biddingStyle: "SAYC" });
+    const auction = [
+      { seat: "north", bid: openingBid }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: splinterBid }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(hand(...cards), auction, "north")).toBe(expected);
+  });
+
+  it("uses Gerber instead of a quantitative invitation with 16 HCP over a 2NT opening", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "2/1" });
+    const responder = hand("spades:A", "spades:K", "spades:Q", "hearts:A", "hearts:K", "hearts:2", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
+    expect(await bot.chooseBid(responder, [{ seat: "north", bid: "2notrump" }], "south")).toBe("4clubs");
+  });
+
+  it.each([
+    [["spades:K", "spades:J", "spades:2", "hearts:K", "hearts:J", "hearts:2", "diamonds:K", "diamonds:J", "diamonds:2", "clubs:K", "clubs:2", "clubs:3", "clubs:4"], "4diamonds"],
+    [["spades:A", "spades:J", "spades:2", "hearts:K", "hearts:J", "hearts:2", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:K", "clubs:2", "clubs:3", "clubs:4"], "4hearts"],
+    [["spades:A", "spades:2", "spades:3", "hearts:A", "hearts:2", "hearts:3", "diamonds:K", "diamonds:J", "diamonds:2", "clubs:K", "clubs:2", "clubs:3", "clubs:4"], "4spades"],
+    [["spades:A", "spades:2", "spades:3", "hearts:A", "hearts:2", "hearts:3", "diamonds:A", "diamonds:2", "diamonds:3", "clubs:K", "clubs:2", "clubs:3", "clubs:4"], "4notrump"],
+    [["spades:A", "spades:2", "spades:3", "hearts:A", "hearts:2", "hearts:3", "diamonds:A", "diamonds:2", "diamonds:3", "clubs:A", "clubs:2", "clubs:3", "clubs:4"], "4diamonds"]
+  ] as const)("answers Gerber with %s for that ace count", async (cards, expected) => {
+    const bot = createBot({ skill: "expert", biddingStyle: "SAYC" });
+    const opener = hand(...cards);
+    const auction = [
+      { seat: "north", bid: "1notrump" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "4clubs" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe(expected);
+  });
+
+  it("places 6NT when its hand and a Gerber reply confirm at least three aces", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "2/1" });
+    const responder = hand("spades:A", "spades:K", "spades:Q", "hearts:A", "hearts:K", "hearts:2", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
+    const auction = [
+      { seat: "north", bid: "1notrump" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "4clubs" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "4hearts" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("6notrump");
+  });
+
+  it("stops in 4NT on an ambiguous 0-or-4 ace reply without three known aces", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "2/1" });
+    const responder = hand("spades:A", "spades:K", "spades:Q", "hearts:A", "hearts:K", "hearts:2", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
+    const auction = [
+      { seat: "north", bid: "1notrump" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "4clubs" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "4diamonds" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("4notrump");
+  });
+
+  it("keeps the quantitative 4NT invitation after a 2NT opening below the Gerber range", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "2/1" });
+    const responder = hand("spades:A", "spades:2", "spades:3", "hearts:K", "hearts:2", "hearts:3", "diamonds:Q", "diamonds:2", "diamonds:3", "clubs:K", "clubs:2", "clubs:3", "clubs:4");
+    expect(await bot.chooseBid(responder, [{ seat: "north", bid: "2notrump" }], "south")).toBe("4notrump");
+  });
 });
+
+  it("rebids a natural five-card diamond suit after SAYC 1 diamond–2 clubs", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
+    const opener = hand("diamonds:A", "diamonds:K", "diamonds:Q", "diamonds:8", "diamonds:4", "spades:A", "spades:3", "hearts:K", "hearts:4", "clubs:Q", "clubs:8", "clubs:5", "clubs:2");
+    const auction = [
+      { seat: "north", bid: "1diamonds" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2clubs" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe("2diamonds");
+  });
+
+  it("raises opener’s natural diamond rebid with four-card support and 10+ HCP", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
+    const responder = hand("clubs:A", "clubs:K", "clubs:Q", "clubs:8", "diamonds:A", "diamonds:K", "diamonds:7", "diamonds:4", "spades:3", "spades:4", "hearts:5", "hearts:6", "hearts:7");
+    const auction = [
+      { seat: "north", bid: "1diamonds" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2clubs" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "2diamonds" as const }, { seat: "east", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("3diamonds");
+  });
+
+  it("shows a natural four-card diamond suit after SAYC 1 heart–2 clubs", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
+    const opener = hand("hearts:A", "hearts:K", "hearts:8", "hearts:7", "hearts:6", "diamonds:A", "diamonds:Q", "diamonds:8", "diamonds:4", "spades:K", "spades:3", "clubs:Q", "clubs:2");
+    const auction = [
+      { seat: "north", bid: "1hearts" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2clubs" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe("2diamonds");
+  });
+
+  it("does not invent a second suit after SAYC 1 heart–2 clubs", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
+    const opener = hand("hearts:A", "hearts:K", "hearts:8", "hearts:7", "hearts:6", "diamonds:Q", "diamonds:8", "diamonds:4", "spades:K", "spades:3", "clubs:Q", "clubs:8", "clubs:2");
+    const auction = [
+      { seat: "north", bid: "1hearts" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2clubs" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).not.toBe("2diamonds");
+  });
+
+  it("finds a spade fit after SAYC 1 heart–2 clubs–2 diamonds", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
+    const responder = hand("spades:K", "spades:Q", "spades:J", "spades:T", "hearts:K", "hearts:2", "diamonds:J", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
+    const opener = hand("hearts:Q", "hearts:J", "hearts:T", "hearts:3", "hearts:4", "diamonds:A", "diamonds:K", "diamonds:Q", "diamonds:4", "spades:A", "spades:9", "spades:8", "spades:7");
+    const beforeResponder = [
+      { seat: "north", bid: "1hearts" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2clubs" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "2diamonds" as const }, { seat: "east", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, beforeResponder, "south")).toBe("2spades");
+
+    const beforeOpener = [
+      ...beforeResponder, { seat: "south", bid: "2spades" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, beforeOpener, "north")).toBe("4spades");
+  });
+
+  it("accepts a spade invitation after SAYC opener raises the alternate major", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
+    const responder = hand("spades:A", "spades:Q", "spades:T", "spades:9", "hearts:K", "hearts:2", "diamonds:J", "diamonds:2", "diamonds:3", "clubs:K", "clubs:2", "clubs:3", "clubs:4");
+    const opener = hand("hearts:Q", "hearts:J", "hearts:T", "hearts:3", "hearts:4", "diamonds:K", "diamonds:Q", "diamonds:4", "diamonds:5", "spades:K", "spades:J", "spades:8", "spades:7");
+    const auction = [
+      { seat: "north", bid: "1hearts" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2clubs" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "2diamonds" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2spades" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe("3spades");
+    expect(await bot.chooseBid(responder, [...auction, { seat: "north", bid: "3spades" as const }, { seat: "east", bid: "pass" as const }], "south")).toBe("4spades");
+  });
+
+  it("continues in hearts when SAYC opener has no spade fit after responder shows spades", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
+    const opener = hand("hearts:A", "hearts:Q", "hearts:J", "hearts:2", "hearts:3", "hearts:4", "diamonds:K", "diamonds:Q", "diamonds:2", "diamonds:3", "spades:2", "clubs:K", "clubs:2");
+    const auction = [
+      { seat: "north", bid: "1hearts" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2clubs" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "2diamonds" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2spades" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe("3hearts");
+  });
+
+  it("raises opener’s natural diamond rebid with four-card support", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
+    const responder = hand("clubs:A", "clubs:K", "clubs:Q", "clubs:8", "diamonds:A", "diamonds:K", "diamonds:7", "diamonds:4", "spades:3", "spades:4", "hearts:5", "hearts:6", "hearts:7");
+    const auction = [
+      { seat: "north", bid: "1hearts" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2clubs" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "2diamonds" as const }, { seat: "east", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("3diamonds");
+  });
+
+  it("places 3NT after a natural second-suit rebid with balanced values and stoppers", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
+    const responder = hand("spades:A", "spades:K", "spades:3", "hearts:K", "hearts:2", "diamonds:Q", "diamonds:2", "diamonds:3", "clubs:A", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
+    const auction = [
+      { seat: "north", bid: "1hearts" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2clubs" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "2diamonds" as const }, { seat: "east", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("3notrump");
+  });
+
+  it("invites in notrump after SAYC 1 heart–2 clubs–2 diamonds with balanced values", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
+    const responder = hand("spades:K", "spades:Q", "spades:2", "hearts:K", "hearts:2", "hearts:3", "diamonds:Q", "diamonds:2", "diamonds:3", "clubs:J", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "1hearts" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2clubs" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "2diamonds" as const }, { seat: "east", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("2notrump");
+  });
+
+  it("shows preference for opener’s hearts after SAYC 1 heart–2 clubs–2 diamonds", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
+    const responder = hand("spades:A", "spades:2", "hearts:K", "hearts:Q", "hearts:8", "hearts:4", "hearts:2", "diamonds:K", "diamonds:2", "clubs:Q", "clubs:8", "clubs:4", "clubs:2");
+    const auction = [
+      { seat: "north", bid: "1hearts" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2clubs" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "2diamonds" as const }, { seat: "east", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("2hearts");
+  });
+
+  it("invites in notrump after a SAYC 1 spade–2 clubs–2 diamonds rebid", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
+    const responder = hand("spades:K", "spades:J", "spades:2", "hearts:K", "hearts:2", "hearts:3", "diamonds:Q", "diamonds:2", "diamonds:3", "clubs:J", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "1spades" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2clubs" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "2diamonds" as const }, { seat: "east", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("2notrump");
+  });
+
+  it("invites in notrump after SAYC opener repeats the major following a two-level response", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
+    const responder = hand("spades:K", "spades:2", "spades:3", "hearts:Q", "hearts:2", "diamonds:Q", "diamonds:J", "diamonds:2", "diamonds:3", "clubs:A", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "1hearts" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2clubs" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "2hearts" as const }, { seat: "east", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("2notrump");
+  });
+
+  it.each([
+    [10, "3hearts", hand("spades:2", "spades:3", "spades:4", "hearts:K", "hearts:Q", "hearts:2", "diamonds:J", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:A", "clubs:2", "clubs:3")],
+    [11, "3hearts", hand("spades:2", "spades:3", "spades:4", "hearts:K", "hearts:Q", "hearts:2", "diamonds:A", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:Q", "clubs:2", "clubs:3")],
+    [12, "3hearts", hand("spades:2", "spades:3", "spades:4", "hearts:K", "hearts:Q", "hearts:2", "diamonds:5", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:A", "clubs:K", "clubs:2")],
+    [13, "4hearts", hand("spades:2", "spades:3", "spades:4", "hearts:K", "hearts:Q", "hearts:2", "diamonds:J", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:A", "clubs:K", "clubs:2")]
+  ] as const)("shows the appropriate SAYC heart raise after 1 heart–2 clubs–2 hearts with %i HCP", async (_hcp, expected, responder) => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
+    const auction = [
+      { seat: "north", bid: "1hearts" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2clubs" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "2hearts" as const }, { seat: "east", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe(expected);
+  });
+
+  it.each([[15, "pass"], [16, "4hearts"]] as const)("accepts the responder’s SAYC 3-heart invitation with 16+ HCP (%i HCP)", async (hcp, expected) => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
+    const opener = hcp === 16
+      ? hand("hearts:A", "hearts:K", "hearts:Q", "hearts:J", "hearts:2", "spades:A", "spades:2", "diamonds:Q", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4")
+      : hand("hearts:A", "hearts:K", "hearts:Q", "hearts:J", "hearts:2", "spades:A", "spades:2", "diamonds:J", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "1hearts" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2clubs" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "2hearts" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "3hearts" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe(expected);
+  });
+
+  it.each([[15, "pass"], [16, "3notrump"]] as const)("accepts the responder’s SAYC 2NT invitation after a major rebid with 16+ HCP (%i HCP)", async (hcp, expected) => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
+    const opener = hcp === 16
+      ? hand("hearts:A", "hearts:K", "hearts:Q", "hearts:J", "hearts:2", "spades:A", "spades:2", "diamonds:Q", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4")
+      : hand("hearts:A", "hearts:K", "hearts:Q", "hearts:J", "hearts:2", "spades:A", "spades:2", "diamonds:J", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "1hearts" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2clubs" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "2hearts" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2notrump" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe(expected);
+  });
+
 
 describe("seeded bot behavior", () => {
   const suits: readonly Suit[] = ["spades", "hearts", "diamonds", "clubs"];
@@ -888,7 +2973,7 @@ describe("seeded bot behavior", () => {
     }
   });
 
-  it.each(["beginner", "intermediate"] as const)("keeps %s bidding and card choices stable, private, and legal", async (skill) => {
+  it.each(["beginner", "intermediate", "advanced", "expert"] as const)("keeps %s bidding and card choices stable, private, and legal", async (skill) => {
     for (const seed of seeds) {
       const board = seededDeal(seed);
       for (const seat of SEATS) {
@@ -917,4 +3002,6 @@ describe("seeded bot behavior", () => {
       }
     }
   });
+
+
 });

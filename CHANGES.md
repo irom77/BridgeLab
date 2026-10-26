@@ -4,6 +4,88 @@ Project changes are recorded here, newest first. Keep entries short and link imp
 
 ## Unreleased
 
+- Card-play hints now show a brief message if a host-provided solver fails; stale hint requests do not affect a replacement hand.
+- After a SAYC 1M–2m sequence and opener's natural side-suit rebid, responder can show an unbid four-card major with 10+ HCP; opener raises with three-card support or continues in the original major without a fit. See [implementation plan](docs/superpowers/plans/2026-10-26-sayc-alternate-major-after-two-level-response.md).
+- Corrected opener's rebid after sequences such as 1♦–1♠: a four-card heart suit now requires 16+ HCP and is shown at 2♥ as a reverse. See [implementation plan](docs/superpowers/plans/2026-10-26-opener-reverse-after-one-level-response.md).
+- After an uncontested 1M–1NT response, opener now rebids 3NT with a balanced 20–21 HCP hand in both SAYC and 2/1. See [implementation plan](docs/superpowers/plans/2026-10-26-major-nt-rebid-20-21.md).
+- Added the Expert Grand Slam Force after Jacoby 2NT: responder asks with 18+ HCP and two top trump honors; opener bids 7M with two of A/K/Q in trumps or 6M otherwise. See [implementation plan](docs/superpowers/plans/2026-10-26-expert-grand-slam-force.md).
+- After an uncontested SAYC 1M–2m response, opener can show a natural four-card side suit or repeat the five-card major; responder can raise a four-card fit or place 3NT with balanced game values and stoppers.
+- After a SAYC 1M–2m response and opener’s natural second-suit rebid, responder can invite in 2NT with balanced 10–12 HCP and stoppers, or show preference for opener’s major with 10+ HCP and two-card support.
+- After a SAYC two-level response and opener’s repeated major, responder can invite with 2NT or raise with support; opener accepts a 3M invitation with 16+ HCP.
+- Opener also accepts a 2NT invitation in that sequence with 3NT at 16+ HCP.
+- Expert responders with 18+ HCP can ask for aces after opener accepts a splinter raise with game; opener answers and responder bids slam when at least three aces are known.
+- Expert responders can also use Blackwood after a 2/1 game force establishes a major fit, with responder placing slam from the combined ace count.
+- After an uncontested one-level suit response, opener can show a natural four-card lower-ranking side suit at the two level with an unbalanced 12–18 HCP hand in either bidding style.
+- After a minor opening, one-level major response, and opener’s balanced 2NT rebid, responder accepts game with a balanced 8+ HCP hand in either style.
+- After a SAYC 1♦–2♣ response, opener rebids five-card diamonds naturally; responder can raise with four-card support and 10+ HCP.
+- After an uncontested major opening, responders with five-card support, a singleton or void, and fewer than 10 HCP can make a preemptive 4M raise.
+- In SAYC, balanced 15–17 HCP responders with two-card support for opener's major can place the contract directly in 3NT when they have no four-card other major.
+- In a 1♠–2♥ game force, opener now shows three-card heart support with 3♥ and responder places game in 4♥.
+- After a one-level major response, openers with an unbalanced 19+ HCP hand and four-card support place game directly in the major.
+- After 1♥–(1♦)–1♠, opener raises four spades by strength, rebids a six-card heart suit at 2♥/3♥ by strength, or shows a balanced hand with a diamond stopper at 1NT/2NT with 12–14/18–19 HCP.
+- After 1♥–(1♦)–1♠–1NT, responders can invite with a balanced 10–12 HCP hand or five-card spade support, and place game with 13+ HCP.
+- In 2/1, after responder rebids a six-card minor, opener shows three-card support for the minor game or places the contract in 3NT without support.
+- After a major opening and a two-level minor overcall, responders can make a negative double with four or more cards in the unbid major and 6+ HCP.
+- After a major opening and a one-level major overcall, responders can make a negative double with four or more diamonds and 6+ HCP.
+- After a major opening and a one-level overcall, responders can bid an available new suit naturally at the one level with 4+ cards and 6+ HCP.
+- After a major opening and 1NT response, opener places game with 19+ HCP and a six-card major when no side suit takes priority.
+- After 1M–1NT–3M, responders accept the invitation at 8+ HCP in SAYC or 10+ in 2/1.
+- In a direct 2/1 game force, responder chooses 3NT after opener's balanced 2NT rebid when no three-card major fit exists, even with a six-card minor.
+- After responder shows a four-card side major in a direct 2/1 game force, opener raises to game with three-card support.
+- Without three-card support for that side major, opener completes the game force in 3NT.
+- A 2/1 continuation now stops at 4M after a major fit is agreed instead of incorrectly bidding 5M with a long responder suit.
+- After 1♠–1NT–2♥, responders can invite with three-card heart support, place 4♥ with 13+ HCP, or invite/bid game in notrump with a balanced hand.
+- After Jacoby 2NT and opener's shortness response, Expert can ask for aces with 4NT at 18+ HCP; opener answers with Blackwood steps and responder bids slam only when at least three aces are known.
+- Expert responders can make a splinter raise after a one-level major opening with four-card support, one singleton or void, and 13+ support points; opener completes game in the major.
+- After 1♥–(1♦), responders can bid 1♠ naturally with four or more spades and 6+ HCP in both SAYC and 2/1.
+- After 1♠–(2♥), intermediate responders make a negative double with 4+ diamonds and 6+ HCP in both bidding styles.
+- After 1NT–2♣–2♦ denies a major, responders can show a five-card major naturally at the two level, and opener raises with three-card support.
+- Added an Expert bot skill with direct Gerber ace-asking over 1NT/2NT openings; its 4NT invitations remain quantitative.
+- Added an Advanced bot skill: it follows Intermediate bidding and plays the top touching honor third hand when partner is winning.
+- Responders now accept an opener's invitational jump raise to 3M with 10+ HCP, or pass with fewer points, in both bidding styles.
+- Responders now continue after a 1♥–1NT–2♠ reverse by showing a major fit, bidding notrump with a spade stopper, or rebidding a natural minor.
+- Added quantitative 4NT slam invitations after 1NT and 2NT openings when responder has a balanced hand without a major fit; notrump openers accept with maximum strength.
+- Over a 2NT opening, responders can use Stayman with a four-card major, transfer with a five-card major, or bid 3NT with a balanced game hand; opener shows or denies a major fit, responder can find an alternate spade fit after a heart reply, and then places the contract.
+- Strong 2♣ openings now include six-card-or-longer hands estimated at nine playing tricks below 22 HCP. Responders show a natural positive with an 8+ HCP five-card suit or balanced hand, and opener raises a supported positive major to game.
+- After a waiting 2♦ response to strong 2♣, responders use Stayman or transfers after a balanced 2NT rebid, raise opener's natural suit rebid with support, place 3NT with balanced values and a stopper, or pass a weak hand without a fit.
+- Extended the 2/1 game force after 1♠–2♣: opener can show four diamonds at 2♦ with 12–17 HCP, and responder can raise the suit to game with four-card support.
+- Added the Jacoby 2NT game-forcing major raise in both SAYC and 2/1: responder shows 13+ HCP and four-card support; opener shows a singleton or void, or bids game without shortness.
+- Added SAYC Stayman and Jacoby transfers over an uncontested 1NT opening, including opener's major response, transfer acceptance, game/invitation placement, and finding spades after a heart reply.
+- SAYC and 2/1 bots now open balanced 20–21 HCP hands with 2NT and strong 22+ HCP hands with 2♣; after a waiting 2♦ response, opener rebids 2NT with 22–24 or 3NT with 25–27 balanced.
+- Intermediate bots now open a natural weak two in a six-card major or diamond suit with 5–11 HCP and at least two honors among ace through ten.
+- Over a weak two, Intermediate responders use forcing 2NT with game interest; opener shows a 5–8 HCP minimum, or with 9–11 shows an outside ace/king or bids 3NT without one.
+- Weak-two responders can also raise to 3M/4M with trump support or bid 3NT directly with a balanced game hand and no major fit.
+- Intermediate bots now use support points for partner’s overcalls: 6–10 points for a simple raise and 11+ points for a cue-bid raise.
+- After partner’s strong-raise cue-bid, intermediate overcallers repeat their suit with a minimum, show a three-card side suit with 11+ HCP, or bid game with 15+ HCP.
+- After a simple raise of an intermediate overcall, overcallers invite game with 11–14 HCP after a one-level overcall and bid game with 15+ HCP.
+- Intermediate takeout doublers now pass minimum major advances, raise with 16–18 support points, jump-raise with 19+ support points, and accept game over a jump advance with 15+ support points.
+- After advancer's strong cuebid of opener's suit, intermediate takeout doublers now name their longest available major, or longest available minor when no major is held.
+- After opener's partner raises over a takeout double, intermediate advancers compete in a natural four-card suit with 6–8 support points, jump with 9–11, or cue-bid the raised suit with 12+.
+- Intermediate bots now make a natural 1NT overcall with a balanced 15–18 HCP hand and a stopper in opener's suit.
+- After a partner's natural 1NT overcall, responders with 8+ HCP and a four-card major can use 2♣ Stayman; the overcaller shows a four-card major or denies one with 2♦.
+- After the Stayman reply, responders can invite in a shown major with 8–9 HCP, place major-suit game with 10+ HCP and support, or invite/bid game in notrump when there is no fit.
+- After a 1NT overcaller shows hearts, responders with four spades and no heart fit can show spades; the overcaller raises a spade fit or bids notrump without one.
+- Responders can also show a natural five-card suit at the two level with 6+ HCP, or a six-card club suit at 3♣ because 2♣ is Stayman.
+- After a partner's 1NT overcall, responders without a four-card major can invite in 2NT with a balanced 8–9 HCP hand or bid 3NT with a balanced 10+ HCP hand.
+- Intermediate bots now advance partner's takeout double with minimum or jump suit bids, natural notrump with a stopper, or a strong cuebid.
+- Intermediate bots now make natural takeout doubles of one-level suit openings with opening values, shortness, and support for the unbid suits.
+- Intermediate bots can advance partner's overcall in a natural five-card suit, requiring 6+ HCP for a one-level bid and 11+ HCP at the two level.
+- Intermediate bots now advance partner's one-level overcall with natural 1NT on a balanced 8–11 HCP hand with a stopper in opener's suit.
+- Intermediate bots now make simple raises with 6–10 support points and cue-bid strong raises with 11+ support points after partner's overcall.
+- Intermediate bots now make natural direct overcalls after an opponent's one-level suit opening, showing a five-card suit and 8+ HCP at the one level or 10+ HCP at the two level.
+- Added a simple competitive raise to 3M with 3+ card support and 6–9 HCP after a two-level overcall, in SAYC and 2/1.
+- After 1m–1NT, opener now rebids a six-card minor with 12–17 HCP in both SAYC and 2/1.
+- Added a natural two-level new-suit response with 5+ cards and 10+ HCP after a major opening and one-level overcall, in both SAYC and 2/1.
+- Extended natural competitive notrump responses to minor openings in both SAYC and 2/1, using 1NT with balanced 6–9 HCP after a double or one-level overcall and 2NT with balanced 10–12 HCP after a two-level overcall with a stopper.
+- Added a simple 2m competitive raise with five-card support and 6–9 HCP after an opponent's one-level overcall, for both SAYC and 2/1.
+- Added negative doubles after a minor opening and one-level major overcall, showing 4+ cards in the unbid major and 6+ HCP; direct 1♠ responses over 1♥ now require five cards.
+- Added natural one-level major responses after a minor opening and one-level minor overcall when the suit is available and responder has 4+ cards and 6+ HCP.
+- Added natural one-level suit responses after a minor opening is doubled, with 4+ cards and 6+ HCP.
+- Added a game-forcing cue-bid raise after a minor opening and one-level overcall, with three-card support and 10+ HCP.
+- Added a strong raise cue-bid after a major opening and one- or two-level overcall, with three-card support and 10+ HCP.
+- Added the 2NT limit raise or better after a takeout double in both styles, with four-card major or five-card minor support; opener shows a minimum at 3M and a maximum at game.
+- Extended the simple major raise to takeout doubles: responder raises to 2M with three-card support and 6–9 HCP in both configured styles.
+- Extended natural competitive responses to SAYC: after a double or one-level overcall, responder can bid 1NT with balanced 6–9 HCP (and a stopper over an overcall); after a two-level overcall, responder can bid 2NT with balanced 10–12 HCP and a stopper. A 6–9 HCP three-card major raise is also available after a one-level overcall.
 - Improved intermediate opening leads: after honoring a touching sequence, the bot leads fourth-highest from its longest suit when that suit has at least four cards.
 - Added 10–12 HCP responder invitations after 1M–1NT–2M: raise with three-card support or invite with 2NT on a balanced hand.
 - Added a natural 2NT rebid with balanced 18–19 HCP after an uncontested direct 2/1 response.
@@ -25,7 +107,7 @@ Project changes are recorded here, newest first. Keep entries short and link imp
 - Rebranded the app and workspace packages as ContractPlay; existing `bridgelab.solo` saves migrate to the new storage key.
 - Added a responder game acceptance: 3NT with 6+ HCP after 1M–1NT–2NT.
 - Added an invitational 3M responder rebid with a five-card major and 10–12 HCP after opener's uncontested 1NT rebid.
-- Added a solo setup choice for Beginner or Intermediate bot skill; Intermediate bots still use beginner bidding.
+- Added a solo setup choice for Beginner or Intermediate bot skill; the initial Intermediate skill reused Beginner bidding.
 - Added the 1♥–1NT–2♠ opener reverse with 16+ HCP and four spades, after checking for an available lower side suit.
 - Added an initial intermediate bot skill that conserves high cards when partner is winning and takes a trick with the cheapest winning card when an opponent is ahead. Its bidding still uses beginner rules.
 - Added an intermediate opening lead that selects the top honor from a touching honor sequence.
@@ -71,3 +153,4 @@ Project changes are recorded here, newest first. Keep entries short and link imp
 - Added the MIT license.
 - Added the initial `packages/core` TypeScript scaffold for cards, dealing, play legality, action history, bot/hint interfaces, and basic PBN metadata utilities.
 - Added the ContractPlay app roadmap and the initial project documentation and agent guidance.
+- Corrected the SAYC direct 3NT response to a major opening to use the ACBL's 16–18 HCP range.
