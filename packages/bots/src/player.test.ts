@@ -3771,6 +3771,17 @@ describe("beginner bot", () => {
     expect(await bot.chooseBid(opener, fitAuction, "north")).toBe("4spades");
   });
 
+  it("lets opener choose between four-card major fits after Puppet Stayman", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "2/1" });
+    const opener = hand("spades:A", "spades:K", "spades:Q", "spades:2", "hearts:A", "hearts:K", "hearts:Q", "hearts:2", "diamonds:A", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3");
+    const auction = [
+      { seat: "north", bid: "2notrump" as const }, { seat: "south", bid: "3clubs" as const },
+      { seat: "west", bid: "pass" as const }, { seat: "north", bid: "3diamonds" as const },
+      { seat: "east", bid: "pass" as const }, { seat: "south", bid: "4diamonds" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe("4spades");
+  });
+
   it("does not use Puppet Stayman after interference over 2NT", async () => {
     const bot = createBot({ skill: "expert", biddingStyle: "2/1" });
     const responder = hand("spades:Q", "spades:6", "spades:4", "hearts:8", "hearts:7", "diamonds:A", "diamonds:9", "diamonds:4", "diamonds:2", "clubs:Q", "clubs:5", "clubs:3", "clubs:2");
