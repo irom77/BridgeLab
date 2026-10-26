@@ -259,6 +259,20 @@ export class BeginnerBot implements BotPlayer {
       saycMajorTwoLevelMinor && contractCalls.length === 2 && saycMajorTwoLevelMinor.opening.seat === seat &&
       isBalanced(hand) && points(hand) >= 18 && points(hand) <= 19
     ) return "2notrump";
+    if (saycMajorTwoLevelMinor && contractCalls.length === 2 && saycMajorTwoLevelMinor.opening.seat === seat && points(hand) >= 19) {
+      if (hand.filter((card) => card.suit === saycMajorTwoLevelMinor.responseSuit).length >= 4) {
+        return `3${saycMajorTwoLevelMinor.responseSuit}` as Bid;
+      }
+      const suitOrder: readonly Suit[] = ["clubs", "diamonds", "hearts", "spades"];
+      const sideSuit = suitOrder.find((suit) =>
+        suit !== saycMajorTwoLevelMinor.openingSuit && suit !== saycMajorTwoLevelMinor.responseSuit &&
+        hand.filter((card) => card.suit === suit).length >= 4
+      );
+      if (sideSuit) return `3${sideSuit}` as Bid;
+      if (hand.filter((card) => card.suit === saycMajorTwoLevelMinor.openingSuit).length >= 6) {
+        return `3${saycMajorTwoLevelMinor.openingSuit}` as Bid;
+      }
+    }
     if (
       saycMajorTwoLevelMinor && contractCalls.length === 3 && saycMajorTwoLevelMinor.response.seat === seat &&
       contractCalls[2]?.bid === "2notrump"
@@ -266,6 +280,27 @@ export class BeginnerBot implements BotPlayer {
       return hand.filter((card) => card.suit === saycMajorTwoLevelMinor.openingSuit).length >= 3
         ? `4${saycMajorTwoLevelMinor.openingSuit}` as Bid
         : "3notrump";
+    }
+    if (
+      saycMajorTwoLevelMinor && contractCalls.length === 3 && saycMajorTwoLevelMinor.response.seat === seat &&
+      /^3(clubs|diamonds|hearts|spades)$/.test(contractCalls[2]?.bid ?? "")
+    ) {
+      const openerRebidSuit = contractCalls[2]!.bid.slice(1) as Suit;
+      const support = hand.filter((card) => card.suit === openerRebidSuit).length;
+      if ((openerRebidSuit === "hearts" || openerRebidSuit === "spades") && support >= 3) {
+        return `4${openerRebidSuit}` as Bid;
+      }
+      if (saycMajorTwoLevelMinor.openingSuit === "hearts" && hand.filter((card) => card.suit === "hearts").length >= 3) return "4hearts";
+      if (saycMajorTwoLevelMinor.openingSuit === "spades" && hand.filter((card) => card.suit === "spades").length >= 3) return "4spades";
+      if ((openerRebidSuit === "clubs" || openerRebidSuit === "diamonds") && support >= 4) {
+        return `5${openerRebidSuit}` as Bid;
+      }
+      if (isBalanced(hand)) return "3notrump";
+      const longMajor = (["spades", "hearts"] as const).find((suit) => hand.filter((card) => card.suit === suit).length >= 5);
+      if (longMajor) return `4${longMajor}` as Bid;
+      const longMinor = (["diamonds", "clubs"] as const).find((suit) => hand.filter((card) => card.suit === suit).length >= 6);
+      if (longMinor) return `5${longMinor}` as Bid;
+      return "3notrump";
     }
     if (saycJumpShift && contractCalls.length === 2 && saycJumpShift.opening.seat === seat) {
       const support = hand.filter((card) => card.suit === saycJumpShift.responseSuit).length;

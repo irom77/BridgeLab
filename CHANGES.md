@@ -2,6 +2,7 @@
 
 - SAYC bots now use a natural jump-shift response with a five-card suit and 19+ HCP, continue with opener's fit or natural description, and place game; 2/1 response selection remains distinct.
 - After SAYC 1M–2m, balanced openers with 18–19 HCP now rebid 2NT; responder places game in a three-card major fit or in 3NT.
+- Maximum unbalanced SAYC openers after 1M–2m now jump-raise a supported responder minor, jump-shift to a four-card side suit, or jump-rebid a six-card major; responder continues to game.
 
 - Expert bots use Smolen after Stayman denial over 1NT to show a game-forcing 5-4 major pattern; opener raises the longer major with three-card support, and responder corrects 3NT only with a six-card major.
 - After 1M–1NT–2m, responders with 13+ HCP and three-card support now raise opener's major to game; 11–12 HCP still invites at the three level.
