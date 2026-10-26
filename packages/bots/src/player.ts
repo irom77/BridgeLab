@@ -1807,7 +1807,8 @@ export class ExpertBot implements BotPlayer {
         auction.every(({ bid }) => bid === "pass" || bid === opening.bid || bid === response.bid || bid === openerRebid.bid || bid === checkback.bid || bid === majorReply.bid)
       ) {
         const fitLength = hand.filter((card) => card.suit === major).length;
-        if (fitLength >= 4) return Promise.resolve(points(hand) >= 13 ? `4${major}` as Bid : `3${major}` as Bid);
+        const requiredFitLength = major === responderMajor ? 5 : 4;
+        if (fitLength >= requiredFitLength) return Promise.resolve(points(hand) >= 13 ? `4${major}` as Bid : `3${major}` as Bid);
         if (isBalanced(hand) && points(hand) >= 13 && suits.every((suit) => hasStopper(hand, suit))) {
           return Promise.resolve("3notrump");
         }

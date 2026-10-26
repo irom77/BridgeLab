@@ -2,7 +2,7 @@
 
 ## Scope
 
-After an uncontested 1♣/1♦–1♥/1♠–1NT auction, Expert responder with 10+ HCP and a five-card response major or four-card other major uses artificial 2♣ Checkback Stayman. Opener shows three-card support for responder's major, a four-card other major, or denies both with 2♦. Responder places game or invites after finding a fit, or places/invites in notrump after a denial with a balanced hand and stoppers. Opener accepts a 3M invitation with 14+ HCP.
+After an uncontested 1♣/1♦–1♥/1♠–1NT auction, Expert responder with 10+ HCP and a five-card response major or four-card other major uses artificial 2♣ Checkback Stayman. Opener shows three-card support for responder's major, a four-card other major, or denies both with 2♦. Responder places game or invites in a major only with an eight-card fit; with a shorter fit, responder may place/invite in notrump with a balanced hand and stoppers. Opener accepts a 3M invitation with 14+ HCP.
 
 ## Implementation
 

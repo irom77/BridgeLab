@@ -3120,9 +3120,9 @@ describe("beginner bot", () => {
   });
 
   it.each([
-    ["13 HCP", hand("spades:A", "spades:K", "spades:Q", "spades:J", "hearts:K", "hearts:2", "hearts:3", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4"), "4spades"],
-    ["10 HCP", hand("spades:K", "spades:Q", "spades:J", "spades:8", "hearts:A", "hearts:2", "hearts:3", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4"), "3spades"]
-  ] as const)("places the Checkback spade fit with %s", async (_strength, responder, expected) => {
+    ["13 HCP and an eight-card fit", hand("spades:A", "spades:K", "spades:Q", "spades:J", "spades:8", "hearts:K", "hearts:2", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4"), "4spades"],
+    ["10 HCP and a seven-card fit", hand("spades:K", "spades:Q", "spades:J", "spades:8", "hearts:A", "hearts:2", "hearts:3", "hearts:4", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3"), "pass"]
+  ] as const)("responds after Checkback shows spade support with %s", async (_strength, responder, expected) => {
     const bot = createBot({ skill: "expert", biddingStyle: "2/1" });
     const auction = [
       { seat: "north", bid: "1clubs" as const }, { seat: "east", bid: "pass" as const },
