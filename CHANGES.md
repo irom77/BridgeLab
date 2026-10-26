@@ -1,6 +1,7 @@
 # Changes
 
 - SAYC bots now use a natural jump-shift response with a five-card suit and 19+ HCP, continue with opener's fit or natural description, and place game; 2/1 response selection remains distinct.
+- SAYC openers now require 16+ HCP to reverse to 2♠ after 1♥–2♦; below that strength they repeat hearts when no eligible side suit applies.
 - Expert bots can use the Grand Slam Force after a SAYC strong jump shift finds a major fit at game; with fewer than two top trump honors, they retain the Blackwood route and king ask.
 - After SAYC 1M–2m, balanced openers with 18–19 HCP now rebid 2NT; responder places game in a three-card major fit or in 3NT.
 - Maximum unbalanced SAYC openers after 1M–2m now jump-raise a supported responder minor, jump-shift to a four-card side suit, or jump-rebid a six-card major; responder continues to game.

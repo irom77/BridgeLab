@@ -13,4 +13,5 @@ The ACBL SAYC booklet says 2♣/2♦ responses after a major opening show at lea
 ## Verification
 
 - Bot tests cover showing a four-card diamond side suit, falling back to the opening major without that suit, raising the shown suit, inviting in notrump after either major opening, preferring opener’s major, raising the repeated major from 10 HCP, bidding game with 13 HCP, and opener accepting either invitation at 16 HCP.
-- Run `pnpm test`, `pnpm typecheck`, `pnpm lint`, and `git diff --check`.
+- Regression tests ensure a 1♥–2♦–2♠ reverse requires 16+ HCP and a weaker opener repeats hearts.
+- Verified with `pnpm test` (638 tests), `pnpm typecheck`, `pnpm lint`, and `git diff --check`.

@@ -48,6 +48,8 @@ SAYC bots also use strong natural jump shifts with a five-card suit and 19+ HCP 
 
 After SAYC 1M–2m, an opener with a balanced 18–19 HCP hand rebids 2NT; responder places game in a three-card major fit or 3NT without one.
 
+SAYC opener reverses to 2♠ after 1♥–2♦ only with 16+ HCP; a weaker opener repeats hearts when no other eligible rebid applies.
+
 With a maximum unbalanced hand after SAYC 1M–2m, opener can jump-raise responder's minor, jump-shift to a four-card side suit, or jump-rebid a six-card major. Responder places game in a shown fit or notrump.
 
 After SAYC 1♠–2♥, opener shows three-card heart support, a natural side suit, a five-card spade rebid, or a balanced 18–19 HCP hand in 2NT; responder places or invites game based on the fit and rebid.

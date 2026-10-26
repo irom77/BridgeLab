@@ -290,7 +290,12 @@ export class BeginnerBot implements BotPlayer {
       const suitOrder: readonly Suit[] = ["clubs", "diamonds", "hearts", "spades"];
       const responseRank = suitOrder.indexOf(saycMajorTwoLevelResponse.responseSuit);
       const sideSuit = [...suitOrder]
-        .filter((suit) => suit !== saycMajorTwoLevelResponse.openingSuit && suit !== saycMajorTwoLevelResponse.responseSuit && hand.filter((card) => card.suit === suit).length >= 4)
+        .filter((suit) => {
+          if (suit === saycMajorTwoLevelResponse.openingSuit || suit === saycMajorTwoLevelResponse.responseSuit || hand.filter((card) => card.suit === suit).length < 4) return false;
+          const isTwoLevelReverse = suitOrder.indexOf(suit) > responseRank &&
+            suitOrder.indexOf(suit) > suitOrder.indexOf(saycMajorTwoLevelResponse.openingSuit);
+          return !isTwoLevelReverse || points(hand) >= 16;
+        })
         .sort((a, b) => hand.filter((card) => card.suit === b).length - hand.filter((card) => card.suit === a).length || suitOrder.indexOf(b) - suitOrder.indexOf(a))[0];
       if (sideSuit) {
         const level = suitOrder.indexOf(sideSuit) > responseRank ? 2 : 3;
