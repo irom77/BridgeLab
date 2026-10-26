@@ -174,6 +174,57 @@ export class BeginnerBot implements BotPlayer {
 
     const contractCalls = auction.filter(({ bid }) => bid !== "pass");
     const partner = SEATS[(SEATS.indexOf(seat) + 2) % SEATS.length]!;
+    if (contractCalls.length === 3) {
+      const [opening, response, rebid] = contractCalls;
+      const suitOrder: readonly Suit[] = ["clubs", "diamonds", "hearts", "spades"];
+      const bidSuit = (bid: Bid | undefined) => bid?.match(/^[1-7](clubs|diamonds|hearts|spades)$/)?.[1] as Suit | undefined;
+      const openingSuit = bidSuit(opening?.bid);
+      const responseSuit = bidSuit(response?.bid);
+      const rebidSuit = bidSuit(rebid?.bid);
+      if (
+        opening?.seat === partner && response?.seat === seat && rebid?.seat === partner &&
+        response.bid.startsWith("1") && openingSuit && responseSuit && rebidSuit &&
+        new Set([openingSuit, responseSuit, rebidSuit]).size === 3 && points(hand) >= 10 &&
+        !passedBeforeOpening(auction, seat, opening)
+      ) {
+        const fourthSuit = suitOrder.find((suit) => ![openingSuit, responseSuit, rebidSuit].includes(suit))!;
+        const lastCall = contractCalls.at(-1)!.bid;
+        const lastLevel = Number(lastCall[0]);
+        const lastSuit = bidSuit(lastCall)!;
+        const level = suitOrder.indexOf(fourthSuit) > suitOrder.indexOf(lastSuit) ? lastLevel : lastLevel + 1;
+        return `${level}${fourthSuit}` as Bid;
+      }
+    }
+    if (contractCalls.length === 4) {
+      const [opening, response, rebid, fourthSuitCall] = contractCalls;
+      const suitOrder: readonly Suit[] = ["clubs", "diamonds", "hearts", "spades"];
+      const bidSuit = (bid: Bid | undefined) => bid?.match(/^[1-7](clubs|diamonds|hearts|spades)$/)?.[1] as Suit | undefined;
+      const openingSuit = bidSuit(opening?.bid);
+      const responseSuit = bidSuit(response?.bid);
+      const rebidSuit = bidSuit(rebid?.bid);
+      const fourthSuit = bidSuit(fourthSuitCall?.bid);
+      if (
+        opening?.seat === seat && response?.seat === partner && rebid?.seat === seat && fourthSuitCall?.seat === partner &&
+        response.bid.startsWith("1") && openingSuit && responseSuit && rebidSuit && fourthSuit &&
+        new Set([openingSuit, responseSuit, rebidSuit, fourthSuit]).size === 4
+      ) {
+        const lastLevel = Number(fourthSuitCall.bid[0]);
+        const lastRank = suitOrder.indexOf(fourthSuit);
+        const makeCall = (suit: Suit) => {
+          const level = suitOrder.indexOf(suit) > lastRank ? lastLevel : lastLevel + 1;
+          return `${level}${suit}` as Bid;
+        };
+        if (hand.filter((card) => card.suit === responseSuit).length >= 3) return makeCall(responseSuit);
+        const fourthSuitCards = hand.filter((card) => card.suit === fourthSuit);
+        const hasFourthSuitStopper = fourthSuitCards.some((card) => card.rank === "A") ||
+          (fourthSuitCards.length >= 2 && fourthSuitCards.some((card) => card.rank === "K")) ||
+          (fourthSuitCards.length >= 3 && fourthSuitCards.some((card) => card.rank === "Q"));
+        if (isBalanced(hand) && hasFourthSuitStopper) {
+          return `${lastLevel}notrump` as Bid;
+        }
+        return makeCall(openingSuit);
+      }
+    }
     if (contractCalls.length === 2) {
       const [opening, response] = contractCalls;
       if (

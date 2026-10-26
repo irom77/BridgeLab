@@ -23,6 +23,56 @@ function seededDeal(seed: number) {
 }
 
 describe("beginner bot", () => {
+  it("uses an artificial fourth-suit forcing bid with 10 HCP even when short in that suit", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
+    const responder = hand("spades:A", "hearts:K", "hearts:Q", "hearts:J", "hearts:2", "clubs:2", "clubs:3", "clubs:4", "clubs:5", "clubs:6", "clubs:7", "diamonds:2", "diamonds:3");
+    const auction = [
+      { seat: "north", bid: "1clubs" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "1hearts" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "1spades" as const }, { seat: "east", bid: "pass" as const }
+    ] as const;
+
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("2diamonds");
+  });
+
+  it("does not force in the fourth suit with fewer than 10 HCP", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
+    const responder = hand("spades:K", "hearts:A", "hearts:Q", "hearts:2", "hearts:3", "clubs:2", "clubs:3", "clubs:4", "clubs:5", "clubs:6", "clubs:7", "diamonds:2", "diamonds:3");
+    const auction = [
+      { seat: "north", bid: "1clubs" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "1hearts" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "1spades" as const }, { seat: "east", bid: "pass" as const }
+    ] as const;
+
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("pass");
+  });
+
+  it("responds to fourth-suit forcing by showing three-card support", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
+    const opener = hand("clubs:A", "clubs:K", "clubs:2", "clubs:3", "hearts:K", "hearts:2", "hearts:3", "spades:A", "spades:K", "spades:2", "spades:3", "diamonds:Q", "diamonds:2");
+    const auction = [
+      { seat: "north", bid: "1clubs" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "1hearts" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "1spades" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2diamonds" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+
+    expect(await bot.chooseBid(opener, auction, "north")).toBe("2hearts");
+  });
+
+  it("shows a notrump stopper in response to fourth-suit forcing", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
+    const opener = hand("clubs:A", "clubs:K", "clubs:2", "spades:K", "spades:Q", "spades:2", "spades:3", "hearts:Q", "hearts:2", "diamonds:A", "diamonds:2", "diamonds:3", "diamonds:4");
+    const auction = [
+      { seat: "north", bid: "1clubs" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "1hearts" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "1spades" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2diamonds" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+
+    expect(await bot.chooseBid(opener, auction, "north")).toBe("2notrump");
+  });
+
   it("opens a balanced hand with 15-17 high card points in notrump", async () => {
     const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
     const openingHand = hand("spades:A", "spades:K", "spades:Q", "spades:J", "hearts:A", "hearts:T", "diamonds:Q", "diamonds:9", "diamonds:8", "clubs:9", "clubs:8", "clubs:7", "clubs:6");

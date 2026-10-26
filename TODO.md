@@ -80,6 +80,7 @@ The core rules, PBN package, and solo client are in place. Beginner through Expe
   - [x] After 1M–1NT–2M, responder invites with 3M on 10–12 HCP and three-card support, or 2NT with a balanced hand.
   - [x] After 1♠–1NT–2♥, responder raises with three-card heart support on 10–12 HCP or places 4♥ with 13+; a balanced responder without a heart fit invites in 2NT or bids 3NT.
   - [ ] Implement distinct SAYC and 2/1 response agreements, including game-forcing 2/1 sequences. (2/1 now uses forcing 1NT with 6–12 HCP in the listed uncontested cases; direct 1M–2-over-1 responses require 13+ HCP, allow three-card major support, and continue to game. Opener can show balanced 18–19 HCP with 2NT after a direct 2/1 response. Further detailed continuations and complete SAYC agreements remain.)
+    - [x] After a one-level response and opener's suit rebid, use fourth-suit forcing with 10+ HCP when three suits have been bid; opener shows support, a notrump stopper, or rebids the opening suit. The fourth suit may be artificial.
     - [x] After 1♠–2♥, opener raises to 3♥ with three-card support and responder completes 4♥ in the game force.
     - [x] Keep the 2/1 force active after responder rebids a six-card minor; opener raises three-card support and responder places the minor game.
     - [x] When opener lacks three-card support for that minor rebid, place the game force in 3NT.

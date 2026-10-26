@@ -4,6 +4,7 @@ Project changes are recorded here, newest first. Keep entries short and link imp
 
 ## Unreleased
 
+- Added fourth-suit forcing after a one-level response and opener's suit rebid: with 10+ HCP, responder may bid the only unbid suit artificially, and opener continues by showing support, a notrump stopper, or the opening suit.
 - Card-play hints now show a brief message if a host-provided solver fails; stale hint requests do not affect a replacement hand.
 - After a SAYC 1M–2m sequence and opener's natural side-suit rebid, responder can show an unbid four-card major with 10+ HCP; opener raises with three-card support or continues in the original major without a fit. See [implementation plan](docs/superpowers/plans/2026-10-26-sayc-alternate-major-after-two-level-response.md).
 - Corrected opener's rebid after sequences such as 1♦–1♠: a four-card heart suit now requires 16+ HCP and is shown at 2♥ as a reverse. See [implementation plan](docs/superpowers/plans/2026-10-26-opener-reverse-after-one-level-response.md).
