@@ -24,6 +24,7 @@ The core rules, PBN package, and solo client are in place. Beginner through Expe
   - [x] Open strong 2♣ with a six-card-or-longer hand estimated at 9+ playing tricks below 22 HCP; respond positively with an 8+ HCP five-card suit or balanced hand, and raise a supported positive major to game.
   - [x] Continue after a waiting 2♦ response to strong 2♣: use Stayman/transfers over opener's balanced 2NT rebid, raise natural suit rebids with support, place 3NT with balanced values and a stopper, or pass a weak hand without a fit.
   - [x] Over a 2NT opening, use Stayman with a four-card major, transfers with a five-card major, or 3NT with a balanced game hand; show or deny a major, find an alternate spade fit after a heart reply, and place the contract after the reply.
+  - [x] After a 1NT opening, use 2♠ with a weak hand and a six-card minor; opener relays to 3♣, and responder passes with clubs or corrects to 3♦ with diamonds. See [implementation plan](docs/superpowers/plans/2026-10-26-notrump-minor-signoff.md).
   - [x] Add a limited uncontested balanced 1NT response.
   - [x] Add basic uncontested raises after partner opens 1♥ or 1♠.
   - [x] Make a weak 4M preemptive raise with 5+ card support, a singleton or void, and fewer than 10 HCP in SAYC and 2/1.

@@ -415,6 +415,21 @@ describe("beginner bot", () => {
     expect(await bot.chooseBid(responder, [{ seat: "north", bid: "1notrump" }], "south")).toBe("2diamonds");
   });
 
+  it.each(["SAYC", "2/1"] as const)("uses 2 spades to find a minor-suit partscore in %s", async (biddingStyle) => {
+    const bot = createBot({ skill: "beginner", biddingStyle });
+    const clubsHand = hand("clubs:2", "clubs:3", "clubs:4", "clubs:5", "clubs:6", "clubs:7", "hearts:2", "hearts:3", "hearts:4", "spades:2", "spades:3", "diamonds:2", "diamonds:3");
+    const diamondsHand = hand("diamonds:2", "diamonds:3", "diamonds:4", "diamonds:5", "diamonds:6", "diamonds:7", "hearts:2", "hearts:3", "hearts:4", "spades:2", "spades:3", "clubs:2", "clubs:3");
+    const opening = [{ seat: "north", bid: "1notrump" as const }] as const;
+    expect(await bot.chooseBid(clubsHand, opening, "south")).toBe("2spades");
+    expect(await bot.chooseBid(diamondsHand, opening, "south")).toBe("2spades");
+
+    const relay = [...opening, { seat: "east", bid: "pass" as const }, { seat: "south", bid: "2spades" as const }, { seat: "west", bid: "pass" as const }] as const;
+    const opener = hand("spades:A", "spades:K", "spades:Q", "spades:2", "hearts:A", "hearts:K", "hearts:2", "diamonds:A", "diamonds:2", "diamonds:3", "clubs:K", "clubs:2", "clubs:3");
+    expect(await bot.chooseBid(opener, relay, "north")).toBe("3clubs");
+    expect(await bot.chooseBid(clubsHand, [...relay, { seat: "north", bid: "3clubs" as const }], "south")).toBe("pass");
+    expect(await bot.chooseBid(diamondsHand, [...relay, { seat: "north", bid: "3clubs" as const }], "south")).toBe("3diamonds");
+  });
+
   it("shows a four-card heart suit after Stayman over 1NT", async () => {
     const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
     const opener = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:2", "spades:2", "spades:3", "spades:4", "diamonds:A", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4");

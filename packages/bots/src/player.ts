@@ -255,6 +255,7 @@ export class BeginnerBot implements BotPlayer {
         ((opening.bid === "1notrump" && points(hand) >= 17) || (opening.bid === "2notrump" && points(hand) >= 21))
       ) return "6notrump";
       if (opening?.seat === seat && opening.bid === "1notrump" && response?.seat === partner) {
+        if (response.bid === "2spades") return "3clubs";
         if (response.bid === "2clubs") {
           if (hand.filter((card) => card.suit === "hearts").length >= 4) return "2hearts";
           if (hand.filter((card) => card.suit === "spades").length >= 4) return "2spades";
@@ -310,6 +311,17 @@ export class BeginnerBot implements BotPlayer {
         }
         if (response.bid === "3diamonds") return "3hearts";
         if (response.bid === "3hearts") return "3spades";
+      }
+    }
+    if (contractCalls.length === 3) {
+      const [opening, minorRelay, openerResponse] = contractCalls;
+      if (
+        opening?.seat === partner && opening.bid === "1notrump" && minorRelay?.seat === seat && minorRelay.bid === "2spades" &&
+        openerResponse?.seat === partner && openerResponse.bid === "3clubs"
+      ) {
+        const clubs = hand.filter((card) => card.suit === "clubs").length;
+        const diamonds = hand.filter((card) => card.suit === "diamonds").length;
+        if (Math.max(clubs, diamonds) >= 6) return clubs > diamonds ? "pass" : "3diamonds";
       }
     }
     if (contractCalls.length === 4) {
@@ -1183,6 +1195,9 @@ export class BeginnerBot implements BotPlayer {
       if (responderPoints >= 8 && hasFourCardMajor) return "2clubs";
       if (hearts >= 5 && spades < 4) return "2diamonds";
       if (spades >= 5 && hearts < 4) return "2hearts";
+      const clubs = hand.filter((card) => card.suit === "clubs").length;
+      const diamonds = hand.filter((card) => card.suit === "diamonds").length;
+      if (responderPoints < 8 && !hasFourCardMajor && Math.max(clubs, diamonds) >= 6) return "2spades";
       if (!isBalanced(hand) || responderPoints < 8) return "pass";
       if (responderPoints >= 16) return "4notrump";
       return responderPoints < 10 ? "2notrump" : "3notrump";
