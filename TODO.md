@@ -35,7 +35,7 @@ The core rules, PBN package, and solo client are in place. Beginner through Expe
   - [x] Add one-level new-suit responses with 4+ cards and 6+ HCP where a higher one-level suit is available.
   - [x] Add uncontested minor responses: five-card raises at 6–12 HCP and balanced 2NT/3NT responses at 10–15 HCP.
   - [x] Add limited uncontested two-level new-suit responses with 4+ cards and 10+ HCP where no one-level new-suit response is available.
-  - [x] In SAYC, make a natural jump-shift response with 5+ cards and 19+ HCP when unpassed; opener describes a major fit, strong balanced hand, or natural suit, and responder places game. Expert bots can use Blackwood after opener confirms a major fit at game; 2/1 keeps its direct two-level response agreement. Other slam continuations remain open.
+  - [x] In SAYC, make a natural jump-shift response with 5+ cards and 19+ HCP when unpassed; opener describes a major fit, strong balanced hand, or natural suit, and responder places game. Expert bots can use the Grand Slam Force with 18+ HCP and two top trump honors, or Blackwood after opener confirms a major fit at game; 2/1 keeps its direct two-level response agreement. Other slam continuations remain open.
   - [x] Complete the uncontested SAYC 1♠–2♥ response with 10+ HCP and 4+ hearts: opener raises a three-card fit, describes a natural side suit, rebids spades without a heart fit, or shows balanced 18–19 HCP in 2NT; responder places or invites game based on the rebid and fit.
   - [x] Add basic opener continuations after a one-level new-suit response: rebid a 6+ card opening suit or show a balanced 12–14 HCP hand in 1NT after a minor opening.
   - [x] Extend balanced opener rebids after a one-level new-suit response: 12–14 HCP in 1NT and 18–19 HCP in 2NT.

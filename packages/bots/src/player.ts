@@ -2125,7 +2125,19 @@ export class ExpertBot implements BotPlayer {
       saycJumpShiftBlackwoodMajor &&
       calls[0]?.seat === partner && calls[1]?.seat === seat && calls[2]?.seat === partner &&
       calls[2].bid === `4${saycJumpShiftBlackwoodMajor}` && points(hand) >= 18
-    ) return Promise.resolve("4notrump");
+    ) {
+      const topTrumpHonors = hand.filter((card) => card.suit === saycJumpShiftBlackwoodMajor && ["A", "K", "Q"].includes(card.rank)).length;
+      return Promise.resolve(topTrumpHonors >= 2 ? "5notrump" : "4notrump");
+    }
+
+    if (
+      calls.length === 4 && saycJumpShiftBlackwoodMajor && calls[0]?.seat === seat && calls[1]?.seat === partner &&
+      calls[2]?.seat === seat && calls[2].bid === `4${saycJumpShiftBlackwoodMajor}` &&
+      calls[3]?.seat === partner && calls[3].bid === "5notrump"
+    ) {
+      const topTrumpHonors = hand.filter((card) => card.suit === saycJumpShiftBlackwoodMajor && ["A", "K", "Q"].includes(card.rank)).length;
+      return Promise.resolve(`${topTrumpHonors >= 2 ? 7 : 6}${saycJumpShiftBlackwoodMajor}` as Bid);
+    }
 
     if (
       calls.length === 4 && saycJumpShiftBlackwoodMajor && agreedBlackwoodMajor && calls[3]?.seat === partner && calls[3].bid === "4notrump"

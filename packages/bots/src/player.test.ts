@@ -3918,7 +3918,7 @@ describe("beginner bot", () => {
 
   it("uses Expert Blackwood after a SAYC strong jump shift finds a major fit", async () => {
     const bot = createBot({ skill: "expert", biddingStyle: "SAYC" });
-    const responder = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:J", "hearts:T", "spades:A", "spades:2", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:K", "clubs:2", "clubs:3");
+    const responder = hand("hearts:A", "hearts:T", "hearts:9", "hearts:8", "hearts:7", "spades:A", "spades:K", "spades:Q", "diamonds:K", "diamonds:Q", "clubs:K", "clubs:2", "clubs:3");
     const auction = [
       { seat: "north", bid: "1spades" as const }, { seat: "east", bid: "pass" as const },
       { seat: "south", bid: "3hearts" as const }, { seat: "west", bid: "pass" as const },
@@ -3927,9 +3927,35 @@ describe("beginner bot", () => {
     expect(await bot.chooseBid(responder, auction, "south")).toBe("4notrump");
   });
 
+  it("uses the Expert Grand Slam Force before Blackwood after a SAYC jump-shift major fit", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "SAYC" });
+    const responder = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:J", "hearts:T", "spades:A", "spades:2", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:K", "clubs:2", "clubs:3");
+    const auction = [
+      { seat: "north", bid: "1spades" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "3hearts" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "4hearts" as const }, { seat: "east", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("5notrump");
+  });
+
+  it.each([
+    ["hearts:A", "hearts:K", "7hearts"],
+    ["hearts:Q", "hearts:J", "6hearts"]
+  ] as const)("answers the SAYC jump-shift Grand Slam Force with %s and %s", async (firstHonor, secondHonor, expected) => {
+    const bot = createBot({ skill: "expert", biddingStyle: "SAYC" });
+    const opener = hand(firstHonor, secondHonor, "hearts:2", "spades:K", "spades:Q", "spades:J", "diamonds:A", "diamonds:Q", "diamonds:5", "diamonds:6", "clubs:Q", "clubs:4", "clubs:5");
+    const auction = [
+      { seat: "north", bid: "1spades" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "3hearts" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "4hearts" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "5notrump" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe(expected);
+  });
+
   it("answers and places Blackwood after a SAYC strong jump-shift major fit", async () => {
     const bot = createBot({ skill: "expert", biddingStyle: "SAYC" });
-    const opener = hand("hearts:2", "hearts:3", "hearts:4", "spades:K", "spades:Q", "spades:J", "diamonds:A", "diamonds:Q", "diamonds:5", "diamonds:6", "clubs:Q", "clubs:4", "clubs:5");
+    const opener = hand("hearts:2", "hearts:3", "hearts:4", "spades:J", "spades:T", "spades:9", "diamonds:A", "diamonds:J", "diamonds:T", "diamonds:6", "clubs:Q", "clubs:J", "clubs:4");
     const auction = [
       { seat: "north", bid: "1spades" as const }, { seat: "east", bid: "pass" as const },
       { seat: "south", bid: "3hearts" as const }, { seat: "west", bid: "pass" as const },
@@ -3938,7 +3964,7 @@ describe("beginner bot", () => {
     ] as const;
     expect(await bot.chooseBid(opener, auction, "north")).toBe("5diamonds");
     const afterAnswer = [...auction, { seat: "north", bid: "5diamonds" as const }, { seat: "east", bid: "pass" as const }] as const;
-    expect(await bot.chooseBid(hand("hearts:A", "hearts:K", "hearts:Q", "hearts:J", "hearts:T", "spades:A", "spades:2", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:K", "clubs:2", "clubs:3"), afterAnswer, "south")).toBe("6hearts");
+    expect(await bot.chooseBid(hand("hearts:A", "hearts:T", "hearts:9", "hearts:8", "hearts:7", "spades:A", "spades:K", "spades:Q", "diamonds:K", "diamonds:Q", "clubs:K", "clubs:2", "clubs:3"), afterAnswer, "south")).toBe("6hearts");
   });
 
   it("asks for kings after a SAYC jump-shift Blackwood response confirms all four aces", async () => {

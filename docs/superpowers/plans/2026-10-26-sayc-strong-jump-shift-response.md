@@ -38,12 +38,12 @@
 - [x] Add responder jump-shift selection and preserve fit-raise priority.
 - [x] Add opener continuation and responder game placement.
 - [x] Cover both two-level and three-level jump shifts, strength threshold, major fits, balanced hands, and natural side-suit fits.
-- [x] Extend the Expert auction through Blackwood after opener confirms a major fit at game; keep natural notrump auctions and non-fit jump-shift sequences outside this route.
+- [x] Extend the Expert auction through the Grand Slam Force after opener confirms a major fit at game; use Blackwood instead with 18+ HCP but fewer than two top trump honors, keeping the king ask and natural notrump auctions distinct.
 
 ## Verification
 
-- [x] Focused tests cover the 19-HCP SAYC jump, below-threshold natural response, unchanged 2/1 response, opener rebids, game placement, confirmed-fit Blackwood, ace placement, and no-fit rejection.
-- [x] Run workspace tests (633 passed), typecheck, lint, and diff checks for the slam extension.
+- [x] Focused tests cover the 19-HCP SAYC jump, below-threshold natural response, unchanged 2/1 response, opener rebids, game placement, confirmed-fit Grand Slam Force, Blackwood, ace placement, and no-fit rejection.
+- [x] Run workspace tests (636 passed), typecheck, lint, and diff checks for the expanded slam continuation.
 
 ## References
 
