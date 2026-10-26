@@ -42,7 +42,7 @@ The core package lives in `packages/core/src` and provides card/deal types, deal
 
 The core is TypeScript and designed to stay independent of UI and platform APIs. It is part of the root pnpm workspace and builds to `packages/core/dist`.
 
-Configured beginner bidding includes quantitative 4NT invitations after 1NT and 2NT openings on balanced hands without a major fit; the opener accepts with maximum strength. In both SAYC and 2/1, responder can use fourth-suit forcing with 10+ HCP after a one-level response and opener's suit rebid. SAYC and 2/1 support remains limited, and broader competitive auctions and complete convention systems are still planned.
+Configured beginner bidding includes quantitative 4NT invitations after 1NT and 2NT openings on balanced hands without a major fit; the opener accepts with maximum strength. Intermediate overcalls also preempt with a six-card major to the two level, or a seven-card minor to the three level, on weak-two values. In both SAYC and 2/1, responder can use fourth-suit forcing with 10+ HCP after a one-level response and opener's suit rebid. SAYC and 2/1 support remains limited, and broader competitive auctions and complete convention systems are still planned.
 
 After the 1♥–1NT–2♠ reverse, responder shows a major fit, bids notrump with a spade stopper, or continues in a natural minor.
 

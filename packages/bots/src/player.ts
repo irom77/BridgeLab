@@ -16,9 +16,13 @@ function aceCount(hand: Hand): number {
   return hand.filter((card) => card.rank === "A").length;
 }
 
-function hasReasonableWeakTwoSuit(hand: Hand, suit: Suit): boolean {
+function hasReasonablePreemptiveSuit(hand: Hand, suit: Suit, minimumLength: number): boolean {
   const suitCards = hand.filter((card) => card.suit === suit);
-  return suitCards.length >= 6 && suitCards.filter((card) => ["A", "K", "Q", "J", "T"].includes(card.rank)).length >= 2;
+  return suitCards.length >= minimumLength && suitCards.filter((card) => ["A", "K", "Q", "J", "T"].includes(card.rank)).length >= 2;
+}
+
+function hasReasonableWeakTwoSuit(hand: Hand, suit: Suit): boolean {
+  return hasReasonablePreemptiveSuit(hand, suit, 6);
 }
 
 function supportPoints(hand: Hand, trumpSuit: Suit): number {
@@ -1491,6 +1495,16 @@ export class IntermediateBot implements BotPlayer {
         const hasOpeningSuitStopper = openingSuitCards.some((card) => card.rank === "A") ||
           (openingSuitCards.length >= 2 && openingSuitCards.some((card) => card.rank === "K")) ||
           (openingSuitCards.length >= 3 && openingSuitCards.some((card) => card.rank === "Q"));
+        if (hcp >= 5 && hcp <= 11) {
+          const jumpMajor = (["spades", "hearts"] as const)
+            .filter((suit) => suit !== openingSuit && hasReasonableWeakTwoSuit(hand, suit))
+            .sort((a, b) => hand.filter((card) => card.suit === b).length - hand.filter((card) => card.suit === a).length || Number(b === "spades") - Number(a === "spades"))[0];
+          if (jumpMajor) return Promise.resolve(`2${jumpMajor}` as Bid);
+          const jumpMinor = (["clubs", "diamonds"] as const)
+            .filter((suit) => suit !== openingSuit && hasReasonablePreemptiveSuit(hand, suit, 7))
+            .sort((a, b) => hand.filter((card) => card.suit === b).length - hand.filter((card) => card.suit === a).length || Number(b === "diamonds") - Number(a === "diamonds"))[0];
+          if (jumpMinor) return Promise.resolve(`3${jumpMinor}` as Bid);
+        }
         if (isBalanced(hand) && hcp >= 15 && hcp <= 18 && hasOpeningSuitStopper) return Promise.resolve("1notrump");
         const longest = (candidates: readonly Suit[]) => [...candidates]
           .map((suit) => ({ suit, length: length(suit) }))

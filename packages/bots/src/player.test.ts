@@ -2196,6 +2196,18 @@ describe("beginner bot", () => {
     expect(await bot.chooseBid(overcaller, [{ seat: "north", bid: "1spades" }], "east")).toBe("2clubs");
   });
 
+  it("makes a preemptive jump overcall with a six-card major and weak-two values", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const overcaller = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:J", "hearts:T", "hearts:2", "spades:2", "spades:3", "spades:4", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
+    expect(await bot.chooseBid(overcaller, [{ seat: "north", bid: "1diamonds" }], "east")).toBe("2hearts");
+  });
+
+  it("makes a preemptive jump overcall with a seven-card minor", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "2/1" });
+    const overcaller = hand("clubs:A", "clubs:K", "clubs:2", "clubs:3", "clubs:4", "clubs:5", "clubs:6", "spades:2", "spades:3", "hearts:2", "hearts:3", "diamonds:2", "diamonds:3");
+    expect(await bot.chooseBid(overcaller, [{ seat: "north", bid: "1spades" }], "east")).toBe("3clubs");
+  });
+
   it("passes a direct overcall with fewer than five cards in every suit", async () => {
     const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
     const balanced = hand("spades:A", "spades:2", "spades:3", "spades:4", "hearts:K", "hearts:2", "hearts:3", "diamonds:Q", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4");
