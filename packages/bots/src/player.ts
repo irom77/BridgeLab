@@ -334,6 +334,15 @@ export class BeginnerBot implements BotPlayer {
     }
     if (
       saycMajorTwoLevelResponse && contractCalls.length === 3 && saycMajorTwoLevelResponse.response.seat === seat &&
+      contractCalls[2]?.bid === `2${saycMajorTwoLevelResponse.openingSuit === "hearts" ? "spades" : "hearts"}`
+    ) {
+      const alternateMajor = saycMajorTwoLevelResponse.openingSuit === "hearts" ? "spades" : "hearts";
+      if (hand.filter((card) => card.suit === alternateMajor).length >= 4 && points(hand) >= 10) {
+        return `3${alternateMajor}` as Bid;
+      }
+    }
+    if (
+      saycMajorTwoLevelResponse && contractCalls.length === 3 && saycMajorTwoLevelResponse.response.seat === seat &&
       /^3(clubs|diamonds|hearts|spades)$/.test(contractCalls[2]?.bid ?? "")
     ) {
       const openerRebidSuit = contractCalls[2]!.bid.slice(1) as Suit;
@@ -357,6 +366,12 @@ export class BeginnerBot implements BotPlayer {
       saycMajorTwoLevelResponse && contractCalls.length === 4 && saycMajorTwoLevelResponse.opening.seat === seat
     ) {
       const responderRebid = contractCalls[3]?.bid;
+      const alternateMajor = saycMajorTwoLevelResponse.openingSuit === "hearts" ? "spades" : "hearts";
+      if (contractCalls[2]?.bid === `2${alternateMajor}` && responderRebid === `3${alternateMajor}`) {
+        return points(hand) >= 16 && hand.filter((card) => card.suit === alternateMajor).length >= 3
+          ? `4${alternateMajor}` as Bid
+          : "pass";
+      }
       if (responderRebid === `3${saycMajorTwoLevelResponse.openingSuit}`) {
         const support = hand.filter((card) => card.suit === saycMajorTwoLevelResponse.openingSuit).length;
         return support >= 3 && points(hand) >= 16 ? `4${saycMajorTwoLevelResponse.openingSuit}` as Bid : "pass";

@@ -15,6 +15,7 @@ Project changes are recorded here, newest first. Keep entries short and link imp
 
 ## Unreleased
 
+- After a SAYC major reverse to the alternate major, responder can invite with four-card support and 10+ HCP; opener accepts with three-card support and 16+ HCP. See [implementation plan](docs/superpowers/plans/2026-10-26-sayc-two-level-opener-rebid.md).
 - Expert responders can use the Grand Slam Force after an accepted splinter raise with 18+ HCP and two top trump honors; opener bids 7M with two of A/K/Q in trumps, otherwise 6M. With 18+ HCP but fewer than two top trump honors, 4NT Blackwood remains available. See [implementation plan](docs/superpowers/plans/2026-10-26-expert-grand-slam-force-after-splinter.md).
 - Splinter detection now matches the agreed level for the opening major, so a natural 1♠–3♥ jump is not treated as a splinter.
 - Expert openers can use the Grand Slam Force after a 2/1 auction establishes a major fit and responder places game; responder bids 7M with two of A/K/Q in trumps, otherwise 6M. See [implementation plan](docs/superpowers/plans/2026-10-26-expert-grand-slam-force-two-over-one.md).
