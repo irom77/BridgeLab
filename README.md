@@ -50,6 +50,8 @@ After SAYC 1M–2m, an opener with a balanced 18–19 HCP hand rebids 2NT; respo
 
 With a maximum unbalanced hand after SAYC 1M–2m, opener can jump-raise responder's minor, jump-shift to a four-card side suit, or jump-rebid a six-card major. Responder places game in a shown fit or notrump.
 
+After SAYC 1♠–2♥, opener shows three-card heart support, a natural side suit, a five-card spade rebid, or a balanced 18–19 HCP hand in 2NT; responder places or invites game based on the fit and rebid.
+
 Expert responders can use Texas transfers to place game in a six-card major while keeping opener as declarer: with 8–9 HCP over 1NT or 0–9 HCP over 2NT. Higher-strength hands continue with the existing slam-aware transfer methods.
 
 Expert responders use Puppet Stayman over 2NT to find opener's four- or five-card major, then place game in a fit or notrump. With a 6–4 major holding, responder can transfer to the longer major after opener denies a fit.
