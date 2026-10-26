@@ -774,7 +774,7 @@ export class BeginnerBot implements BotPlayer {
         const majorSupport = hand.filter((card) => card.suit === openingMajor).length;
         if (majorSupport >= 3 && responderPoints >= 11 && responderPoints <= 12) return `3${openingMajor}` as Bid;
         if (isBalanced(hand) && responderPoints >= 11 && responderPoints <= 12) return "2notrump";
-        const alternateMajor = openingMajor === "spades" ? "hearts" : undefined;
+        const alternateMajor = openingMajor === "spades" ? "hearts" : "spades";
         const directTwoLevelMinimum = this.convention.style === "2/1" ? 13 : 10;
         if (
           alternateMajor && responderPoints < directTwoLevelMinimum &&
