@@ -15,6 +15,7 @@ Project changes are recorded here, newest first. Keep entries short and link imp
 
 ## Unreleased
 
+- Expert opening leads against suit contracts no longer underlead an ace from the selected suit; notrump lead choices are unchanged. See [implementation plan](docs/superpowers/plans/2026-10-26-expert-suit-contract-ace-lead.md).
 - Intermediate and Advanced bots now play the lowest legal card as second hand, avoiding unnecessary overtakes of an opponent's lead.
 - After a SAYC major reverse to the alternate major, responder can invite with four-card support and 10+ HCP; opener accepts with three-card support and 16+ HCP. See [implementation plan](docs/superpowers/plans/2026-10-26-sayc-two-level-opener-rebid.md).
 - Expert responders can use the Grand Slam Force after an accepted splinter raise with 18+ HCP and two top trump honors; opener bids 7M with two of A/K/Q in trumps, otherwise 6M. With 18+ HCP but fewer than two top trump honors, 4NT Blackwood remains available. See [implementation plan](docs/superpowers/plans/2026-10-26-expert-grand-slam-force-after-splinter.md).

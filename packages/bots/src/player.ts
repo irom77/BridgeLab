@@ -2986,6 +2986,12 @@ export class ExpertBot implements BotPlayer {
   }
 
   chooseCard(context: PlayContext): Promise<Hand[number]> {
+    if (context.currentTrick.length === 0 && context.trump) {
+      const lead = topOfTouchingHonorSequence(context.hand) ??
+        fourthHighestFromLongestSuit(context.hand) ?? lowestCard(context.hand);
+      const ace = context.hand.find((card) => card.suit === lead.suit && card.rank === "A");
+      if (ace) return Promise.resolve(ace);
+    }
     return this.advancedBot.chooseCard(context);
   }
 }

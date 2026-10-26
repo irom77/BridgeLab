@@ -3390,6 +3390,20 @@ describe("beginner bot", () => {
     expect(choice).toEqual({ suit: "hearts", rank: "4" });
   });
 
+  it("does not underlead an ace on an Expert opening lead against a suit contract", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "2/1" });
+    const cards = hand("spades:A", "spades:8", "spades:6", "spades:4", "spades:2", "hearts:K", "hearts:3", "diamonds:Q", "diamonds:2", "clubs:K", "clubs:3", "clubs:2", "clubs:4");
+    const choice = await bot.chooseCard({ seat: "south", hand: cards, currentTrick: [], trump: "hearts" });
+    expect(choice).toEqual({ suit: "spades", rank: "A" });
+  });
+
+  it("keeps the fourth-highest lead against notrump even when holding the ace", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "2/1" });
+    const cards = hand("spades:A", "spades:8", "spades:6", "spades:4", "spades:2", "hearts:K", "hearts:3", "diamonds:Q", "diamonds:2", "clubs:K", "clubs:3", "clubs:2", "clubs:4");
+    const choice = await bot.chooseCard({ seat: "south", hand: cards, currentTrick: [] });
+    expect(choice).toEqual({ suit: "spades", rank: "4" });
+  });
+
   it("uses Reverse Drury with a passed-hand limit raise after a third-seat major opening", async () => {
     const bot = createBot({ skill: "expert", biddingStyle: "2/1" });
     const responder = hand("spades:K", "spades:Q", "spades:2", "hearts:A", "hearts:2", "hearts:3", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
