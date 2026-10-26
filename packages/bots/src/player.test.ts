@@ -1721,12 +1721,16 @@ describe("beginner bot", () => {
   it("shows a four-card side major after opener's natural 3 clubs rebid", async () => {
     const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
     const responder = hand("spades:A", "spades:K", "spades:Q", "spades:J", "spades:2", "hearts:A", "diamonds:A", "diamonds:K", "diamonds:Q", "diamonds:2", "clubs:K", "clubs:2", "clubs:3");
+    const opener = hand("hearts:K", "hearts:Q", "hearts:2", "hearts:3", "hearts:4", "spades:A", "spades:2", "spades:3", "diamonds:K", "clubs:Q", "clubs:J", "clubs:2", "clubs:3");
     const auction = [
       { seat: "north", bid: "1hearts" as const }, { seat: "east", bid: "pass" as const },
       { seat: "south", bid: "2diamonds" as const }, { seat: "west", bid: "pass" as const },
       { seat: "north", bid: "3clubs" as const }, { seat: "east", bid: "pass" as const }
     ] as const;
     expect(await bot.chooseBid(responder, auction, "south")).toBe("3spades");
+    expect(await bot.chooseBid(opener, [
+      ...auction, { seat: "south", bid: "3spades" as const }, { seat: "west", bid: "pass" as const }
+    ], "north")).toBe("4spades");
   });
 
   it("places the 2/1 force in notrump after opener shows clubs without a major fit or a long diamond suit", async () => {

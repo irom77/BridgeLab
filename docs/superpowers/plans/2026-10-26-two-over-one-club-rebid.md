@@ -8,5 +8,6 @@ In an uncontested, unpassed 2/1 game force after 1M–2♦, opener with 12–17 
 
 - Test the opener's natural 3♣ rebid.
 - Test responder placement with a four-card side major, four-card club support, and no fit/long suit.
+- Test opener accepting the four-card side-major continuation with three-card support.
 - Test the six-diamond rebid, opener's raise, and responder's final 5♦ game placement.
 - Run `pnpm test`, `pnpm typecheck`, `pnpm lint`, and `git diff --check`.
