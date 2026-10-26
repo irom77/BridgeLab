@@ -31,7 +31,7 @@
 - Modify: `packages/bots/src/player.ts`
 - Modify: `TODO.md`, `CHANGES.md`, `README.md`
 
-- [x] Add tests for responder's 5NT ask, opener's 6M/7M answers, the strength boundary, rejection of a natural 1♠–3♥ jump, and retained 4NT Blackwood when the GSF condition is not met.
+- [x] Add tests for responder's 5NT ask, opener's 6M/7M answers, the strength boundary, rejection of a natural 1♠–3♥ jump in both GSF and king-ask detection, and retained 4NT Blackwood when the GSF condition is not met.
 - [x] Run the tests before implementation; the 5NT ask and both answers failed as expected.
 - [x] Implement exact accepted-splinter detection.
 - [x] Run `pnpm test` (602 tests), `pnpm typecheck`, `pnpm lint`, and `git diff --check`.

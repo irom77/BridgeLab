@@ -3491,7 +3491,7 @@ describe("beginner bot", () => {
 
   it("does not treat a natural 1S-3H response as a splinter", async () => {
     const bot = createBot({ skill: "expert", biddingStyle: "2/1" });
-    const responder = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:J", "hearts:2", "spades:A", "spades:K", "spades:2", "diamonds:K", "diamonds:2", "clubs:2", "clubs:3", "clubs:4");
+    const responder = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:J", "hearts:2", "spades:A", "spades:K", "spades:2", "diamonds:A", "diamonds:2", "clubs:2", "clubs:3", "clubs:4");
     const auction = [
       { seat: "north", bid: "1spades" as const }, { seat: "east", bid: "pass" as const },
       { seat: "south", bid: "3hearts" as const }, { seat: "west", bid: "pass" as const },
@@ -3499,6 +3499,13 @@ describe("beginner bot", () => {
     ] as const;
     expect(await bot.chooseBid(responder, auction, "south")).not.toBe("5notrump");
     expect(await bot.chooseBid(responder, auction, "south")).not.toBe("4notrump");
+
+    const naturalJumpBlackwoodAuction = [
+      ...auction,
+      { seat: "south", bid: "4notrump" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "5diamonds" as const }, { seat: "east", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, naturalJumpBlackwoodAuction, "south")).not.toBe("5notrump");
   });
 
   it.each([

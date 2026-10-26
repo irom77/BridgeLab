@@ -1887,7 +1887,8 @@ export class ExpertBot implements BotPlayer {
             : undefined;
         if (agreedMajor) return agreedMajor;
       }
-      if (responseSuit && response.bid !== `2${responseSuit}` && responseSuit !== major && openerRebid.bid === `4${major}`) return major;
+      const acceptedSplinter = splinterSequence(opening, response);
+      if (acceptedSplinter && openerRebid.bid === `4${acceptedSplinter.major}`) return acceptedSplinter.major;
       return undefined;
     };
 
