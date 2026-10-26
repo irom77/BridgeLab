@@ -3916,6 +3916,57 @@ describe("beginner bot", () => {
     expect(await bot.chooseBid(responder, auction, "south")).toBe("6hearts");
   });
 
+  it("uses Expert Blackwood after a SAYC strong jump shift finds a major fit", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "SAYC" });
+    const responder = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:J", "hearts:T", "spades:A", "spades:2", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:K", "clubs:2", "clubs:3");
+    const auction = [
+      { seat: "north", bid: "1spades" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "3hearts" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "4hearts" as const }, { seat: "east", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("4notrump");
+  });
+
+  it("answers and places Blackwood after a SAYC strong jump-shift major fit", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "SAYC" });
+    const opener = hand("hearts:2", "hearts:3", "hearts:4", "spades:K", "spades:Q", "spades:J", "diamonds:A", "diamonds:Q", "diamonds:5", "diamonds:6", "clubs:Q", "clubs:4", "clubs:5");
+    const auction = [
+      { seat: "north", bid: "1spades" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "3hearts" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "4hearts" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "4notrump" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe("5diamonds");
+    const afterAnswer = [...auction, { seat: "north", bid: "5diamonds" as const }, { seat: "east", bid: "pass" as const }] as const;
+    expect(await bot.chooseBid(hand("hearts:A", "hearts:K", "hearts:Q", "hearts:J", "hearts:T", "spades:A", "spades:2", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:K", "clubs:2", "clubs:3"), afterAnswer, "south")).toBe("6hearts");
+  });
+
+  it("asks for kings after a SAYC jump-shift Blackwood response confirms all four aces", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "SAYC" });
+    const responder = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:J", "hearts:T", "spades:A", "spades:2", "diamonds:A", "diamonds:2", "diamonds:3", "clubs:K", "clubs:2", "clubs:3");
+    const auction = [
+      { seat: "north", bid: "1spades" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "3hearts" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "4hearts" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "4notrump" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "5diamonds" as const }, { seat: "east", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("5notrump");
+    const kingAsk = [...auction, { seat: "south", bid: "5notrump" as const }, { seat: "west", bid: "pass" as const }] as const;
+    expect(await bot.chooseBid(hand("hearts:2", "hearts:3", "hearts:4", "spades:K", "spades:Q", "spades:J", "diamonds:A", "diamonds:Q", "diamonds:5", "diamonds:6", "clubs:Q", "clubs:4", "clubs:5"), kingAsk, "north")).toBe("6diamonds");
+  });
+
+  it("does not treat a SAYC strong jump shift without a confirmed major fit as Blackwood", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "SAYC" });
+    const responder = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:J", "hearts:T", "spades:A", "spades:2", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:K", "clubs:2", "clubs:3");
+    const auction = [
+      { seat: "north", bid: "1spades" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "3hearts" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "3notrump" as const }, { seat: "east", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).not.toBe("4notrump");
+  });
+
   it("asks for kings after Blackwood confirms all four aces", async () => {
     const bot = createBot({ skill: "expert", biddingStyle: "2/1" });
     const responder = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:2", "hearts:3", "spades:A", "spades:2", "diamonds:A", "diamonds:2", "diamonds:3", "clubs:K", "clubs:2", "clubs:3");

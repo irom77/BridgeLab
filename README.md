@@ -44,7 +44,7 @@ The core is TypeScript and designed to stay independent of UI and platform APIs.
 
 Intermediate bidding uses Support Doubles after a minor opening and a one-level major response: opener doubles with exactly three-card support after a suit overcall, or raises with four or more.
 
-SAYC bots also use strong natural jump shifts with a five-card suit and 19+ HCP when unpassed. Opener shows a major fit, a strong balanced hand, or a natural suit rebid, and responder places game; slam continuations remain planned.
+SAYC bots also use strong natural jump shifts with a five-card suit and 19+ HCP when unpassed. Opener shows a major fit, a strong balanced hand, or a natural suit rebid, and responder places game. Expert bots can use Blackwood after opener confirms a major fit at game; further slam continuations remain planned.
 
 After SAYC 1M–2m, an opener with a balanced 18–19 HCP hand rebids 2NT; responder places game in a three-card major fit or 3NT without one.
 

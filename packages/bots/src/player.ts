@@ -2094,6 +2094,11 @@ export class ExpertBot implements BotPlayer {
       const responseSuit = response?.bid.match(/^[234](clubs|diamonds|hearts|spades)$/)?.[1] as Suit | undefined;
       const expectedResponder = opening ? SEATS[(SEATS.indexOf(opening.seat) + 2) % SEATS.length]! : undefined;
       if (!opening || !major || !response || !openerRebid || response.seat !== expectedResponder || openerRebid.seat !== opening.seat) return undefined;
+      const saycJumpShift = this.config.biddingStyle === "SAYC" ? saycJumpShiftAuction(auction, "SAYC") : undefined;
+      if (
+        saycJumpShift && (saycJumpShift.responseSuit === "hearts" || saycJumpShift.responseSuit === "spades") &&
+        openerRebid.bid === `4${saycJumpShift.responseSuit}`
+      ) return saycJumpShift.responseSuit;
       if (response.bid === "2notrump" && /^3(clubs|diamonds|hearts|spades)$/.test(openerRebid.bid) && openerRebid.bid !== `3${major}`) return major;
       if (this.config.biddingStyle === "2/1" && responseSuit && response.bid.startsWith("2") && responseSuit !== major) {
         const agreedMajor = openerRebid.bid === `3${major}`
@@ -2109,6 +2114,46 @@ export class ExpertBot implements BotPlayer {
     };
 
     const agreedBlackwoodMajor = blackwoodTrump();
+    const saycJumpShift = this.config.biddingStyle === "SAYC" ? saycJumpShiftAuction(auction, "SAYC") : undefined;
+    const saycJumpShiftBlackwoodMajor = saycJumpShift &&
+      (saycJumpShift.responseSuit === "hearts" || saycJumpShift.responseSuit === "spades") &&
+      calls[2]?.bid === `4${saycJumpShift.responseSuit}`
+      ? saycJumpShift.responseSuit
+      : undefined;
+    if (
+      calls.length === 3 && this.config.biddingStyle === "SAYC" &&
+      saycJumpShiftBlackwoodMajor &&
+      calls[0]?.seat === partner && calls[1]?.seat === seat && calls[2]?.seat === partner &&
+      calls[2].bid === `4${saycJumpShiftBlackwoodMajor}` && points(hand) >= 18
+    ) return Promise.resolve("4notrump");
+
+    if (
+      calls.length === 4 && saycJumpShiftBlackwoodMajor && agreedBlackwoodMajor && calls[3]?.seat === partner && calls[3].bid === "4notrump"
+    ) {
+      const aces = aceCount(hand);
+      if (aces === 0 || aces === 4) return Promise.resolve("5clubs");
+      if (aces === 1) return Promise.resolve("5diamonds");
+      if (aces === 2) return Promise.resolve("5hearts");
+      return Promise.resolve("5spades");
+    }
+
+    if (
+      calls.length === 5 && saycJumpShiftBlackwoodMajor && agreedBlackwoodMajor && calls[3]?.seat === seat && calls[3].bid === "4notrump" &&
+      calls[4]?.seat === partner && ["5clubs", "5diamonds", "5hearts", "5spades"].includes(calls[4].bid)
+    ) {
+      const ownAces = aceCount(hand);
+      const partnerAces = calls[4].bid === "5clubs" ? undefined : calls[4].bid === "5diamonds" ? 1 : calls[4].bid === "5hearts" ? 2 : 3;
+      const allAcesKnown = partnerAces === undefined ? ownAces === 4 : ownAces + partnerAces === 4;
+      if (allAcesKnown) return Promise.resolve("5notrump");
+      if (partnerAces === undefined ? ownAces >= 3 : ownAces + partnerAces >= 3) {
+        return Promise.resolve(`6${agreedBlackwoodMajor}` as Bid);
+      }
+      const suitOrder: readonly Suit[] = ["clubs", "diamonds", "hearts", "spades"];
+      return Promise.resolve(suitOrder.indexOf(agreedBlackwoodMajor) > suitOrder.indexOf(calls[4].bid.slice(1) as Suit)
+        ? `5${agreedBlackwoodMajor}` as Bid
+        : "pass");
+    }
+
     if (
       calls.length === 5 && agreedBlackwoodMajor && calls[3]?.seat === seat && calls[3].bid === "4notrump" &&
       calls[4]?.seat === partner && ["5clubs", "5diamonds", "5hearts", "5spades"].includes(calls[4].bid)
