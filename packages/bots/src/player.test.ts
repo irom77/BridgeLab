@@ -3671,6 +3671,34 @@ describe("beginner bot", () => {
     expect(await bot.chooseBid(responder, auction, "south")).not.toBe("4diamonds");
   });
 
+  it.each([
+    ["hearts", "4diamonds"],
+    ["spades", "4hearts"]
+  ] as const)("uses Texas over 1NT for a six-card %s suit with 8–9 HCP", async (major, expected) => {
+    const bot = createBot({ skill: "expert", biddingStyle: "2/1" });
+    const responder = major === "hearts"
+      ? hand("hearts:A", "hearts:K", "hearts:Q", "hearts:2", "hearts:3", "hearts:4", "spades:2", "spades:3", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4")
+      : hand("spades:A", "spades:K", "spades:Q", "spades:2", "spades:3", "spades:4", "hearts:2", "hearts:3", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4");
+    expect(await bot.chooseBid(responder, [{ seat: "north", bid: "1notrump" }], "south")).toBe(expected);
+  });
+
+  it.each([
+    ["4diamonds", "4hearts"],
+    ["4hearts", "4spades"]
+  ] as const)("accepts a Texas transfer over 1NT with %s", async (transfer, expected) => {
+    const bot = createBot({ skill: "expert", biddingStyle: "SAYC" });
+    const auction = [
+      { seat: "north", bid: "1notrump" as const }, { seat: "south", bid: transfer as "4diamonds" },
+    ] as const;
+    expect(await bot.chooseBid(hand(), auction, "north")).toBe(expected);
+  });
+
+  it("keeps the Jacoby transfer route for slam values over 1NT", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "2/1" });
+    const responder = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:2", "hearts:3", "hearts:4", "spades:A", "spades:2", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:K", "clubs:2");
+    expect(await bot.chooseBid(responder, [{ seat: "north", bid: "1notrump" }], "south")).toBe("2diamonds");
+  });
+
   it("uses Gerber instead of a quantitative invitation with 16 HCP over a 2NT opening", async () => {
     const bot = createBot({ skill: "expert", biddingStyle: "2/1" });
     const responder = hand("spades:A", "spades:K", "spades:Q", "hearts:A", "hearts:K", "hearts:2", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4", "clubs:5");

@@ -1861,10 +1861,12 @@ export class ExpertBot implements BotPlayer {
     const partner = SEATS[(SEATS.indexOf(seat) + 2) % SEATS.length]!;
     const isNotrumpOpening = (bid: Bid | undefined) => bid === "1notrump" || bid === "2notrump";
 
-    if (calls.length === 1 && calls[0]?.seat === partner && calls[0].bid === "2notrump") {
+    if (calls.length === 1 && calls[0]?.seat === partner && (calls[0].bid === "1notrump" || calls[0].bid === "2notrump")) {
       const hearts = hand.filter((card) => card.suit === "hearts").length;
       const spades = hand.filter((card) => card.suit === "spades").length;
-      if (points(hand) <= 9) {
+      const hcp = points(hand);
+      const gameOnlyRange = calls[0].bid === "1notrump" ? hcp >= 8 && hcp <= 9 : hcp <= 9;
+      if (gameOnlyRange) {
         if (spades >= 6) return Promise.resolve("4hearts");
         if (hearts >= 6) return Promise.resolve("4diamonds");
       }
@@ -1872,7 +1874,7 @@ export class ExpertBot implements BotPlayer {
 
     if (calls.length === 2) {
       const [opening, transfer] = calls;
-      if (opening?.bid === "2notrump" && opening.seat === seat && transfer?.seat === partner) {
+      if (opening && isNotrumpOpening(opening.bid) && opening.seat === seat && transfer?.seat === partner) {
         if (transfer.bid === "4diamonds") return Promise.resolve("4hearts");
         if (transfer.bid === "4hearts") return Promise.resolve("4spades");
       }
@@ -1881,7 +1883,7 @@ export class ExpertBot implements BotPlayer {
     if (calls.length === 3) {
       const [opening, transfer, acceptance] = calls;
       if (
-        opening?.bid === "2notrump" && opening.seat === partner && transfer?.seat === seat && acceptance?.seat === partner &&
+        opening && isNotrumpOpening(opening.bid) && opening.seat === partner && transfer?.seat === seat && acceptance?.seat === partner &&
         ((transfer.bid === "4diamonds" && acceptance.bid === "4hearts") ||
           (transfer.bid === "4hearts" && acceptance.bid === "4spades"))
       ) return Promise.resolve("pass");
