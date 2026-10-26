@@ -1849,6 +1849,7 @@ export class ExpertBot implements BotPlayer {
       const [opening, response, openerRebid] = calls;
       const openingMinor = opening?.bid.match(/^1(clubs|diamonds)$/)?.[1] as Suit | undefined;
       const responderMajor = response?.bid.match(/^1(hearts|spades)$/)?.[1] as Suit | undefined;
+      const forcingAsk = this.config.biddingStyle === "2/1" && openingMinor === "clubs" ? "2diamonds" : "2clubs";
       if (
         openingMinor && opening?.seat === partner && responderMajor && response?.seat === seat &&
         openerRebid?.bid === "1notrump" && openerRebid.seat === partner && points(hand) >= 10 &&
@@ -1856,22 +1857,24 @@ export class ExpertBot implements BotPlayer {
           hand.filter((card) => card.suit === responderMajor).length >= 5 ||
           hand.filter((card) => card.suit === (responderMajor === "hearts" ? "spades" : "hearts")).length >= 4
         ) && auction.every(({ bid }) => bid === "pass" || bid === opening.bid || bid === response.bid || bid === openerRebid.bid)
-      ) return Promise.resolve("2clubs");
+      ) return Promise.resolve(forcingAsk);
     }
 
     if (calls.length === 4) {
       const [opening, response, openerRebid, checkback] = calls;
       const openingMinor = opening?.bid.match(/^1(clubs|diamonds)$/)?.[1] as Suit | undefined;
       const responderMajor = response?.bid.match(/^1(hearts|spades)$/)?.[1] as Suit | undefined;
+      const forcingAsk = this.config.biddingStyle === "2/1" && openingMinor === "clubs" ? "2diamonds" : "2clubs";
+      const denialBid = this.config.biddingStyle === "2/1" ? "2notrump" : "2diamonds";
       if (
         openingMinor && opening?.seat === seat && responderMajor && response?.seat === partner &&
-        openerRebid?.bid === "1notrump" && openerRebid.seat === seat && checkback?.bid === "2clubs" &&
+        openerRebid?.bid === "1notrump" && openerRebid.seat === seat && checkback?.bid === forcingAsk &&
         checkback.seat === partner && auction.every(({ bid }) => bid === "pass" || bid === opening.bid || bid === response.bid || bid === openerRebid.bid || bid === checkback.bid)
       ) {
         if (hand.filter((card) => card.suit === responderMajor).length >= 3) return Promise.resolve(`2${responderMajor}` as Bid);
         const otherMajor = responderMajor === "hearts" ? "spades" : "hearts";
         if (hand.filter((card) => card.suit === otherMajor).length >= 4) return Promise.resolve(`2${otherMajor}` as Bid);
-        return Promise.resolve("2diamonds");
+        return Promise.resolve(denialBid);
       }
     }
 
@@ -1880,10 +1883,12 @@ export class ExpertBot implements BotPlayer {
       const openingMinor = opening?.bid.match(/^1(clubs|diamonds)$/)?.[1] as Suit | undefined;
       const responderMajor = response?.bid.match(/^1(hearts|spades)$/)?.[1] as Suit | undefined;
       const major = majorReply?.bid.match(/^2(hearts|spades)$/)?.[1] as Suit | undefined;
+      const forcingAsk = this.config.biddingStyle === "2/1" && openingMinor === "clubs" ? "2diamonds" : "2clubs";
+      const denialBid = this.config.biddingStyle === "2/1" ? "2notrump" : "2diamonds";
       if (
         openingMinor && opening?.seat === partner && responderMajor && response?.seat === seat &&
-        openerRebid?.bid === "1notrump" && openerRebid.seat === partner && checkback?.bid === "2clubs" &&
-        checkback.seat === seat && majorReply?.bid === "2diamonds" && majorReply.seat === partner &&
+        openerRebid?.bid === "1notrump" && openerRebid.seat === partner && checkback?.bid === forcingAsk &&
+        checkback.seat === seat && majorReply?.bid === denialBid && majorReply.seat === partner &&
         auction.every(({ bid }) => bid === "pass" || bid === opening.bid || bid === response.bid || bid === openerRebid.bid || bid === checkback.bid || bid === majorReply.bid)
       ) {
         const responderPoints = points(hand);
@@ -1894,7 +1899,7 @@ export class ExpertBot implements BotPlayer {
       }
       if (
         openingMinor && opening?.seat === partner && responderMajor && response?.seat === seat &&
-        openerRebid?.bid === "1notrump" && openerRebid.seat === partner && checkback?.bid === "2clubs" &&
+        openerRebid?.bid === "1notrump" && openerRebid.seat === partner && checkback?.bid === forcingAsk &&
         checkback.seat === seat && major && majorReply?.seat === partner &&
         auction.every(({ bid }) => bid === "pass" || bid === opening.bid || bid === response.bid || bid === openerRebid.bid || bid === checkback.bid || bid === majorReply.bid)
       ) {
@@ -1917,9 +1922,10 @@ export class ExpertBot implements BotPlayer {
       const [opening, response, openerRebid, checkback, majorReply, responderInvite] = calls;
       const openingMinor = opening?.bid.match(/^1(clubs|diamonds)$/)?.[1] as Suit | undefined;
       const major = majorReply?.bid.match(/^2(hearts|spades)$/)?.[1] as Suit | undefined;
+      const forcingAsk = this.config.biddingStyle === "2/1" && openingMinor === "clubs" ? "2diamonds" : "2clubs";
       if (
         openingMinor && opening?.seat === seat && response?.bid.match(/^1(hearts|spades)$/) && response.seat === partner &&
-        openerRebid?.bid === "1notrump" && openerRebid.seat === seat && checkback?.bid === "2clubs" &&
+        openerRebid?.bid === "1notrump" && openerRebid.seat === seat && checkback?.bid === forcingAsk &&
         checkback.seat === partner && major && majorReply?.seat === seat && responderInvite?.bid === `3${major}` &&
         responderInvite.seat === partner && hand.filter((card) => card.suit === major).length >= 3 &&
         auction.every(({ bid }) => bid === "pass" || bid === opening.bid || bid === response.bid || bid === openerRebid.bid || bid === checkback.bid || bid === majorReply.bid || bid === responderInvite.bid)

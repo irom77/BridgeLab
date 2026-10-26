@@ -1,5 +1,7 @@
 # Changes
 
+- Expert 2/1 bots now use New Minor Forcing after 1m–1M–1NT: responder asks with the unbid minor, opener shows major support or a side major, and responder places the contract. SAYC keeps its existing Expert Checkback sequence.
+
 Project changes are recorded here, newest first. Keep entries short and link implementation plans when useful.
 
 ## Unreleased
