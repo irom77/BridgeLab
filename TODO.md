@@ -4,7 +4,7 @@ Status follows the app-wide plan in [`docs/superpowers/plans/2026-10-25-contract
 
 ## Current focus
 
-The core rules, PBN package, and solo client are in place. Beginner through Expert bots are selectable; Advanced adds third-hand honor-sequence play, and Expert adds Gerber, splinter raises, Reverse Drury, and a limited Lebensohl sequence. Card-play hints identify legal moves or optional solver recommendations. Next is broader SAYC / 2/1 bidding and strategy coverage.
+The core rules, PBN package, and solo client are in place. Beginner through Expert bots are selectable; Advanced adds third-hand honor-sequence play, and Expert adds Gerber, splinter raises, Reverse Drury, and weak-suit Lebensohl relays. Card-play hints identify legal moves or optional solver recommendations. Next is broader SAYC / 2/1 bidding and strategy coverage.
 
 ## Foundation
 
@@ -97,7 +97,7 @@ The core rules, PBN package, and solo client are in place. Beginner through Expe
     - [x] Add an Advanced bot skill that follows Intermediate bidding and plays the top touching honor third hand when partner is winning.
     - [x] Add an Expert bot skill that inherits Advanced play, uses direct Gerber over notrump openings, makes splinter raises with four-card major support and one singleton/void, and uses Blackwood after Jacoby shortness, accepted splinter raises, or a 2/1 game-forcing major fit with 18+ HCP; after a Jacoby game rebid, responder can use the Grand Slam Force with two top trump honors, and opener bids 7M with two of A/K/Q in trumps or 6M otherwise. Other expert bidding/play strategies remain planned.
     - [x] Use Reverse Drury in Expert auctions after a third- or fourth-seat major opening: a passed responder with 3+ card support and 10–12 support points bids artificial 2♣; opener signs off in 2M with up to 12 HCP, shows a sound opening with 2♦ on 13–15, or bids game with 16+; responder places 3M or 4M, and opener accepts an invitation with 15+ HCP. See [implementation plan](docs/superpowers/plans/2026-10-26-expert-reverse-drury.md).
-    - [x] After an opponent's natural 2♦/2♥/2♠ overcall of 1NT, use Lebensohl's 2NT relay with a weak hand (0–7 HCP) and 5+ clubs; opener relays to 3♣ and responder passes. See [implementation plan](docs/superpowers/plans/2026-10-26-expert-lebensohl-clubs.md).
+    - [x] After an opponent's natural 2♦/2♥/2♠ overcall of 1NT, use Lebensohl's 2NT relay with 0–7 HCP and 5+ cards in a lower-ranking suit; opener relays to 3♣, and responder passes with clubs or shows a weak lower-ranking suit at the three level. See [implementation plan](docs/superpowers/plans/2026-10-26-expert-lebensohl-weak-suits.md).
     - [x] Open a natural weak two in a six-card major or diamond suit with 5–11 HCP and at least two honors among ace through ten.
     - [x] Respond to a forcing 2NT weak-two inquiry: rebid the suit with 5–8 HCP; with 9–11 show an ace/king feature or bid 3NT without one, then let responder choose game.
     - [x] Allow preemptive 3M/4M raises of a weak two with trump support, and a natural 3NT response with a balanced game hand and no major fit.
