@@ -1224,6 +1224,9 @@ export class IntermediateBot implements BotPlayer {
           .slice(0, 2)
           .map((suit) => ({ suit, support: hand.filter((card) => card.suit === suit).length }))
           .sort((a, b) => b.support - a.support || suitOrder.indexOf(a.suit) - suitOrder.indexOf(b.suit))[0]?.suit;
+        if (preferredSuit && points(hand) <= 9 && hand.filter((card) => card.suit === preferredSuit).length >= 5) {
+          return Promise.resolve(`4${preferredSuit}` as Bid);
+        }
         if (preferredSuit) return Promise.resolve(`3${preferredSuit}` as Bid);
       }
     }

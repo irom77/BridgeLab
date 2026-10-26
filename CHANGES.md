@@ -4,6 +4,7 @@ Project changes are recorded here, newest first. Keep entries short and link imp
 
 ## Unreleased
 
+- Weak advancers with 5+ card support for a suit shown by partner's Unusual 2NT now jump to level 4 as a preemptive raise. See [implementation plan](docs/superpowers/plans/2026-10-26-intermediate-unusual-notrump-advance.md).
 - After partner's Unusual 2NT overcall, balanced Intermediate advancers with 13+ HCP now place the contract in 3NT; weaker hands still prefer a shown suit. See [implementation plan](docs/superpowers/plans/2026-10-26-intermediate-unusual-notrump-advance.md).
 - After an Intermediate partner's Unusual 2NT overcall, advancers now make a level-three preference for the better-supported shown suit when the next opponent passes. See [implementation plan](docs/superpowers/plans/2026-10-26-intermediate-unusual-notrump-advance.md).
 - Intermediate bots now use a direct Unusual 2NT overcall over a one-level suit opening with at least five cards in each of the two lowest unbid suits. See [implementation plan](docs/superpowers/plans/2026-10-26-intermediate-unusual-notrump.md).

@@ -1908,6 +1908,26 @@ describe("beginner bot", () => {
     expect(await bot.chooseBid(advancer, auction, "west")).toBe("3notrump");
   });
 
+  it("preempts at the four level with a six-card minor fit and fewer than 10 HCP", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const advancer = hand("diamonds:A", "diamonds:2", "diamonds:3", "diamonds:4", "diamonds:5", "diamonds:6", "hearts:2", "hearts:3", "spades:2", "spades:3", "spades:4", "clubs:7", "clubs:8");
+    const auction = [
+      { seat: "north", bid: "1clubs" as const }, { seat: "east", bid: "2notrump" as const },
+      { seat: "south", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(advancer, auction, "west")).toBe("4diamonds");
+  });
+
+  it("keeps a simple suit preference with a short fit after partner's Unusual 2NT", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const advancer = hand("diamonds:A", "diamonds:2", "diamonds:3", "hearts:2", "hearts:3", "hearts:4", "spades:2", "spades:3", "spades:4", "spades:5", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "1clubs" as const }, { seat: "east", bid: "2notrump" as const },
+      { seat: "south", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(advancer, auction, "west")).toBe("3diamonds");
+  });
+
   it.each([15, 18])("makes a natural 1NT overcall with a balanced %i-HCP hand and opener-suit stopper", async (expectedHcp) => {
     const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
     const overcaller = expectedHcp === 15
