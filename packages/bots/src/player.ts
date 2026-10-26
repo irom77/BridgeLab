@@ -91,6 +91,18 @@ function passedBeforeOpening(auction: readonly PublicBid[], seat: Seat, opening:
   return openingIndex >= 0 && auction.slice(0, openingIndex).some((call) => call.seat === seat && call.bid === "pass");
 }
 
+function splinterSequence(
+  opening: PublicBid | undefined,
+  splinter: PublicBid | undefined
+): { readonly major: Suit; readonly shortSuit: Suit } | undefined {
+  const major = opening?.bid.match(/^1(hearts|spades)$/)?.[1] as Suit | undefined;
+  if (!major || !splinter) return undefined;
+  const shortSuit = splinter.bid.match(
+    major === "hearts" ? /^3(clubs|diamonds|spades)$/ : /^4(clubs|diamonds|hearts)$/
+  )?.[1] as Suit | undefined;
+  return shortSuit ? { major, shortSuit } : undefined;
+}
+
 function twoOverOneAuction(auction: readonly PublicBid[], style: ConventionSystem["style"]) {
   if (style !== "2/1") return undefined;
   const contracts = auction.filter(({ bid }) => bid !== "pass");
@@ -2426,11 +2438,11 @@ export class ExpertBot implements BotPlayer {
     }
 
     if (calls.length === 4) {
-      const [opening, splinter, openerGame, grandSlamAsk] = calls;
-      const major = opening?.bid.match(/^1(hearts|spades)$/)?.[1] as Suit | undefined;
-      const shortSuit = splinter?.bid.match(/^[34](clubs|diamonds|hearts|spades)$/)?.[1] as Suit | undefined;
+      const [opening, splinterCall, openerGame, grandSlamAsk] = calls;
+      const splinter = splinterSequence(opening, splinterCall);
+      const major = splinter?.major;
       if (
-        opening?.seat === seat && major && splinter?.seat === partner && shortSuit && shortSuit !== major &&
+        opening?.seat === seat && major && splinterCall?.seat === partner && splinter &&
         openerGame?.seat === seat && openerGame.bid === `4${major}` && grandSlamAsk?.seat === partner && grandSlamAsk.bid === "5notrump"
       ) {
         const topTrumpHonors = hand.filter((card) => card.suit === major && ["A", "K", "Q"].includes(card.rank)).length;
@@ -2519,34 +2531,34 @@ export class ExpertBot implements BotPlayer {
     }
 
     if (calls.length === 3) {
-      const [opening, splinter, game] = calls;
-      const major = opening?.bid.match(/^1(hearts|spades)$/)?.[1] as Suit | undefined;
-      const shortSuit = splinter?.bid.match(/^[34](clubs|diamonds|hearts|spades)$/)?.[1] as Suit | undefined;
+      const [opening, splinterCall, game] = calls;
+      const splinter = splinterSequence(opening, splinterCall);
+      const major = splinter?.major;
       const topTrumpHonors = major
         ? hand.filter((card) => card.suit === major && ["A", "K", "Q"].includes(card.rank)).length
         : 0;
       if (
-        opening?.seat === partner && major && splinter?.seat === seat && shortSuit && shortSuit !== major &&
+        opening?.seat === partner && major && splinterCall?.seat === seat && splinter &&
         game?.seat === partner && game.bid === `4${major}` && points(hand) >= 18 && topTrumpHonors >= 2
       ) return Promise.resolve("5notrump");
     }
 
     if (calls.length === 3) {
-      const [opening, splinter, game] = calls;
-      const major = opening?.bid.match(/^1(hearts|spades)$/)?.[1] as Suit | undefined;
-      const shortSuit = splinter?.bid.match(/^[34](clubs|diamonds|hearts|spades)$/)?.[1] as Suit | undefined;
+      const [opening, splinterCall, game] = calls;
+      const splinter = splinterSequence(opening, splinterCall);
+      const major = splinter?.major;
       if (
-        opening?.seat === partner && major && splinter?.seat === seat && shortSuit && shortSuit !== major &&
+        opening?.seat === partner && major && splinterCall?.seat === seat && splinter &&
         game?.seat === partner && game.bid === `4${major}` && points(hand) >= 18
       ) return Promise.resolve("4notrump");
     }
 
     if (calls.length === 4) {
-      const [opening, splinter, game, aceAsk] = calls;
-      const major = opening?.bid.match(/^1(hearts|spades)$/)?.[1] as Suit | undefined;
-      const shortSuit = splinter?.bid.match(/^[34](clubs|diamonds|hearts|spades)$/)?.[1] as Suit | undefined;
+      const [opening, splinterCall, game, aceAsk] = calls;
+      const splinter = splinterSequence(opening, splinterCall);
+      const major = splinter?.major;
       if (
-        opening?.seat === seat && major && splinter?.seat === partner && shortSuit && shortSuit !== major &&
+        opening?.seat === seat && major && splinterCall?.seat === partner && splinter &&
         game?.seat === seat && game.bid === `4${major}` && aceAsk?.seat === partner && aceAsk.bid === "4notrump"
       ) {
         const aces = aceCount(hand);
@@ -2558,11 +2570,11 @@ export class ExpertBot implements BotPlayer {
     }
 
     if (calls.length === 5) {
-      const [opening, splinter, game, aceAsk, aceAnswer] = calls;
-      const major = opening?.bid.match(/^1(hearts|spades)$/)?.[1] as Suit | undefined;
-      const shortSuit = splinter?.bid.match(/^[34](clubs|diamonds|hearts|spades)$/)?.[1] as Suit | undefined;
+      const [opening, splinterCall, game, aceAsk, aceAnswer] = calls;
+      const splinter = splinterSequence(opening, splinterCall);
+      const major = splinter?.major;
       if (
-        opening?.seat === partner && major && splinter?.seat === seat && shortSuit && shortSuit !== major &&
+        opening?.seat === partner && major && splinterCall?.seat === seat && splinter &&
         game?.seat === partner && game.bid === `4${major}` && aceAsk?.seat === seat && aceAsk.bid === "4notrump" &&
         aceAnswer?.seat === partner && ["5clubs", "5diamonds", "5hearts", "5spades"].includes(aceAnswer.bid)
       ) {
@@ -2577,11 +2589,11 @@ export class ExpertBot implements BotPlayer {
     }
 
     if (calls.length === 2) {
-      const [opening, splinter] = calls;
-      const major = opening?.bid.match(/^1(hearts|spades)$/)?.[1] as Suit | undefined;
-      const shortSuit = splinter?.bid.match(/^[34](clubs|diamonds|hearts|spades)$/)?.[1] as Suit | undefined;
+      const [opening, splinterCall] = calls;
+      const splinter = splinterSequence(opening, splinterCall);
+      const major = splinter?.major;
       if (
-        opening?.seat === seat && major && splinter?.seat === partner && shortSuit && shortSuit !== major
+        opening?.seat === seat && major && splinterCall?.seat === partner && splinter
       ) return Promise.resolve(`4${major}` as Bid);
     }
 

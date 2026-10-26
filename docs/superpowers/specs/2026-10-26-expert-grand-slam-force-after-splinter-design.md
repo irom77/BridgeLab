@@ -8,7 +8,7 @@ Let Expert openers ask about trump quality after accepting partner's splinter ra
 
 - In Expert, after 1M–splinter–4M, responder with 18+ HCP and at least two of A/K/Q in the agreed major bids 5NT.
 - Opener bids 7M with at least two of A/K/Q in trumps and 6M otherwise.
-- Recognize only a major opening, a shortness showing suit bid at the three or four level, opener's game acceptance in the opening major, and responder as the 5NT bidder.
+- Recognize only a major opening, a three-level splinter over 1♥ or four-level splinter over 1♠, opener's game acceptance in the opening major, and responder as the 5NT bidder.
 - When responder has 18+ HCP but lacks two top trump honors, preserve the existing 4NT Blackwood ask after accepted splinters.
 
 ## Approaches
@@ -22,4 +22,4 @@ Use exact detection to match the existing auction-specific convention logic.
 
 - Expert-only and deterministic.
 - No changes to core APIs or other bidding styles.
-- Test both the ask threshold and opener's honor-based answer.
+- Test the ask threshold, opener's honor-based answer, rejection of a natural 1♠–3♥ sequence, and the existing 4NT Blackwood path.

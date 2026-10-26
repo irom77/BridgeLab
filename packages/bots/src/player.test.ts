@@ -3489,6 +3489,18 @@ describe("beginner bot", () => {
     expect(await bot.chooseBid(minimumResponder, auction, "south")).not.toBe("5notrump");
   });
 
+  it("does not treat a natural 1S-3H response as a splinter", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "2/1" });
+    const responder = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:J", "hearts:2", "spades:A", "spades:K", "spades:2", "diamonds:K", "diamonds:2", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "1spades" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "3hearts" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "4spades" as const }, { seat: "east", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).not.toBe("5notrump");
+    expect(await bot.chooseBid(responder, auction, "south")).not.toBe("4notrump");
+  });
+
   it.each([
     ["hearts:A", "hearts:K", "7hearts"],
     ["hearts:Q", "hearts:J", "6hearts"]

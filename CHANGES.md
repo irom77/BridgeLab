@@ -9,6 +9,7 @@ Project changes are recorded here, newest first. Keep entries short and link imp
 ## Unreleased
 
 - Expert responders can use the Grand Slam Force after an accepted splinter raise with 18+ HCP and two top trump honors; opener bids 7M with two of A/K/Q in trumps, otherwise 6M. With 18+ HCP but fewer than two top trump honors, 4NT Blackwood remains available. See [implementation plan](docs/superpowers/plans/2026-10-26-expert-grand-slam-force-after-splinter.md).
+- Splinter detection now matches the agreed level for the opening major, so a natural 1♠–3♥ jump is not treated as a splinter.
 - Expert openers can use the Grand Slam Force after a 2/1 auction establishes a major fit and responder places game; responder bids 7M with two of A/K/Q in trumps, otherwise 6M. See [implementation plan](docs/superpowers/plans/2026-10-26-expert-grand-slam-force-two-over-one.md).
 - Expert Blackwood auctions now ask for kings with 5NT after all four aces are confirmed; the bot uses the king count to choose 6M or 7M. The Jacoby Grand Slam Force remains separate. See [implementation plan](docs/superpowers/plans/2026-10-26-expert-blackwood-kings.md).
 - Expert Puppet Stayman over 2NT now finds opener's four- or five-card major, with follow-ups to place a fit in game or choose notrump. A responder with a 6–4 major holding can transfer to game after opener denies a fit. See [implementation plan](docs/superpowers/plans/2026-10-26-expert-puppet-stayman.md).
