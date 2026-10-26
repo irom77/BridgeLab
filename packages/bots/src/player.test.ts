@@ -1878,6 +1878,14 @@ describe("beginner bot", () => {
     expect(await bot.chooseBid(overcaller, [{ seat: "north", bid: "1diamonds" }], "east")).toBe("1hearts");
   });
 
+  it.each([
+    ["a spade opening", "1spades", hand("clubs:2", "clubs:3", "clubs:4", "clubs:5", "clubs:6", "diamonds:2", "diamonds:3", "diamonds:4", "diamonds:5", "diamonds:6", "hearts:2", "hearts:3", "hearts:4")],
+    ["a diamond opening", "1diamonds", hand("clubs:2", "clubs:3", "clubs:4", "clubs:5", "clubs:6", "hearts:2", "hearts:3", "hearts:4", "hearts:5", "hearts:6", "spades:2", "spades:3", "diamonds:7")]
+  ] as const)("uses the Unusual 2NT overcall over %s", async (_opening, openingBid, overcaller) => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    expect(await bot.chooseBid(overcaller, [{ seat: "north", bid: openingBid }], "east")).toBe("2notrump");
+  });
+
   it.each([15, 18])("makes a natural 1NT overcall with a balanced %i-HCP hand and opener-suit stopper", async (expectedHcp) => {
     const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
     const overcaller = expectedHcp === 15

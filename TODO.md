@@ -102,6 +102,7 @@ The core rules, PBN package, and solo client are in place. Beginner through Expe
     - [x] Add initial intermediate bidding: make a natural direct overcall of an opponent's one-level suit opening with a five-card suit, 8+ HCP at the one level or 10+ HCP at the two level.
     - [x] Make weak jump overcalls over a one-level opening: six-card majors to the two level and seven-card minors to the three level with 5–11 HCP and a suit containing at least two honors.
     - [x] Use Michaels cue-bids over one-level openings: show both majors over a minor or the other major plus a minor over a major; accept 2NT as a minor-suit ask after a major cue-bid.
+    - [x] Make a direct 2NT overcall over a one-level suit opening with at least five cards in each of the two lowest unbid suits.
     - [x] Make a natural 1NT overcall with a balanced 15–18 HCP hand and a stopper in opener's suit.
     - [x] After a partner's 1NT overcall, use 2♣ Stayman with 8+ HCP and a four-card major; show a four-card major or deny one with 2♦, then invite or place game according to responder strength and fit.
     - [x] Make natural suit responses after a partner's 1NT overcall with 6+ HCP: show a five-card suit at the two level, or a six-card club suit at 3♣ because 2♣ is Stayman.

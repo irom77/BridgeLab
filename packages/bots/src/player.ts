@@ -1526,6 +1526,10 @@ export class IntermediateBot implements BotPlayer {
         const hasOpeningSuitStopper = openingSuitCards.some((card) => card.rank === "A") ||
           (openingSuitCards.length >= 2 && openingSuitCards.some((card) => card.rank === "K")) ||
           (openingSuitCards.length >= 3 && openingSuitCards.some((card) => card.rank === "Q"));
+        const lowestTwoUnbid = suitOrder.filter((suit) => suit !== openingSuit).slice(0, 2);
+        if (lowestTwoUnbid.every((suit) => length(suit) >= 5)) {
+          return Promise.resolve("2notrump");
+        }
         if (hcp >= 5 && hcp <= 11) {
           const jumpMajor = (["spades", "hearts"] as const)
             .filter((suit) => suit !== openingSuit && hasReasonableWeakTwoSuit(hand, suit))
