@@ -345,6 +345,11 @@ export class BeginnerBot implements BotPlayer {
         points(hand) >= 11 && points(hand) <= 12 &&
         hand.filter((card) => card.suit === "spades").length === 2
       ) return "2spades";
+      if (
+        saycMajorTwoLevelResponse.openingSuit === "spades" && saycMajorTwoLevelResponse.responseSuit === "clubs" &&
+        points(hand) >= 10 && points(hand) <= 11 && hand.filter((card) => card.suit === "clubs").length >= 5 &&
+        !(points(hand) === 11 && hand.filter((card) => card.suit === "spades").length === 2)
+      ) return "3clubs";
       if (hand.filter((card) => card.suit === alternateMajor).length >= 4 && points(hand) >= 10) {
         return `3${alternateMajor}` as Bid;
       }

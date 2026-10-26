@@ -1,10 +1,10 @@
-# SAYC Preference After 1♠–2♣–2♥
+# SAYC Responder Rebids After 1♠–2♣–2♥
 
 > **For agentic workers:** Implement and verify each auction path with focused bot tests.
 
-**Goal:** Let a SAYC responder show invitational values and preference for opener's spades after 1♠–2♣–2♥.
+**Goal:** Let a SAYC responder describe an invitational club holding or spade preference after 1♠–2♣–2♥.
 
-**Architecture:** Extend the existing uncontested SAYC major two-level response handler. With 11–12 HCP and exactly two spades, responder rebids 2♠; other continuations keep their existing handling.
+**Architecture:** Extend the existing uncontested SAYC major two-level response handler. Responder rebids 2♠ with 11–12 HCP and exactly two spades, or 3♣ with 10–11 HCP and five or more clubs, giving the 2♠ preference priority when both descriptions apply at 11 HCP.
 
 **Tech Stack:** TypeScript, Vitest, pnpm workspace scripts.
 
@@ -19,11 +19,12 @@
 ## Review Focus
 
 - At both 11 and 12 HCP with exactly two spades, responder bids 2♠.
+- With 10 HCP and five clubs, responder bids 3♣; at 11 HCP, a doubleton spade takes priority for 2♠.
 - Other hands continue through the existing response logic.
 
 ## Implementation
 
-- [x] Add a regression test for the 1♠–2♣–2♥–2♠ continuation at 11 and 12 HCP.
+- [x] Add regression tests for 2♠ preference at 11 and 12 HCP and the natural 3♣ invitation at 10 HCP.
 - [x] Run the focused bot tests.
 
 ## Reference
