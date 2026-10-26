@@ -1847,6 +1847,45 @@ export class ExpertBot implements BotPlayer {
     const isNotrumpOpening = (bid: Bid | undefined) => bid === "1notrump" || bid === "2notrump";
 
     if (calls.length === 3) {
+      const [opening, stayman, denial] = calls;
+      const spades = hand.filter((card) => card.suit === "spades").length;
+      const hearts = hand.filter((card) => card.suit === "hearts").length;
+      if (
+        opening?.bid === "1notrump" && opening.seat === partner &&
+        stayman?.bid === "2clubs" && stayman.seat === seat &&
+        denial?.bid === "2diamonds" && denial.seat === partner && points(hand) >= 10 &&
+        ((spades >= 5 && hearts === 4) || (hearts >= 5 && spades === 4)) &&
+        auction.every(({ bid }) => bid === "pass" || bid === opening.bid || bid === stayman.bid || bid === denial.bid)
+      ) return Promise.resolve(spades === 4 ? "3spades" : "3hearts");
+    }
+
+    if (calls.length === 4) {
+      const [opening, stayman, denial, smolen] = calls;
+      const shownMajor = smolen?.bid === "3hearts" ? "hearts" : smolen?.bid === "3spades" ? "spades" : undefined;
+      if (
+        opening?.bid === "1notrump" && opening.seat === seat &&
+        stayman?.bid === "2clubs" && stayman.seat === partner &&
+        denial?.bid === "2diamonds" && denial.seat === seat && shownMajor &&
+        smolen?.seat === partner && auction.every(({ bid }) => bid === "pass" || bid === opening.bid || bid === stayman.bid || bid === denial.bid || bid === smolen.bid)
+      ) {
+        return Promise.resolve(hand.filter((card) => card.suit === shownMajor).length >= 3 ? `4${shownMajor}` as Bid : "3notrump");
+      }
+    }
+
+    if (calls.length === 5) {
+      const [opening, stayman, denial, smolen, openerReply] = calls;
+      const longerMajor = smolen?.bid === "3hearts" ? "spades" : smolen?.bid === "3spades" ? "hearts" : undefined;
+      if (
+        opening?.bid === "1notrump" && opening.seat === partner &&
+        stayman?.bid === "2clubs" && stayman.seat === seat &&
+        denial?.bid === "2diamonds" && denial.seat === partner && longerMajor &&
+        smolen?.seat === seat && openerReply?.seat === partner &&
+        (openerReply.bid === "3notrump" || openerReply.bid === `4${smolen.bid.slice(1)}`) &&
+        auction.every(({ bid }) => bid === "pass" || bid === opening.bid || bid === stayman.bid || bid === denial.bid || bid === smolen.bid || bid === openerReply.bid)
+      ) return Promise.resolve(openerReply.bid === "3notrump" ? `4${longerMajor}` as Bid : "pass");
+    }
+
+    if (calls.length === 3) {
       const [opening, response, openerRebid] = calls;
       const openingMinor = opening?.bid.match(/^1(clubs|diamonds)$/)?.[1] as Suit | undefined;
       const responderMajor = response?.bid.match(/^1(hearts|spades)$/)?.[1] as Suit | undefined;
