@@ -4,86 +4,61 @@
 
 <h1 align="center">ContractPlay</h1>
 
-<p align="center">A cross-platform home for contract bridge: play, learn, and review every hand.</p>
+<p align="center">Play, learn, and review contract bridge.</p>
 
 ---
 
-## Project status
+## Status
 
-ContractPlay now has a responsive browser client for configured or imported local deals, autosaved play, take-back, hand review, beginner bots, and card-play hints. Without a solver, hints identify legal cards; hosts can optionally provide solver recommendations. Stronger bidding systems and platform builds remain planned work.
+ContractPlay currently provides a responsive browser table for local deals, configurable bots, PBN import, autosaved play, take-back, hand review, and card-play hints. A host can supply a solver for recommendations; without one, hints show legal cards.
 
-See [TODO.md](TODO.md) for the current roadmap and [CHANGES.md](CHANGES.md) for completed work.
+Native clients, online multiplayer, and complete SAYC and 2/1 agreements remain planned. See the [roadmap](TODO.md) and [change history](CHANGES.md).
 
-## Product goals
-
-- Play contract bridge on the web, Windows, macOS, iOS, and iPad.
-- Use one platform-neutral TypeScript rules core across clients.
-- Support solo play, configurable bots, hints, and hand review with take-back and replay.
-- Import and export hands in Portable Bridge Notation (PBN).
-- Add live multiplayer with server-validated actions and private hands.
-
-## Repository layout
+## Project structure
 
 ```text
-apps/client/          Responsive React/Vite bridge table
-apps/server/          Online game server (planned)
-packages/core/        Bridge cards, rules, and game state
+apps/client/          React and Vite browser client
+packages/core/        Platform-neutral cards, rules, and game state
 packages/pbn/         PBN parser, serializer, and diagnostics
-packages/persistence/ Versioned local solo-game storage
-packages/bots/        Beginner bidding and card play strategies
-packages/protocol/    Shared network message types (planned)
-docs/superpowers/
-  plans/              Implementation plans
+packages/persistence/ Versioned local game storage
+packages/bots/        Bidding and card-play strategies
+docs/superpowers/     Feature plans and specifications
 ```
 
-## Core package
+The core package owns legal actions and immutable game transitions. PBN, persistence, bots, and the client build on its shared types and APIs.
 
-The core package lives in `packages/core/src` and provides card/deal types, dealing and shuffle helpers, follow-suit validation, trick winner evaluation, an immutable auction/play reducer with undo/redo reconstruction, duplicate scoring, and bot/solver interfaces. The `packages/bots` package provides deterministic beginner bidding and legal card selection with limited SAYC and 2/1 behavior, plus intermediate card-play tactics that save high cards when partner is winning, take the trick cheaply when an opponent is ahead, and lead the top honor from a touching sequence or fourth-highest from a longest suit of four or more cards. Intermediate bots also make natural direct overcalls of an opponent's one-level suit opening with a five-card suit, requiring 8+ HCP at the one level or 10+ at the two level, and make a natural 1NT overcall with a balanced 15–18 HCP hand and a stopper in opener's suit. Intermediate bots also open a natural weak two in a six-card major or diamond suit with 5–11 HCP and at least two honors among ace through ten. Over a weak two, a responder with game interest can ask with forcing 2NT; opener rebids the suit with 5–8 HCP, or with 9–11 shows an outside ace/king or bids 3NT without one, then responder places the contract. Responders can also raise preemptively to 3M/4M with trump support or bid 3NT directly with a balanced game hand and no major fit. After partner's 1NT overcall, responder uses 2♣ Stayman with 8+ HCP and a four-card major; the overcaller shows a four-card major or denies one with 2♦. If the overcaller shows hearts and responder has four spades without a heart fit, responder can show spades; the overcaller raises a spade fit or bids notrump without one. The responder can invite in a shown major with 8–9 HCP, place major-suit game with 10+ HCP and support, or invite/bid game in notrump when there is no fit. Without a four-card major, a balanced responder invites in 2NT with 8–9 HCP or bids 3NT with 10+ HCP. Natural suit responses can show a five-card suit at the two level with 6+ HCP, or a six-card club suit at 3♣ because 2♣ is Stayman. Raise partner's overcall with three-card support and 6–10 support points (HCP plus side-suit shortness), cue-bid opener's suit with three-card support and 11+ support points, bid natural 1NT on a balanced 8–11 HCP hand with a stopper in opener's suit, and advance in a natural five-card suit with 6+ HCP at the one level or 11+ HCP at the two level, and make takeout doubles of one-level suit openings with opening values, shortness, and support for the unbid suits. After partner's takeout double, they make minimum or jump suit advances, bid natural notrump with a stopper, or cuebid with 12+ HCP. After opener's partner raises after the double, they compete in a natural four-card suit with 6–8 support points, jump with 9–11, or cue-bid the raised suit with 12+. After a major-suit advance, the doubler passes a minimum, raises with 16–18 support points, jump-raises with 19+ support points, or accepts game over a jump advance with 15+ support points. After advancer's strong cuebid of opener's suit, the doubler names their longest available major, or longest minor when no major is available. After an advancer's strong-raise cuebid, the overcaller repeats their suit with a minimum, shows a three-card side suit with 11+ HCP, or bids game with 15+ HCP. After a simple raise, the overcaller invites at the three level with 11–14 HCP after a one-level overcall or bids game with 15+ HCP; other intermediate bidding currently follows beginner rules; opening selection uses five-card majors and minor fallback, 15–17 balanced 1NT, 20–21 balanced 2NT, and strong 2♣ with 22+ HCP or a six-card hand estimated at 9+ playing tricks; positive responses show an 8+ HCP five-card suit or balanced hand, and opener raises a supported positive major to game. After 2♣–2♦, opener rebids 2NT with 22–24 or 3NT with 25–27 balanced; responder uses Stayman or transfers over 2NT, raises a supported natural suit rebid, or places 3NT with a stopper. Over a 1NT opening, responder can use Stayman with a four-card major or transfer with a five-card major; opener shows a major or accepts the transfer, and responder places an invitation or game, including an alternate spade fit after a heart reply. Over a 2NT opening, responder can use Stayman with a four-card major, transfer with a five-card major, or bid 3NT with a balanced game hand; opener shows or denies a major fit, responder can uncover a spade fit after a heart response, and then places the contract. After a double of partner's one-level suit opening, responder can redouble with 10+ HCP when lacking a support raise. With 10+ HCP and four-card major or five-card minor support after a takeout double, responder bids 2NT as a limit raise or better; opener shows a minimum at 3M and a maximum by bidding game. In uncontested SAYC and 2/1 auctions, Jacoby 2NT shows 13+ HCP and four-card support for opener's major; opener shows a singleton or void, or bids game without shortness. After a minor opening, responder can bid an available suit at the one level with 4+ cards and 6+ HCP after a double, or an available major after a minor overcall. Over a major overcall, a direct 1♠ response over 1♥ requires 5+ cards; a negative double shows 4+ cards in the unbid major and 6+ HCP. After a major opening and one-level overcall, responder can bid a new suit at the two level with 5+ cards and 10+ HCP. After uncontested partner openings, balanced hands respond to 1NT at 8+ HCP; after a major opening, a balanced 6–9 HCP hand without three-card support can respond 1NT. In 2/1 style, 1NT is a forcing response with 6–12 HCP when responder has no direct new-suit or minimum raise; 10–12 HCP hands with three-card major support also start with 1NT for a later limit raise. Passed-hand 2/1 sequences are treated as nonforcing, and opponent interference turns off the forcing 1NT agreement. After an opponent's double or one-level overcall of a major or minor opening, a balanced 6–9 HCP hand can respond naturally and nonforcibly with 1NT; after a two-level overcall, a balanced 10–12 HCP hand can respond with natural 2NT. In both SAYC and 2/1, a 6–9 HCP responder with three-card major support raises to 2M after a takeout double or one-level overcall, and to 3M after a two-level overcall; five-card minor support can be raised to 2m with 6–9 HCP. Notrump responses require a stopper in the overcalled suit. Opener continues the uncontested auction, and responder can invite with 2NT or show a three-card limit raise at 3M with 11–12 HCP, or rebid a five-card heart suit after 1♠–1NT–2♣ below direct 2/1 strength. After a minor opening, a balanced 6–9 HCP hand without five-card support can respond 1NT. Three-card support raises a major according to responder HCP, and five-card minor support raises at 6–12 HCP. Balanced responses to a minor opening use 2NT with 10–12 HCP or 3NT with 13–15 HCP; after 1m–1NT, a balanced 18–19 HCP opener rebids 2NT and a balanced 20–21 HCP opener rebids 3NT, a 12–17 HCP opener with a six-card minor rebids 2m, and responder accepts 3NT with 8+ HCP. New-suit responses require 4+ cards: one-level responses use 6+ HCP where possible; SAYC two-level responses use 10+ HCP, while 2/1 responses after a major opening require 13+ HCP, including 1♥–2♠ with five spades, can be made with three-card major support, and continue the uncontested sequence to game, showing a four-card side major or rebidding a six-card response suit when responder lacks three-card support; opener can show a four-card side major with 12–17 HCP, and responder raises that suit to game with four-card support or shows an unbid four-card major naturally with 10+ HCP; opener raises with three-card support at 12–15 HCP or with 16+ HCP, and continues in the original major without a fit; after 1♥–2♣ or 1♠–2♣, opener can rebid a four-card diamond suit at 2♦ with 12–17 HCP when a higher-priority major is unavailable, and responder raises diamonds to game with four-card support; after opener rebids balanced 2NT, responder places the contract in 4M with support or 3NT without it. After a one-level new-suit response, opener raises responder's major with four-card support and 12–15 HCP, can make an invitational jump raise with 16–18 HCP, can show a separate four-card higher suit at the one level, or reverse at the two level with 16+ HCP when the one-level response blocks a one-level suit bid; opener can rebid 2♣ after 1♦–1♠ with five diamonds and four clubs, can show a balanced 12–14 HCP hand with 1NT or 18–19 HCP with 2NT, and can rebid an opening suit held six or more cards long. After an uncontested major opening and 1NT response, opener can show a four-card lower side suit with 12–17 HCP, can reverse to 2♠ after 1♥–1NT with 16+ HCP and four spades, rebid a six-card major, or rebid a five-card major with 12–15 HCP in SAYC when no side suit is available, or jump rebid a six-card major with 16–18 HCP when no side suit is available; a balanced 18–19 HCP opener can rebid 2NT. After 1M–1NT–2M, responder can invite with 3M on 10–12 HCP and three-card support, or 2NT with a balanced hand. After opener's uncontested 1NT rebid, a balanced responder invites with 2NT on 10–12 HCP or bids 3NT on 13+ HCP; a responder with a five-card major and 10–12 HCP invites with 3M, or signs off in 2M with up to 9 HCP. Broader competitive auctions and complete convention systems remain planned. PBN parsing, serialization, and diagnostics live in the separate `packages/pbn` package, which depends on core.
+## Bots
 
-The core is TypeScript and designed to stay independent of UI and platform APIs. It is part of the root pnpm workspace and builds to `packages/core/dist`.
+Choose Beginner, Intermediate, Advanced, or Expert play, and configure SAYC or 2/1 bidding. The beginner bot covers opening bids and common uncontested and competitive auctions. Intermediate adds natural overcalls, takeout doubles, and card-play tactics; Advanced adds a third-hand honor play; Expert adds selected conventions and slam tools. Convention coverage is still limited; see [TODO.md](TODO.md) for exact scope.
 
-Intermediate bidding uses Support Doubles after a minor opening and a one-level major response: opener doubles with exactly three-card support after a suit overcall, or raises with four or more.
-
-SAYC bots also use strong natural jump shifts with a five-card suit and 19+ HCP when unpassed. Opener shows a major fit, a strong balanced hand, or a natural suit rebid, and responder places game. Expert bots can use the Grand Slam Force after a major fit is confirmed at game, or Blackwood when they have 18+ HCP but fewer than two top trump honors.
-
-After SAYC 1M–2m, an opener with a balanced 18–19 HCP hand rebids 2NT; responder places game in a three-card major fit or 3NT without one.
-
-SAYC opener reverses to 2♠ after 1♥–2♦ only with 16+ HCP; a weaker opener repeats hearts when no other eligible rebid applies.
-
-With a maximum unbalanced hand after SAYC 1M–2m, opener can jump-raise responder's minor, jump-shift to a four-card side suit, or jump-rebid a six-card major. Responder places game in a shown fit or notrump.
-
-After SAYC 1♠–2♥, opener shows three-card heart support, a natural side suit, a five-card spade rebid, or a balanced 18–19 HCP hand in 2NT; responder places or invites game based on the fit and rebid.
-
-Expert responders can use Texas transfers to place game in a six-card major while keeping opener as declarer: with 8–9 HCP over 1NT or 0–9 HCP over 2NT. Higher-strength hands continue with the existing slam-aware transfer methods.
-
-Expert responders use Puppet Stayman over 2NT to find opener's four- or five-card major, then place game in a fit or notrump. With a 6–4 major holding, responder can transfer to the longer major after opener denies a fit.
-
-After a Blackwood 4NT ace ask, Expert bots can ask for kings with 5NT when all four aces are known, then place a major grand slam only when all four kings are confirmed.
-
-Configured beginner bidding includes quantitative 4NT invitations after 1NT and 2NT openings on balanced hands without a major fit; the opener accepts with maximum strength. Intermediate overcalls use Michaels cue-bids to show both majors over a minor opening or the other major and a minor over a major opening, and use a direct 2NT overcall to show at least five cards in each of the two lowest unbid suits. Advancer prefers the better-supported suit at level 3, places a balanced hand with 13+ HCP in 3NT, makes a preemptive level-four jump with 5+ card support and 0–9 HCP, or cue-bids opener's suit with 13+ HCP and a fit; overcaller places game with 13+ HCP or shows a minimum preference at level 3. After a minimum preference, advancer passes with 13–15 HCP or bids game with 16+ and three-card support. They can also preempt with a six-card major to the two level, or a seven-card minor to the three level, on weak-two values. In both SAYC and 2/1, responder can use fourth-suit forcing with 10+ HCP after a one-level response and opener's suit rebid. SAYC and 2/1 support remains limited, and broader competitive auctions and complete convention systems are still planned.
-
-After the 1♥–1NT–2♠ reverse, responder shows a major fit, bids notrump with a spade stopper, or continues in a natural minor.
-
-After 1♠–1NT–2♥, responder invites with three-card heart support at 10–12 HCP or bids 4♥ with 13+; balanced hands without a heart fit invite in 2NT or bid 3NT.
-
-After opener's invitational jump raise to 3M, responder bids game with 10+ HCP and passes with fewer points.
-
-After a 1NT opening, a six-card minor with invitational values and two of the top three honors can invite 3NT; opener accepts with a top honor and at least two cards in the minor.
+Card-play hints highlight all legal cards when no solver is configured. If a host supplies a solver, the client shows its legal recommendations without playing a card.
 
 ## Development
 
-Run `pnpm install` to install the development tools, then use `pnpm typecheck`, `pnpm lint`, `pnpm test`, and `pnpm build` from the repository root.
+Requires Node.js 20 or later and pnpm.
 
-Run `pnpm --filter @contractplay/client dev` to start the web client.
+```sh
+pnpm install
+pnpm test
+pnpm typecheck
+pnpm lint
+pnpm build
+```
 
-The client stores the current hand and up to 25 completed hands in browser local storage. PBN deals can be pasted into the import panel. Choose bots in setup to automate the three seats outside your selected seat, then choose Beginner, Intermediate, Advanced, or Expert skill. Intermediate bots extend beginner bidding with direct natural overcalls and takeout doubles, their natural advances, simple and strong cue-bid raises, natural notrump advances, and natural new-suit advances after partner's overcalls, and add separate opening-lead and trick-play tactics. Advanced adds a third-hand honor-sequence play while retaining Intermediate bidding. Expert adds Reverse Drury after third- or fourth-seat major openings, Checkback Stayman in SAYC and New Minor Forcing in 2/1 after a minor opening, major response, and 1NT rebid, Smolen after Stayman denial over 1NT, weak-suit, invitational, game-forcing, Stayman, and notrump Lebensohl continuations after natural interference over 1NT, direct Gerber over 1NT/2NT openings, splinter raises after major openings, and Blackwood after Jacoby shortness or a 2/1 major fit with an 18+ HCP responder, or after an accepted splinter when the responder lacks two top trump honors. After a Jacoby game rebid, responder can use the Grand Slam Force with 18+ HCP and two top trump honors; after a 2/1 major fit reaches 4M, opener can use it with the same values. After an accepted splinter reaches 4M, responder can use it with the same values. The partner bids 7M with two of A/K/Q in trumps or 6M otherwise. After opener rebids a minor following a major opening and 1NT response, a responder with 13+ HCP and three-card support raises to game; 11–12 HCP invites with 3M. Responders can also show a five-card second major below direct two-level response strength; opener invites with a three-card fit and 16+ HCP, and responder accepts at 8+ HCP in SAYC or 10+ in 2/1. Other 4NT invitations remain quantitative. During card play, choose **Show hint** to highlight legal cards, or solver recommendations when a host has configured a solver.
+Start the browser client with:
+
+```sh
+pnpm --filter @contractplay/client dev
+```
+
+The browser client stores the current hand and up to 25 completed hands in local storage. PBN deals can be pasted into the import panel.
 
 ## Project guidance
 
-- [AGENTS.md](AGENTS.md) is the shared agent guidance.
-- [CLAUDE.md](CLAUDE.md) and [GEMINI.md](GEMINI.md) carry the same project rules for those tools.
-- Update `TODO.md` when work changes milestone status and add completed user-visible changes to `CHANGES.md`.
+- [AGENTS.md](AGENTS.md) contains shared project instructions.
+- [CLAUDE.md](CLAUDE.md) and [GEMINI.md](GEMINI.md) mirror those instructions.
+- Record roadmap changes in `TODO.md` and meaningful user-facing changes in `CHANGES.md`.
 
 ## License
 
-ContractPlay is licensed under the [MIT License](LICENSE).
+MIT. See [LICENSE](LICENSE).
