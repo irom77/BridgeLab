@@ -106,6 +106,8 @@ The core rules, PBN package, and solo client are in place. Beginner through Expe
     - [x] After partner's Unusual 2NT and an opponent's pass, make a simple level-three preference for the better-supported shown suit.
     - [x] After partner's Unusual 2NT and an opponent's pass, place a balanced hand with 13+ HCP in 3NT.
     - [x] After partner's Unusual 2NT, jump-preempt in the best-supported shown suit with 5+ card support and 0–9 HCP.
+    - [x] Cue-bid opener's suit after Unusual 2NT with 13+ HCP and 3+ support for a shown suit; overcaller places game with 13+ HCP or shows a minimum preference at level 3.
+    - [x] After the minimum overcaller preference, accept game with 16+ HCP and three-card support; pass with 13–15 HCP.
     - [x] Make a natural 1NT overcall with a balanced 15–18 HCP hand and a stopper in opener's suit.
     - [x] After a partner's 1NT overcall, use 2♣ Stayman with 8+ HCP and a four-card major; show a four-card major or deny one with 2♦, then invite or place game according to responder strength and fit.
     - [x] Make natural suit responses after a partner's 1NT overcall with 6+ HCP: show a five-card suit at the two level, or a six-card club suit at 3♣ because 2♣ is Stayman.

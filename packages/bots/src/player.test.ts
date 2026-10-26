@@ -1928,6 +1928,62 @@ describe("beginner bot", () => {
     expect(await bot.chooseBid(advancer, auction, "west")).toBe("3diamonds");
   });
 
+  it("cue-bids opener's suit with game-invitational values after partner's Unusual 2NT", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const advancer = hand("spades:K", "hearts:Q", "diamonds:A", "diamonds:Q", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:K", "clubs:2", "clubs:3", "clubs:4", "clubs:5", "clubs:6");
+    const auction = [
+      { seat: "north", bid: "1clubs" as const }, { seat: "east", bid: "2notrump" as const },
+      { seat: "south", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(advancer, auction, "west")).toBe("3clubs");
+  });
+
+  it("accepts a game-invitational cue with a strong two-suited Unusual 2NT hand", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const overcaller = hand("clubs:A", "clubs:K", "clubs:Q", "clubs:2", "clubs:3", "diamonds:K", "diamonds:Q", "diamonds:2", "diamonds:3", "diamonds:4", "hearts:2", "hearts:3", "spades:2");
+    const auction = [
+      { seat: "north", bid: "1spades" as const }, { seat: "east", bid: "2notrump" as const },
+      { seat: "south", bid: "pass" as const }, { seat: "west", bid: "3spades" as const },
+      { seat: "north", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(overcaller, auction, "east")).toBe("5clubs");
+  });
+
+  it("shows the best minor after a game-invitational cue with a minimum Unusual 2NT hand", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const overcaller = hand("clubs:2", "clubs:3", "clubs:4", "clubs:5", "clubs:6", "diamonds:2", "diamonds:3", "diamonds:4", "diamonds:5", "diamonds:6", "hearts:2", "hearts:3", "spades:2");
+    const auction = [
+      { seat: "north", bid: "1spades" as const }, { seat: "east", bid: "2notrump" as const },
+      { seat: "south", bid: "pass" as const }, { seat: "west", bid: "3spades" as const },
+      { seat: "north", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(overcaller, auction, "east")).toBe("3clubs");
+  });
+
+  it("declines game after a minimum Unusual 2NT rebid with 13–15 HCP", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const advancer = hand("spades:K", "spades:Q", "spades:2", "spades:3", "spades:4", "spades:5", "hearts:Q", "diamonds:A", "diamonds:J", "diamonds:2", "clubs:K", "clubs:2", "clubs:3");
+    const auction = [
+      { seat: "north", bid: "1spades" as const }, { seat: "east", bid: "2notrump" as const },
+      { seat: "south", bid: "pass" as const }, { seat: "west", bid: "3spades" as const },
+      { seat: "north", bid: "pass" as const }, { seat: "east", bid: "3clubs" as const },
+      { seat: "south", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(advancer, auction, "west")).toBe("pass");
+  });
+
+  it("accepts game after a minimum Unusual 2NT rebid with 16+ HCP", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const advancer = hand("spades:K", "spades:Q", "spades:2", "spades:3", "spades:4", "spades:5", "hearts:A", "diamonds:A", "diamonds:2", "diamonds:3", "clubs:K", "clubs:2", "clubs:3");
+    const auction = [
+      { seat: "north", bid: "1spades" as const }, { seat: "east", bid: "2notrump" as const },
+      { seat: "south", bid: "pass" as const }, { seat: "west", bid: "3spades" as const },
+      { seat: "north", bid: "pass" as const }, { seat: "east", bid: "3clubs" as const },
+      { seat: "south", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(advancer, auction, "west")).toBe("5clubs");
+  });
+
   it.each([15, 18])("makes a natural 1NT overcall with a balanced %i-HCP hand and opener-suit stopper", async (expectedHcp) => {
     const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
     const overcaller = expectedHcp === 15

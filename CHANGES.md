@@ -4,6 +4,8 @@ Project changes are recorded here, newest first. Keep entries short and link imp
 
 ## Unreleased
 
+- After the Unusual 2NT overcaller shows a minimum in response to a strong cue-bid, advancer places game with 16+ HCP and three-card support or passes with 13–15 HCP.
+- Added a game-invitational cue-bid after Unusual 2NT: advancer shows 13+ HCP and a fit; overcaller places game with 13+ HCP or rebids the preferred suit at level 3. See [implementation plan](docs/superpowers/plans/2026-10-26-intermediate-unusual-notrump-advance.md).
 - Weak advancers with 5+ card support for a suit shown by partner's Unusual 2NT now jump to level 4 as a preemptive raise. See [implementation plan](docs/superpowers/plans/2026-10-26-intermediate-unusual-notrump-advance.md).
 - After partner's Unusual 2NT overcall, balanced Intermediate advancers with 13+ HCP now place the contract in 3NT; weaker hands still prefer a shown suit. See [implementation plan](docs/superpowers/plans/2026-10-26-intermediate-unusual-notrump-advance.md).
 - After an Intermediate partner's Unusual 2NT overcall, advancers now make a level-three preference for the better-supported shown suit when the next opponent passes. See [implementation plan](docs/superpowers/plans/2026-10-26-intermediate-unusual-notrump-advance.md).

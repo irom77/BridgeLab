@@ -1219,15 +1219,58 @@ export class IntermediateBot implements BotPlayer {
       ) {
         const suitOrder: readonly Suit[] = ["clubs", "diamonds", "hearts", "spades"];
         if (isBalanced(hand) && points(hand) >= 13) return Promise.resolve("3notrump");
-        const preferredSuit = suitOrder
+        const shownSuits = suitOrder
           .filter((suit) => suit !== openingSuit)
           .slice(0, 2)
-          .map((suit) => ({ suit, support: hand.filter((card) => card.suit === suit).length }))
+          .map((suit) => ({ suit, support: hand.filter((card) => card.suit === suit).length }));
+        if (points(hand) >= 13 && shownSuits.some(({ support }) => support >= 3)) {
+          return Promise.resolve(`3${openingSuit}` as Bid);
+        }
+        const preferredSuit = shownSuits
           .sort((a, b) => b.support - a.support || suitOrder.indexOf(a.suit) - suitOrder.indexOf(b.suit))[0]?.suit;
         if (preferredSuit && points(hand) <= 9 && hand.filter((card) => card.suit === preferredSuit).length >= 5) {
           return Promise.resolve(`4${preferredSuit}` as Bid);
         }
         if (preferredSuit) return Promise.resolve(`3${preferredSuit}` as Bid);
+      }
+    }
+    if (auction.length === 5 && contractCalls.length === 3 && auction[2]?.bid === "pass" && auction[4]?.bid === "pass") {
+      const [opening, unusualNotrump, cueBid] = contractCalls;
+      const openingSuit = opening?.bid.match(/^1(clubs|diamonds|hearts|spades)$/)?.[1] as Suit | undefined;
+      if (
+        opening && unusualNotrump && cueBid && openingSuit && opening.seat !== seat && opening.seat !== partner &&
+        unusualNotrump.seat === seat && unusualNotrump.bid === "2notrump" &&
+        cueBid.seat === partner && cueBid.bid === `3${openingSuit}`
+      ) {
+        const suitOrder: readonly Suit[] = ["clubs", "diamonds", "hearts", "spades"];
+        const preferredSuit = suitOrder
+          .filter((suit) => suit !== openingSuit)
+          .slice(0, 2)
+          .map((suit) => ({ suit, length: hand.filter((card) => card.suit === suit).length }))
+          .sort((a, b) => b.length - a.length || suitOrder.indexOf(a.suit) - suitOrder.indexOf(b.suit))[0]?.suit;
+        if (preferredSuit) {
+          if (points(hand) >= 13) {
+            const gameLevel = preferredSuit === "hearts" || preferredSuit === "spades" ? 4 : 5;
+            return Promise.resolve(`${gameLevel}${preferredSuit}` as Bid);
+          }
+          return Promise.resolve(`3${preferredSuit}` as Bid);
+        }
+      }
+    }
+    if (auction.length === 7 && contractCalls.length === 4 && auction[2]?.bid === "pass" && auction[4]?.bid === "pass" && auction[6]?.bid === "pass") {
+      const [opening, unusualNotrump, cueBid, preference] = contractCalls;
+      const openingSuit = opening?.bid.match(/^1(clubs|diamonds|hearts|spades)$/)?.[1] as Suit | undefined;
+      const preferredSuit = preference?.bid.match(/^3(clubs|diamonds|hearts|spades)$/)?.[1] as Suit | undefined;
+      const shownSuits = openingSuit ? ["clubs", "diamonds", "hearts", "spades"].filter((suit) => suit !== openingSuit).slice(0, 2) : [];
+      if (
+        opening && unusualNotrump && cueBid && preference && openingSuit && preferredSuit &&
+        opening.seat !== seat && opening.seat !== partner && unusualNotrump.seat === partner &&
+        unusualNotrump.bid === "2notrump" && cueBid.seat === seat && cueBid.bid === `3${openingSuit}` &&
+        preference.seat === partner && shownSuits.includes(preferredSuit) &&
+        hand.filter((card) => card.suit === preferredSuit).length >= 3 && points(hand) >= 16
+      ) {
+        const gameLevel = preferredSuit === "hearts" || preferredSuit === "spades" ? 4 : 5;
+        return Promise.resolve(`${gameLevel}${preferredSuit}` as Bid);
       }
     }
     if (contractCalls.length === 1 && auction.length === 1) {
