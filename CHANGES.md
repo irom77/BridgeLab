@@ -4,6 +4,7 @@ Project changes are recorded here, newest first. Keep entries short and link imp
 
 ## Unreleased
 
+- Over a 1NT opening, a six-card minor with invitational values and two top honors can invite 3NT; opener accepts with a top honor and support. See [implementation plan](docs/superpowers/plans/2026-10-26-notrump-minor-invitations.md).
 - After a weak-two opening, responder can show a natural five-card suit with 10–14 HCP; opener rebids the weak suit with a minimum or shows a feature with a maximum. See [implementation plan](docs/superpowers/plans/2026-10-26-weak-two-new-suit-response.md).
 - After a 1NT opening, a weak hand with a six-card minor can use 2♠ to play in clubs or diamonds through opener's 3♣ relay. See [implementation plan](docs/superpowers/plans/2026-10-26-notrump-minor-signoff.md).
 - Expert responders use Checkback Stayman after a minor opening, major response, and 1NT rebid to find major fits, then invite or place major game with an eight-card fit; balanced hands with stoppers can place or invite in notrump when the major fit is short or opener denies both majors.

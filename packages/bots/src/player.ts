@@ -255,6 +255,12 @@ export class BeginnerBot implements BotPlayer {
         ((opening.bid === "1notrump" && points(hand) >= 17) || (opening.bid === "2notrump" && points(hand) >= 21))
       ) return "6notrump";
       if (opening?.seat === seat && opening.bid === "1notrump" && response?.seat === partner) {
+        const invitationalMinor = response.bid.match(/^3(clubs|diamonds)$/)?.[1] as Suit | undefined;
+        if (invitationalMinor) {
+          const cards = hand.filter((card) => card.suit === invitationalMinor);
+          if (cards.length >= 2 && cards.some((card) => ["A", "K", "Q"].includes(card.rank))) return "3notrump";
+          return "pass";
+        }
         if (response.bid === "2spades") return "3clubs";
         if (response.bid === "2clubs") {
           if (hand.filter((card) => card.suit === "hearts").length >= 4) return "2hearts";
@@ -1195,6 +1201,15 @@ export class BeginnerBot implements BotPlayer {
       if (responderPoints >= 8 && hasFourCardMajor) return "2clubs";
       if (hearts >= 5 && spades < 4) return "2diamonds";
       if (spades >= 5 && hearts < 4) return "2hearts";
+      const invitationalMinor = (["clubs", "diamonds"] as const)
+        .map((suit) => ({
+          suit,
+          length: hand.filter((card) => card.suit === suit).length,
+          topHonors: hand.filter((card) => card.suit === suit && ["A", "K", "Q"].includes(card.rank)).length
+        }))
+        .filter(({ length, topHonors }) => length >= 6 && topHonors >= 2)
+        .sort((a, b) => b.length - a.length || b.topHonors - a.topHonors || (a.suit === "clubs" ? -1 : 1))[0];
+      if (responderPoints >= 10 && responderPoints <= 15 && invitationalMinor) return `3${invitationalMinor.suit}` as Bid;
       const clubs = hand.filter((card) => card.suit === "clubs").length;
       const diamonds = hand.filter((card) => card.suit === "diamonds").length;
       if (responderPoints < 8 && !hasFourCardMajor && Math.max(clubs, diamonds) >= 6) return "2spades";

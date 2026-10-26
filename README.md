@@ -50,6 +50,8 @@ After 1♠–1NT–2♥, responder invites with three-card heart support at 10�
 
 After opener's invitational jump raise to 3M, responder bids game with 10+ HCP and passes with fewer points.
 
+After a 1NT opening, a six-card minor with invitational values and two of the top three honors can invite 3NT; opener accepts with a top honor and at least two cards in the minor.
+
 ## Development
 
 Run `pnpm install` to install the development tools, then use `pnpm typecheck`, `pnpm lint`, `pnpm test`, and `pnpm build` from the repository root.

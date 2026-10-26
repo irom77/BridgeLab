@@ -415,6 +415,29 @@ describe("beginner bot", () => {
     expect(await bot.chooseBid(responder, [{ seat: "north", bid: "1notrump" }], "south")).toBe("2diamonds");
   });
 
+  it.each(["SAYC", "2/1"] as const)("uses a six-card minor invitation over 1NT in %s", async (biddingStyle) => {
+    const bot = createBot({ skill: "beginner", biddingStyle });
+    const clubInvitation = hand("clubs:A", "clubs:K", "clubs:2", "clubs:3", "clubs:4", "clubs:5", "hearts:A", "hearts:3", "spades:2", "spades:3", "diamonds:2", "diamonds:3", "diamonds:4");
+    const diamondInvitation = hand("diamonds:A", "diamonds:K", "diamonds:2", "diamonds:3", "diamonds:4", "diamonds:5", "hearts:2", "hearts:3", "spades:A", "spades:3", "clubs:2", "clubs:3", "clubs:4");
+    expect(await bot.chooseBid(clubInvitation, [{ seat: "north", bid: "1notrump" }], "south")).toBe("3clubs");
+    expect(await bot.chooseBid(diamondInvitation, [{ seat: "north", bid: "1notrump" }], "south")).toBe("3diamonds");
+
+    const clubAuction = [
+      { seat: "north", bid: "1notrump" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "3clubs" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    const diamondAuction = [
+      { seat: "north", bid: "1notrump" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "3diamonds" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    const clubAccept = hand("clubs:Q", "clubs:2", "hearts:A", "hearts:K", "hearts:2", "hearts:3", "diamonds:A", "diamonds:2", "diamonds:3", "spades:Q", "spades:J", "spades:2", "spades:3");
+    const diamondAccept = hand("diamonds:Q", "diamonds:2", "hearts:A", "hearts:K", "hearts:2", "hearts:3", "clubs:A", "clubs:2", "clubs:3", "spades:Q", "spades:J", "spades:2", "spades:3");
+    const clubDecline = hand("clubs:J", "clubs:2", "hearts:A", "hearts:K", "hearts:2", "hearts:3", "diamonds:Q", "diamonds:2", "diamonds:3", "spades:A", "spades:K", "spades:2", "spades:3");
+    expect(await bot.chooseBid(clubAccept, clubAuction, "north")).toBe("3notrump");
+    expect(await bot.chooseBid(diamondAccept, diamondAuction, "north")).toBe("3notrump");
+    expect(await bot.chooseBid(clubDecline, clubAuction, "north")).toBe("pass");
+  });
+
   it.each(["SAYC", "2/1"] as const)("uses 2 spades to find a minor-suit partscore in %s", async (biddingStyle) => {
     const bot = createBot({ skill: "beginner", biddingStyle });
     const clubsHand = hand("clubs:2", "clubs:3", "clubs:4", "clubs:5", "clubs:6", "clubs:7", "hearts:2", "hearts:3", "hearts:4", "spades:2", "spades:3", "diamonds:2", "diamonds:3");
