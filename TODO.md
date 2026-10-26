@@ -59,7 +59,7 @@ The core rules, PBN package, and solo client are in place. Beginner through Expe
   - [x] Rebids a six-card 2/1 response suit after opener repeats the major.
   - [x] Show a four-card side major after a direct 2/1 response with 12–17 HCP.
   - [x] After 1♥–2♣ or 1♠–2♣, show a four-card diamond suit with 12–17 HCP when a higher-priority four-card major is unavailable; responder can raise the shown diamonds with four-card support.
-    - [x] After an unpassed 1M–2♦ response in 2/1, opener can show a natural four-card club suit with 12–17 HCP at 3♣; responder shows a four-card side major, reaches 5♣ with four-card club support, rebids 3♦ with six diamonds, or places 3NT without a fit or long suit.
+    - [x] After an unpassed 1M–2♦ response in 2/1, opener can show a natural four-card club suit with 12–17 HCP at 3♣; responder shows a four-card side major, reaches 5♣ with four-card club support, rebids 3♦ with six diamonds and reaches 5♦ after opener's raise, or places 3NT without a fit or long suit.
   - [x] Raise opener's shown side major to game with four-card support in a direct 2/1 game force.
   - [x] Continue to game after opener's balanced 2NT rebid in a direct 2/1 sequence.
   - [x] Add responder's 11–12 HCP 2NT invitation or three-card major limit raise after opener's natural minor rebid.
