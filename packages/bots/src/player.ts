@@ -96,7 +96,11 @@ function twoOverOneAuction(auction: readonly PublicBid[], style: ConventionSyste
   const responseSuit = response.bid.match(/^2(clubs|diamonds|hearts|spades)$/)?.[1] as Suit | undefined;
   const suitOrder: readonly Suit[] = ["clubs", "diamonds", "hearts", "spades"];
   const expectedResponder = SEATS[(SEATS.indexOf(opening.seat) + 2) % SEATS.length]!;
-  if (!openingSuit || !responseSuit || response.seat !== expectedResponder || suitOrder.indexOf(responseSuit) >= suitOrder.indexOf(openingSuit)) return undefined;
+  const higherMajorGameForce = openingSuit === "hearts" && responseSuit === "spades";
+  if (
+    !openingSuit || !responseSuit || response.seat !== expectedResponder ||
+    (suitOrder.indexOf(responseSuit) >= suitOrder.indexOf(openingSuit) && !higherMajorGameForce)
+  ) return undefined;
   const sideMajor = openingSuit === "hearts" ? "spades" : "hearts";
   const sideMinor = responseSuit === "clubs" && (openingSuit === "hearts" || openingSuit === "spades")
     ? "diamonds"
@@ -104,7 +108,8 @@ function twoOverOneAuction(auction: readonly PublicBid[], style: ConventionSyste
   if (contracts.length >= 3 && (
     contracts[2]!.seat !== opening.seat ||
     (contracts[2]!.bid !== `2${openingSuit}` && contracts[2]!.bid !== "2notrump" &&
-      contracts[2]!.bid !== `2${sideMajor}` && contracts[2]!.bid !== `3${sideMajor}` &&
+      !(sideMajor !== responseSuit && contracts[2]!.bid === `2${sideMajor}`) &&
+      contracts[2]!.bid !== `3${sideMajor}` &&
       (!sideMinor || contracts[2]!.bid !== `2${sideMinor}`))
   )) return undefined;
   if (contracts.length >= 4 && (
@@ -941,12 +946,11 @@ export class BeginnerBot implements BotPlayer {
     }
     const twoOverOne = twoOverOneAuction(auction, this.convention.style);
     if (twoOverOne && contractCalls.length === 2 && twoOverOne.openingSeat === seat) {
-      if (isBalanced(hand) && points(hand) >= 18 && points(hand) <= 19) return "2notrump";
       const sideMajor = twoOverOne.openingSuit === "hearts" ? "spades" : "hearts";
       if (
-        twoOverOne.responseSuit === sideMajor && points(hand) >= 12 && points(hand) <= 17 &&
-        hand.filter((card) => card.suit === sideMajor).length >= 3
+        twoOverOne.responseSuit === sideMajor && hand.filter((card) => card.suit === sideMajor).length >= 3
       ) return `3${sideMajor}` as Bid;
+      if (isBalanced(hand) && points(hand) >= 18 && points(hand) <= 19) return "2notrump";
       if (points(hand) >= 12 && points(hand) <= 17 && hand.filter((card) => card.suit === sideMajor).length >= 4) {
         return `2${sideMajor}` as Bid;
       }
@@ -966,9 +970,14 @@ export class BeginnerBot implements BotPlayer {
         contractCalls[2]?.bid === `2${shownSideMajor}` &&
         hand.filter((card) => card.suit === shownSideMajor).length >= 4
       ) return `4${shownSideMajor}` as Bid;
+      if (contractCalls[2]?.bid === "2notrump") {
+        if (hand.filter((card) => card.suit === twoOverOne.openingSuit).length >= 3) {
+          return `4${twoOverOne.openingSuit}` as Bid;
+        }
+        return "3notrump";
+      }
       const support = hand.filter((card) => card.suit === twoOverOne.openingSuit).length;
       if (support >= 3) return `4${twoOverOne.openingSuit}` as Bid;
-      if (contractCalls[2]?.bid === "2notrump") return "3notrump";
       if (
         twoOverOne.responseSuit === "clubs" && contractCalls[2]?.bid === "2diamonds" &&
         hand.filter((card) => card.suit === "diamonds").length >= 4
@@ -1164,6 +1173,10 @@ export class BeginnerBot implements BotPlayer {
       hand.filter((card) => card.suit === openedMajor).length === 2 &&
       hand.filter((card) => card.suit === (openedMajor === "hearts" ? "spades" : "hearts")).length < 4
     ) return "3notrump";
+    if (
+      this.convention.style === "2/1" && !passedHand && openingSuit === "hearts" &&
+      responderPoints >= 13 && hand.filter((card) => card.suit === "spades").length >= 5
+    ) return "2spades";
     if (responderPoints >= 6) {
       const suitOrder: readonly Suit[] = ["clubs", "diamonds", "hearts", "spades"];
       const openingRank = suitOrder.indexOf(openingSuit);

@@ -88,6 +88,7 @@ The core rules, PBN package, and solo client are in place. Beginner through Expe
     - [x] After responder shows a four-card side major in a 2/1 game force, opener raises to game with three-card support.
     - [x] Without three-card support for responder's side major, opener places the game force in 3NT.
     - [x] Stop at 4M after opener accepts a major fit; continue to 5m only when a long minor fit remains below game.
+    - [x] Include 1♥–2♠ as a 2/1 game force: require 13+ HCP and five spades, raise opener's three-card spade support to game, and place opener's balanced 2NT rebid in game according to major support.
     - [x] Over an uncontested 1NT opening, use Stayman with a four-card major and 8+ HCP or transfer with a five-card major; opener shows a major or accepts the transfer, and responder places an invitation or game, including an alternate spade fit after a heart reply.
     - [x] After a 1NT–2♣–2♦ Stayman denial, responder can show a five-card major naturally at the two level, and opener raises with three-card support.
     - [x] Use quantitative 4NT with a balanced 16+ HCP hand without a major fit over 1NT, and accept with 6NT at 17 HCP; over 2NT, invite with a balanced 12+ HCP hand without a major fit and accept at 21 HCP.
