@@ -28,5 +28,6 @@ Give advancer a simple, nonforcing preference for one of partner's shown suits.
 - [x] Test a game-invitational cue and a minimum overcaller's forced preference.
 - [x] Test a strong overcaller accepting the cue to game.
 - [x] Test passing a minimum preference with 15 HCP and accepting with 16 HCP and three-card support.
-- [x] `pnpm test` passes (482 tests).
+- [x] Verify advancer passes to defend after an opponent competes at the three level.
+- [x] `pnpm test` passes (483 tests).
 - [x] `pnpm typecheck`, `pnpm lint`, and `git diff --check` pass.
