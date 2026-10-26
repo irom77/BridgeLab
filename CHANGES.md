@@ -1,6 +1,6 @@
 # Changes
 
-- Expert bots use Smolen after Stayman denial over 1NT to show a game-forcing 5-4 major pattern, keep opener declarer in a found fit, and place the longer-major fit after 3NT.
+- Expert bots use Smolen after Stayman denial over 1NT to show a game-forcing 5-4 major pattern; opener raises the longer major with three-card support, and responder corrects 3NT only with a six-card major.
 - After 1M–1NT–2m, responders with 13+ HCP and three-card support now raise opener's major to game; 11–12 HCP still invites at the three level.
 - Expert 2/1 bots now use New Minor Forcing after 1m–1M–1NT: responder asks with the unbid minor, opener shows major support or a side major, and responder places the contract. SAYC keeps its existing Expert Checkback sequence.
 

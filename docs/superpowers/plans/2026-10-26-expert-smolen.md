@@ -4,7 +4,7 @@
 
 **Goal:** Add an Expert-only Smolen continuation to find 5-3 major fits after Stayman denial over 1NT.
 
-**Architecture:** Handle the responder jump, opener fit/3NT choice, and responder placement in the existing Expert auction extension. Restrict all stages to uncontested 1NT–2♣–2♦ auctions and keep beginner behavior unchanged.
+**Architecture:** Handle the responder jump, opener's longer-major fit/3NT choice, and responder placement in the existing Expert auction extension. Restrict all stages to uncontested 1NT–2♣–2♦ auctions and keep beginner behavior unchanged.
 
 **Tech Stack:** TypeScript, Vitest, pnpm workspace.
 
@@ -19,8 +19,8 @@
 ## Review Focus
 
 - 5-4 patterns in either orientation: test both Smolen calls.
-- Opener's three-card support: test choosing 4M in the shown four-card major.
-- No three-card fit: test 3NT and responder's longer-major placement.
+- Opener's three-card support: test choosing 4M in the longer major.
+- No three-card fit: test 3NT; responder passes with five cards and corrects with six.
 - Insufficient strength and interference: test the convention does not trigger.
 - Lower bot skills: verify existing natural Stayman-denial behavior remains available.
 
@@ -33,8 +33,8 @@
 
 - [x] Add failing tests for both patterns, opener's fit decision, responder placement, strength threshold, interference, and skill boundary.
 - [x] Implement the Expert-only sequence as specified.
-- [x] Run `pnpm test` (554 tests), `pnpm typecheck`, `pnpm lint`, and `git diff --check`; update roadmap and release notes.
-- [ ] Commit and push the completed slice.
+- [x] Run `pnpm test` (555 tests), `pnpm typecheck`, `pnpm lint`, and `git diff --check`; update roadmap and release notes.
+- [ ] Commit and push the corrected continuation.
 
 ## Source
 

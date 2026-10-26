@@ -500,22 +500,22 @@ describe("beginner bot", () => {
   });
 
   it.each([
-    ["hearts", hand("hearts:A", "hearts:K", "hearts:2", "spades:A", "spades:K", "diamonds:Q", "diamonds:J", "diamonds:2", "diamonds:3", "clubs:Q", "clubs:J", "clubs:2", "clubs:3")],
-    ["spades", hand("spades:A", "spades:K", "spades:2", "hearts:A", "hearts:K", "diamonds:Q", "diamonds:J", "diamonds:2", "diamonds:3", "clubs:Q", "clubs:J", "clubs:2", "clubs:3")]
-  ] as const)("raises the Smolen %s suit to game with three-card support", async (major, opener) => {
+    ["spades", hand("hearts:A", "hearts:K", "spades:A", "spades:K", "spades:2", "diamonds:Q", "diamonds:J", "diamonds:2", "diamonds:3", "clubs:Q", "clubs:J", "clubs:2", "clubs:3")],
+    ["hearts", hand("spades:A", "spades:K", "hearts:A", "hearts:K", "hearts:2", "diamonds:Q", "diamonds:J", "diamonds:2", "diamonds:3", "clubs:Q", "clubs:J", "clubs:2", "clubs:3")]
+  ] as const)("raises the longer Smolen %s suit to game with three-card support", async (major, opener) => {
     const bot = createBot({ skill: "expert", biddingStyle: "2/1" });
     const auction = [
       { seat: "north", bid: "1notrump" as const }, { seat: "east", bid: "pass" as const },
       { seat: "south", bid: "2clubs" as const }, { seat: "west", bid: "pass" as const },
       { seat: "north", bid: "2diamonds" as const }, { seat: "east", bid: "pass" as const },
-      { seat: "south", bid: major === "hearts" ? "3hearts" as const : "3spades" as const }, { seat: "west", bid: "pass" as const }
+      { seat: "south", bid: major === "spades" ? "3hearts" as const : "3spades" as const }, { seat: "west", bid: "pass" as const }
     ] as const;
     expect(await bot.chooseBid(opener, auction, "north")).toBe(`4${major}`);
   });
 
-  it("places 3NT when opener lacks three-card support for the Smolen suit", async () => {
+  it("places 3NT when opener lacks three-card support for the longer Smolen major", async () => {
     const bot = createBot({ skill: "expert", biddingStyle: "2/1" });
-    const opener = hand("hearts:A", "hearts:K", "spades:A", "spades:K", "spades:2", "spades:3", "diamonds:Q", "diamonds:J", "diamonds:2", "diamonds:3", "clubs:Q", "clubs:2", "clubs:3");
+    const opener = hand("hearts:A", "hearts:K", "hearts:2", "spades:A", "spades:K", "diamonds:Q", "diamonds:J", "diamonds:2", "diamonds:3", "clubs:Q", "clubs:2", "clubs:3", "clubs:4");
     const auction = [
       { seat: "north", bid: "1notrump" as const }, { seat: "east", bid: "pass" as const },
       { seat: "south", bid: "2clubs" as const }, { seat: "west", bid: "pass" as const },
@@ -525,9 +525,22 @@ describe("beginner bot", () => {
     expect(await bot.chooseBid(opener, auction, "north")).toBe("3notrump");
   });
 
-  it("places the 5-3 fit in the longer major after a Smolen 3NT rebid", async () => {
+  it("passes 3NT after opener denies the 5-3 Smolen fit", async () => {
     const bot = createBot({ skill: "expert", biddingStyle: "SAYC" });
     const responder = hand("spades:A", "spades:K", "spades:Q", "spades:J", "spades:2", "hearts:K", "hearts:Q", "hearts:2", "hearts:3", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3");
+    const auction = [
+      { seat: "north", bid: "1notrump" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2clubs" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "2diamonds" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "3hearts" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "3notrump" as const }, { seat: "east", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("pass");
+  });
+
+  it("corrects opener's 3NT to the six-card major after Smolen", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "2/1" });
+    const responder = hand("spades:A", "spades:K", "spades:Q", "spades:J", "spades:2", "spades:3", "hearts:K", "hearts:Q", "hearts:2", "hearts:3", "diamonds:2", "clubs:2", "clubs:3");
     const auction = [
       { seat: "north", bid: "1notrump" as const }, { seat: "east", bid: "pass" as const },
       { seat: "south", bid: "2clubs" as const }, { seat: "west", bid: "pass" as const },

@@ -1861,14 +1861,14 @@ export class ExpertBot implements BotPlayer {
 
     if (calls.length === 4) {
       const [opening, stayman, denial, smolen] = calls;
-      const shownMajor = smolen?.bid === "3hearts" ? "hearts" : smolen?.bid === "3spades" ? "spades" : undefined;
+      const longerMajor = smolen?.bid === "3hearts" ? "spades" : smolen?.bid === "3spades" ? "hearts" : undefined;
       if (
         opening?.bid === "1notrump" && opening.seat === seat &&
         stayman?.bid === "2clubs" && stayman.seat === partner &&
-        denial?.bid === "2diamonds" && denial.seat === seat && shownMajor &&
+        denial?.bid === "2diamonds" && denial.seat === seat && longerMajor &&
         smolen?.seat === partner && auction.every(({ bid }) => bid === "pass" || bid === opening.bid || bid === stayman.bid || bid === denial.bid || bid === smolen.bid)
       ) {
-        return Promise.resolve(hand.filter((card) => card.suit === shownMajor).length >= 3 ? `4${shownMajor}` as Bid : "3notrump");
+        return Promise.resolve(hand.filter((card) => card.suit === longerMajor).length >= 3 ? `4${longerMajor}` as Bid : "3notrump");
       }
     }
 
@@ -1880,9 +1880,9 @@ export class ExpertBot implements BotPlayer {
         stayman?.bid === "2clubs" && stayman.seat === seat &&
         denial?.bid === "2diamonds" && denial.seat === partner && longerMajor &&
         smolen?.seat === seat && openerReply?.seat === partner &&
-        (openerReply.bid === "3notrump" || openerReply.bid === `4${smolen.bid.slice(1)}`) &&
+        (openerReply.bid === "3notrump" || openerReply.bid === `4${longerMajor}`) &&
         auction.every(({ bid }) => bid === "pass" || bid === opening.bid || bid === stayman.bid || bid === denial.bid || bid === smolen.bid || bid === openerReply.bid)
-      ) return Promise.resolve(openerReply.bid === "3notrump" ? `4${longerMajor}` as Bid : "pass");
+      ) return Promise.resolve(openerReply.bid === "3notrump" && hand.filter((card) => card.suit === longerMajor).length >= 6 ? `4${longerMajor}` as Bid : "pass");
     }
 
     if (calls.length === 3) {
