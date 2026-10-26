@@ -1726,6 +1726,13 @@ export class ExpertBot implements BotPlayer {
             suitOrder.indexOf(b) - suitOrder.indexOf(a)
           )[0] : undefined;
         const hcp = points(hand);
+        const gameForcingSuit = overcallSuit && hcp >= 10 ? suitOrder
+          .filter((suit) => suit !== overcallSuit && hand.filter((card) => card.suit === suit).length >= 5)
+          .sort((a, b) =>
+            hand.filter((card) => card.suit === b).length - hand.filter((card) => card.suit === a).length ||
+            suitOrder.indexOf(b) - suitOrder.indexOf(a)
+          )[0] : undefined;
+        if (gameForcingSuit) return Promise.resolve(`3${gameForcingSuit}` as Bid);
         if (
           (weakLowerSuit && hcp <= 7) ||
           (invitationalSuit && hcp >= 8 && hcp <= 9) ||
@@ -1734,6 +1741,20 @@ export class ExpertBot implements BotPlayer {
         if (overcallSuit && isBalanced(hand) && hcp >= 10 && !hasStopper(hand, overcallSuit)) {
           return Promise.resolve("3notrump");
         }
+      }
+    }
+
+    if (calls.length === 3) {
+      const [opening, overcall, response] = calls;
+      const responseSuit = response?.bid.match(/^3(clubs|diamonds|hearts|spades)$/)?.[1] as Suit | undefined;
+      const overcallSuit = overcall?.bid.match(/^2(diamonds|hearts|spades)$/)?.[1] as Suit | undefined;
+      if (
+        opening?.bid === "1notrump" && opening.seat === seat && overcallSuit &&
+        overcall?.seat !== seat && overcall?.seat !== partner && response?.seat === partner && responseSuit &&
+        responseSuit !== overcallSuit && auction.length === 3
+      ) {
+        if (hand.filter((card) => card.suit === responseSuit).length >= 3) return Promise.resolve(`4${responseSuit}` as Bid);
+        return Promise.resolve("3notrump");
       }
     }
 

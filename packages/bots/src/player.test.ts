@@ -2823,6 +2823,35 @@ describe("beginner bot", () => {
     expect(await bot.chooseBid(responder, auction, "south")).toBe("3notrump");
   });
 
+  it("makes a direct three-level new-suit response game-forcing after 1NT interference", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "2/1" });
+    const responder = hand("hearts:A", "hearts:K", "hearts:J", "hearts:8", "hearts:7", "spades:Q", "spades:2", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "1notrump" as const }, { seat: "east", bid: "2diamonds" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("3hearts");
+  });
+
+  it("raises a direct game-forcing suit with three-card support", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "SAYC" });
+    const opener = hand("spades:A", "spades:K", "spades:2", "spades:3", "hearts:Q", "hearts:J", "hearts:2", "diamonds:A", "diamonds:2", "diamonds:3", "clubs:K", "clubs:2", "clubs:3");
+    const auction = [
+      { seat: "north", bid: "1notrump" as const }, { seat: "east", bid: "2diamonds" as const },
+      { seat: "south", bid: "3hearts" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe("4hearts");
+  });
+
+  it("places a direct game-forcing new-suit response in 3NT without a fit", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "2/1" });
+    const opener = hand("spades:A", "spades:K", "spades:2", "spades:3", "hearts:2", "hearts:3", "diamonds:A", "diamonds:K", "diamonds:2", "clubs:K", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "1notrump" as const }, { seat: "east", bid: "2diamonds" as const },
+      { seat: "south", bid: "3hearts" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe("3notrump");
+  });
+
   it("signs off in the major after a Reverse Drury response with a minimum", async () => {
     const bot = createBot({ skill: "expert", biddingStyle: "SAYC" });
     const opener = hand("spades:A", "spades:K", "spades:Q", "spades:J", "spades:2", "hearts:2", "hearts:3", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4");
