@@ -801,6 +801,22 @@ export class BeginnerBot implements BotPlayer {
       }
     }
     if (contractCalls.length === 4) {
+      const [followupOpening, followupResponse, followupOpenerRebid, responderSecondMajor] = contractCalls;
+      const followupOpeningMajor = followupOpening?.bid.match(/^1(hearts|spades)$/)?.[1] as Suit | undefined;
+      const rebidMinor = followupOpenerRebid?.bid.match(/^2(clubs|diamonds)$/)?.[1] as Suit | undefined;
+      const secondMajor = responderSecondMajor?.bid.match(/^2(hearts|spades)$/)?.[1] as Suit | undefined;
+      const alternateMajor = followupOpeningMajor === "hearts" ? "spades" : "hearts";
+      if (
+        followupOpeningMajor && followupResponse?.bid === "1notrump" && rebidMinor && secondMajor === alternateMajor &&
+        followupOpening?.seat === seat && followupResponse.seat === partner && followupOpenerRebid?.seat === seat && responderSecondMajor?.seat === partner &&
+        !passedBeforeOpening(auction, partner, followupOpening) &&
+        auction.every(({ bid }) => bid === "pass" || bid === followupOpening.bid || bid === followupResponse.bid || bid === followupOpenerRebid.bid || bid === responderSecondMajor.bid)
+      ) {
+        if (hand.filter((card) => card.suit === secondMajor).length >= 3 && points(hand) >= 16) {
+          return `3${secondMajor}` as Bid;
+        }
+        return `2${followupOpeningMajor}` as Bid;
+      }
       const [fitOpening, fitResponse, fitOpenerRebid, responderMajorBid] = contractCalls;
       const fitOpeningMajor = fitOpening?.bid.match(/^1(hearts|spades)$/)?.[1] as Suit | undefined;
       const fitResponseSuit = fitResponse?.bid.match(/^2(clubs|diamonds)$/)?.[1] as Suit | undefined;
@@ -854,6 +870,21 @@ export class BeginnerBot implements BotPlayer {
       ) return `4${openingMajor}` as Bid;
     }
     if (contractCalls.length === 5) {
+      const [followupOpening, followupResponse, followupOpenerRebid, responderSecondMajor, openerInvite] = contractCalls;
+      const followupOpeningMajor = followupOpening?.bid.match(/^1(hearts|spades)$/)?.[1] as Suit | undefined;
+      const rebidMinor = followupOpenerRebid?.bid.match(/^2(clubs|diamonds)$/)?.[1] as Suit | undefined;
+      const secondMajor = responderSecondMajor?.bid.match(/^2(hearts|spades)$/)?.[1] as Suit | undefined;
+      if (
+        followupOpeningMajor && followupResponse?.bid === "1notrump" && rebidMinor && secondMajor &&
+        openerInvite?.bid === `3${secondMajor}` &&
+        followupOpening?.seat === partner && followupResponse.seat === seat &&
+        followupOpenerRebid?.seat === partner && responderSecondMajor?.seat === seat && openerInvite.seat === partner &&
+        secondMajor !== followupOpeningMajor && secondMajor !== rebidMinor &&
+        !passedBeforeOpening(auction, seat, followupOpening)
+      ) {
+        const acceptanceThreshold = this.convention.style === "2/1" ? 10 : 8;
+        return points(hand) >= acceptanceThreshold ? `4${secondMajor}` as Bid : "pass";
+      }
       const [opening, interference, stayman, majorReply, alternateMajor] = contractCalls;
       if (
         auction.length === 9 && opening && opening.seat !== seat && opening.seat !== partner &&

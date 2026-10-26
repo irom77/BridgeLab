@@ -1483,6 +1483,59 @@ describe("beginner bot", () => {
     expect(await bot.chooseBid(responder, auction, "south")).toBe("2spades");
   });
 
+  it("raises responder's natural second major with a three-card fit and maximum values", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
+    const opener = hand("hearts:A", "hearts:K", "hearts:8", "hearts:7", "hearts:4", "spades:Q", "spades:J", "spades:2", "clubs:A", "clubs:Q", "clubs:4", "diamonds:3", "diamonds:2");
+    const auction = [
+      { seat: "north", bid: "1hearts" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "1notrump" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "2clubs" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2spades" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe("3spades");
+  });
+
+  it("returns to the opening major when the responder's second major is unsupported", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
+    const opener = hand("hearts:A", "hearts:K", "hearts:8", "hearts:7", "hearts:4", "spades:Q", "spades:2", "clubs:K", "clubs:4", "clubs:2", "diamonds:4", "diamonds:3", "diamonds:2");
+    const auction = [
+      { seat: "north", bid: "1hearts" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "1notrump" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "2clubs" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2spades" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe("2hearts");
+  });
+
+  it.each([
+    ["SAYC", 9, "4spades"],
+    ["2/1", 9, "pass"]
+  ] as const)("uses the %s invitation threshold after opener raises the second major (%i HCP)", async (style, _hcp, expected) => {
+    const bot = createBot({ skill: "beginner", biddingStyle: style });
+    const responder = hand("spades:K", "spades:Q", "spades:J", "spades:8", "spades:2", "hearts:Q", "hearts:4", "hearts:3", "diamonds:J", "diamonds:4", "diamonds:3", "clubs:4", "clubs:2");
+    const auction = [
+      { seat: "north", bid: "1hearts" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "1notrump" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "2clubs" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2spades" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "3spades" as const }, { seat: "east", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe(expected);
+  });
+
+  it("accepts the 2/1 invitation after opener raises the second major with 10 HCP", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
+    const responder = hand("spades:K", "spades:Q", "spades:J", "spades:8", "spades:2", "hearts:Q", "hearts:4", "hearts:3", "diamonds:J", "diamonds:4", "diamonds:3", "clubs:J", "clubs:2");
+    const auction = [
+      { seat: "north", bid: "1hearts" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "1notrump" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "2clubs" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2spades" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "3spades" as const }, { seat: "east", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("4spades");
+  });
+
   it.each(["2/1", "SAYC"] as const)("raises a major to the three level with 6-9 HCP after a two-level overcall in %s", async (biddingStyle) => {
     const bot = createBot({ skill: "beginner", biddingStyle });
     const responder = hand("spades:A", "spades:2", "spades:3", "hearts:K", "hearts:2", "hearts:3", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4", "clubs:5");

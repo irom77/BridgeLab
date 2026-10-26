@@ -57,7 +57,7 @@ The core rules, PBN package, and solo client are in place. Beginner through Expe
   - [x] Raise opener's shown side major to game with four-card support in a direct 2/1 game force.
   - [x] Continue to game after opener's balanced 2NT rebid in a direct 2/1 sequence.
   - [x] Add responder's 11–12 HCP 2NT invitation or three-card major limit raise after opener's natural minor rebid.
-  - [x] After 1♠–1NT–2♣, rebid a five-card heart suit below direct 2/1 response strength; after 1♥–1NT–2♣/2♦, rebid a five-card spade suit below direct two-level response strength.
+  - [x] After 1♠–1NT–2♣, rebid a five-card heart suit below direct 2/1 response strength; after 1♥–1NT–2♣/2♦, rebid a five-card spade suit below direct two-level response strength. Opener invites with 3M on 16+ HCP and three-card support or returns to the opening major; responder accepts at 8+ HCP in SAYC or 10+ in 2/1.
   - [x] Respect passed-hand exceptions: lower the direct two-level response threshold and do not force opener to rebid after a passed-hand 1NT response.
   - [x] Treat a 1NT response after an opponent's double or one-level overcall as natural and nonforcing in 2/1, with 6–9 balanced HCP and a stopper over an overcall.
   - [x] Cover interference exceptions to the 2/1 forcing 1NT agreement: the force is off after an opponent acts; responder can use natural 1NT over a double or one-level overcall, and natural 2NT over a two-level overcall with a stopper.
