@@ -1387,21 +1387,51 @@ export class IntermediateBot implements BotPlayer {
         if (weakTwoSuit) return Promise.resolve(`2${weakTwoSuit}` as Bid);
       }
     }
-    if (contractCalls.length === 1 && auction.length === 1) {
+    if (contractCalls.length === 1) {
       const [opening] = contractCalls;
       const weakTwoSuit = opening?.bid.match(/^2(diamonds|hearts|spades)$/)?.[1] as Suit | undefined;
       if (opening?.seat === partner && weakTwoSuit) {
         const hcp = points(hand);
         const support = hand.filter((card) => card.suit === weakTwoSuit).length;
+        const uncontested = auction.slice(auction.indexOf(opening) + 1).every(({ bid }) => bid === "pass");
         if (support < 3 && isBalanced(hand) && hcp >= 16) return Promise.resolve("3notrump");
         if (hcp >= 15) return Promise.resolve("2notrump");
         if (support >= 5) return Promise.resolve(`4${weakTwoSuit}` as Bid);
         if (support >= 3) return Promise.resolve(`3${weakTwoSuit}` as Bid);
+        if (uncontested && hcp >= 10 && hcp < 15) {
+          const suitOrder: readonly Suit[] = ["clubs", "diamonds", "hearts", "spades"];
+          const openingRank = suitOrder.indexOf(weakTwoSuit);
+          const newSuit = suitOrder
+            .filter((suit) => suit !== weakTwoSuit && hand.filter((card) => card.suit === suit).length >= 5)
+            .sort((a, b) => hand.filter((card) => card.suit === b).length - hand.filter((card) => card.suit === a).length || suitOrder.indexOf(b) - suitOrder.indexOf(a))[0];
+          if (newSuit) {
+            const level = suitOrder.indexOf(newSuit) > openingRank ? 2 : 3;
+            return Promise.resolve(`${level}${newSuit}` as Bid);
+          }
+        }
       }
     }
-    if (contractCalls.length === 2 && auction.length === 2) {
+    if (contractCalls.length === 2) {
       const [opening, inquiry] = contractCalls;
       const weakTwoSuit = opening?.bid.match(/^2(diamonds|hearts|spades)$/)?.[1] as Suit | undefined;
+      const responseSuit = inquiry?.bid.match(/^[23](clubs|diamonds|hearts|spades)$/)?.[1] as Suit | undefined;
+      if (
+        opening?.seat === seat && weakTwoSuit && responseSuit && responseSuit !== weakTwoSuit && inquiry?.seat === partner &&
+        points(hand) >= 5 && points(hand) <= 11
+      ) {
+        const responseLength = hand.filter((card) => card.suit === responseSuit).length;
+        const responseIsMajor = responseSuit === "hearts" || responseSuit === "spades";
+        if (responseIsMajor && responseLength >= 3) return Promise.resolve(`3${responseSuit}` as Bid);
+        if (points(hand) <= 8) return Promise.resolve(`3${weakTwoSuit}` as Bid);
+        const feature = suits.find((suit) => {
+          if (suit === weakTwoSuit || suit === responseSuit) return false;
+          const cards = hand.filter((card) => card.suit === suit);
+          return cards.some((card) => card.rank === "A") ||
+            (cards.length >= 2 && cards.some((card) => card.rank === "K")) ||
+            (cards.length >= 4 && cards.some((card) => card.rank === "Q"));
+        });
+        return Promise.resolve(feature ? `3${feature}` as Bid : "3notrump");
+      }
       if (opening?.seat === seat && weakTwoSuit && inquiry?.bid === "2notrump" && inquiry.seat === partner) {
         const hcp = points(hand);
         if (hcp <= 8) return Promise.resolve(`3${weakTwoSuit}` as Bid);
@@ -1409,6 +1439,32 @@ export class IntermediateBot implements BotPlayer {
           suit !== weakTwoSuit && hand.some((card) => card.suit === suit && (card.rank === "A" || card.rank === "K"))
         );
         return Promise.resolve(feature ? `3${feature}` as Bid : "3notrump");
+      }
+    }
+    if (contractCalls.length === 3) {
+      const [opening, response, openerRebid] = contractCalls;
+      const weakTwoSuit = opening?.bid.match(/^2(diamonds|hearts|spades)$/)?.[1] as Suit | undefined;
+      const responseSuit = response?.bid.match(/^[23](clubs|diamonds|hearts|spades)$/)?.[1] as Suit | undefined;
+      if (
+        opening?.seat === partner && weakTwoSuit && response?.seat === seat && responseSuit && responseSuit !== weakTwoSuit &&
+        openerRebid?.seat === partner && openerRebid.bid.startsWith("3")
+      ) {
+        const hcp = points(hand);
+        const openerSuitIsMajor = weakTwoSuit === "hearts" || weakTwoSuit === "spades";
+        if (openerRebid.bid === `3${weakTwoSuit}`) {
+          if (hcp >= 13 && openerSuitIsMajor && hand.filter((card) => card.suit === weakTwoSuit).length >= 2) {
+            return Promise.resolve(`4${weakTwoSuit}` as Bid);
+          }
+          if (hcp >= 13 && isBalanced(hand)) return Promise.resolve("3notrump");
+          return Promise.resolve("pass");
+        }
+        if (openerRebid.bid === "3notrump") return Promise.resolve("pass");
+        const shownSuit = openerRebid.bid.slice(1) as Suit;
+        if (hcp >= 13 && (shownSuit === "hearts" || shownSuit === "spades") && hand.filter((card) => card.suit === shownSuit).length >= 3) {
+          return Promise.resolve(`4${shownSuit}` as Bid);
+        }
+        if (hcp >= 13 && isBalanced(hand)) return Promise.resolve("3notrump");
+        return Promise.resolve("pass");
       }
     }
     if (contractCalls.length === 3 && auction.length === 6) {

@@ -2155,6 +2155,21 @@ describe("beginner bot", () => {
     expect(await bot.chooseBid(responder, [{ seat: "north", bid: "2hearts" }], "south")).toBe("2notrump");
   });
 
+  it("uses a forcing natural new-suit response over a weak two and opener continues by strength", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const responder = hand("spades:A", "spades:K", "spades:Q", "spades:J", "spades:2", "hearts:2", "hearts:3", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4");
+    const gameResponder = hand("spades:A", "spades:K", "spades:Q", "spades:J", "spades:2", "hearts:2", "hearts:3", "diamonds:A", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4");
+    const minimum = hand("hearts:A", "hearts:J", "hearts:2", "hearts:3", "hearts:4", "hearts:5", "spades:2", "spades:3", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4");
+    const maximum = hand("hearts:K", "hearts:Q", "hearts:J", "hearts:2", "hearts:3", "hearts:4", "spades:2", "spades:3", "diamonds:A", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3");
+    const opening = [{ seat: "north", bid: "2hearts" as const }, { seat: "east", bid: "pass" as const }] as const;
+    expect(await bot.chooseBid(responder, opening, "south")).toBe("2spades");
+
+    const auction = [...opening, { seat: "south", bid: "2spades" as const }, { seat: "west", bid: "pass" as const }] as const;
+    expect(await bot.chooseBid(minimum, auction, "north")).toBe("3hearts");
+    expect(await bot.chooseBid(maximum, auction, "north")).toBe("3diamonds");
+    expect(await bot.chooseBid(gameResponder, [...auction, { seat: "north", bid: "3hearts" as const }, { seat: "east", bid: "pass" as const }], "south")).toBe("4hearts");
+  });
+
   it("raises a weak two to the three level with three-card support and no game interest", async () => {
     const bot = createBot({ skill: "intermediate", biddingStyle: "2/1" });
     const responder = hand("hearts:Q", "hearts:2", "hearts:3", "spades:J", "spades:2", "spades:3", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
