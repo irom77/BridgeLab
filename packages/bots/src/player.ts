@@ -1257,6 +1257,26 @@ export class BeginnerBot implements BotPlayer {
       this.convention.style === "2/1" && !passedHand && openingSuit === "hearts" &&
       responderPoints >= 13 && hand.filter((card) => card.suit === "spades").length >= 5
     ) return "2spades";
+    if (
+      this.convention.style === "SAYC" && openedMajor && responderPoints >= 13 &&
+      hand.filter((card) => card.suit === openedMajor).length >= 3
+    ) {
+      return `4${openedMajor}` as Bid;
+    }
+    if (
+      this.convention.style === "SAYC" && !passedHand && responderPoints >= 19 &&
+      (!openedMajor || hand.filter((card) => card.suit === openedMajor).length < 3)
+    ) {
+      const suitOrder: readonly Suit[] = ["clubs", "diamonds", "hearts", "spades"];
+      const openingRank = suitOrder.indexOf(openingSuit);
+      const jumpShiftSuit = [...suitOrder]
+        .filter((suit) => suit !== openingSuit && hand.filter((card) => card.suit === suit).length >= 5)
+        .sort((a, b) => hand.filter((card) => card.suit === b).length - hand.filter((card) => card.suit === a).length || suitOrder.indexOf(b) - suitOrder.indexOf(a))[0];
+      if (jumpShiftSuit) {
+        const jumpLevel = suitOrder.indexOf(jumpShiftSuit) > openingRank ? 2 : 3;
+        return `${jumpLevel}${jumpShiftSuit}` as Bid;
+      }
+    }
     if (responderPoints >= 6) {
       const suitOrder: readonly Suit[] = ["clubs", "diamonds", "hearts", "spades"];
       const openingRank = suitOrder.indexOf(openingSuit);

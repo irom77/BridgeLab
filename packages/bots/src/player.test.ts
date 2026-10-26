@@ -630,6 +630,30 @@ describe("beginner bot", () => {
     expect(await bot.chooseBid(handWithSupport, [{ seat: "north", bid: "1hearts" }], "south")).toBe("2hearts");
   });
 
+  it("uses a SAYC strong jump shift with 19+ HCP and a five-card suit", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
+    const strongResponder = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:2", "hearts:3", "spades:A", "spades:K", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4");
+    expect(await bot.chooseBid(strongResponder, [{ seat: "north", bid: "1clubs" }], "south")).toBe("2hearts");
+  });
+
+  it("does not jump shift below 19 HCP in SAYC", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
+    const responder = hand("hearts:A", "hearts:K", "hearts:J", "hearts:2", "hearts:3", "spades:A", "spades:K", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4");
+    expect(await bot.chooseBid(responder, [{ seat: "north", bid: "1clubs" }], "south")).toBe("1hearts");
+  });
+
+  it("places a strong major fit in game before showing a side-suit jump shift", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
+    const responder = hand("hearts:A", "hearts:K", "hearts:Q", "spades:A", "spades:K", "spades:Q", "spades:J", "spades:2", "diamonds:A", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3");
+    expect(await bot.chooseBid(responder, [{ seat: "north", bid: "1hearts" }], "south")).toBe("4hearts");
+  });
+
+  it("keeps the direct two-level response at 13 HCP in 2/1", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
+    const strongResponder = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:2", "hearts:3", "spades:A", "spades:K", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4");
+    expect(await bot.chooseBid(strongResponder, [{ seat: "north", bid: "1clubs" }], "south")).toBe("1hearts");
+  });
+
   it.each(["SAYC", "2/1"] as const)("makes a weak preemptive game raise with five-card support and shortness in %s", async (biddingStyle) => {
     const bot = createBot({ skill: "beginner", biddingStyle });
     const responder = hand("hearts:K", "hearts:Q", "hearts:J", "hearts:2", "hearts:3", "spades:K", "spades:2", "diamonds:2", "clubs:2", "clubs:3", "clubs:4", "clubs:5", "clubs:6");
