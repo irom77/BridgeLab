@@ -3699,6 +3699,87 @@ describe("beginner bot", () => {
     expect(await bot.chooseBid(responder, [{ seat: "north", bid: "1notrump" }], "south")).toBe("2diamonds");
   });
 
+  it("uses Puppet Stayman over 2NT with three-card support for a possible five-card major", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "SAYC" });
+    const responder = hand("spades:Q", "spades:6", "spades:4", "hearts:8", "hearts:7", "diamonds:A", "diamonds:9", "diamonds:4", "diamonds:2", "clubs:Q", "clubs:5", "clubs:3", "clubs:2");
+    expect(await bot.chooseBid(responder, [{ seat: "north", bid: "2notrump" }], "south")).toBe("3clubs");
+  });
+
+  it.each([
+    ["hearts", "3hearts"],
+    ["spades", "3spades"]
+  ] as const)("shows a five-card %s major to Expert Puppet Stayman", async (major, expected) => {
+    const bot = createBot({ skill: "expert", biddingStyle: "2/1" });
+    const opener = major === "hearts"
+      ? hand("hearts:A", "hearts:K", "hearts:Q", "hearts:J", "hearts:2", "spades:2", "spades:3", "diamonds:A", "diamonds:2", "diamonds:3", "clubs:A", "clubs:2", "clubs:3")
+      : hand("spades:A", "spades:K", "spades:Q", "spades:J", "spades:2", "hearts:2", "hearts:3", "diamonds:A", "diamonds:2", "diamonds:3", "clubs:A", "clubs:2", "clubs:3");
+    const auction = [
+      { seat: "north", bid: "2notrump" as const }, { seat: "south", bid: "3clubs" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe(expected);
+  });
+
+  it("shows four-card major holdings with 3 diamonds in response to Puppet Stayman", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "SAYC" });
+    const opener = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:2", "spades:A", "spades:K", "spades:2", "diamonds:A", "diamonds:2", "diamonds:3", "clubs:A", "clubs:2", "clubs:3");
+    const auction = [
+      { seat: "north", bid: "2notrump" as const }, { seat: "south", bid: "3clubs" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe("3diamonds");
+  });
+
+  it("denies four- and five-card majors with 3NT over Puppet Stayman", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "SAYC" });
+    const opener = hand("clubs:A", "clubs:K", "clubs:Q", "clubs:2", "diamonds:A", "diamonds:K", "diamonds:Q", "diamonds:2", "hearts:K", "hearts:2", "spades:Q", "spades:2", "spades:3");
+    const auction = [
+      { seat: "north", bid: "2notrump" as const }, { seat: "south", bid: "3clubs" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe("3notrump");
+  });
+
+  it("places game in a five-card major when Puppet Stayman finds a three-card fit", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "2/1" });
+    const responder = hand("hearts:Q", "hearts:8", "hearts:7", "spades:K", "spades:2", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:K", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
+    const auction = [
+      { seat: "north", bid: "2notrump" as const }, { seat: "south", bid: "3clubs" as const },
+      { seat: "west", bid: "pass" as const }, { seat: "north", bid: "3hearts" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("4hearts");
+  });
+
+  it("chooses notrump when the five-card major doesn't fit responder", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "SAYC" });
+    const responder = hand("hearts:2", "hearts:3", "spades:A", "spades:K", "spades:Q", "spades:2", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:K", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "2notrump" as const }, { seat: "south", bid: "3clubs" as const },
+      { seat: "west", bid: "pass" as const }, { seat: "north", bid: "3hearts" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("3notrump");
+  });
+
+  it("shows a four-card major through Puppet Stayman and accepts a discovered fit", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "SAYC" });
+    const responder = hand("spades:A", "spades:Q", "spades:7", "spades:4", "hearts:8", "hearts:7", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:K", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "2notrump" as const }, { seat: "south", bid: "3clubs" as const },
+      { seat: "west", bid: "pass" as const }, { seat: "north", bid: "3diamonds" as const },
+      { seat: "east", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("3hearts");
+    const fitAuction = [...auction, { seat: "south" as const, bid: "3hearts" as const }, { seat: "west" as const, bid: "pass" as const }] as const;
+    const opener = hand("spades:A", "spades:K", "spades:Q", "spades:2", "hearts:2", "hearts:3", "diamonds:A", "diamonds:2", "diamonds:3", "clubs:A", "clubs:2", "clubs:3", "clubs:4");
+    expect(await bot.chooseBid(opener, fitAuction, "north")).toBe("4spades");
+  });
+
+  it("does not use Puppet Stayman after interference over 2NT", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "2/1" });
+    const responder = hand("spades:Q", "spades:6", "spades:4", "hearts:8", "hearts:7", "diamonds:A", "diamonds:9", "diamonds:4", "diamonds:2", "clubs:Q", "clubs:5", "clubs:3", "clubs:2");
+    const auction = [
+      { seat: "north", bid: "2notrump" as const }, { seat: "east", bid: "3diamonds" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).not.toBe("3clubs");
+  });
+
   it("uses Gerber instead of a quantitative invitation with 16 HCP over a 2NT opening", async () => {
     const bot = createBot({ skill: "expert", biddingStyle: "2/1" });
     const responder = hand("spades:A", "spades:K", "spades:Q", "hearts:A", "hearts:K", "hearts:2", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4", "clubs:5");

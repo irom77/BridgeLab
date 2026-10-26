@@ -1889,6 +1889,64 @@ export class ExpertBot implements BotPlayer {
       ) return Promise.resolve("pass");
     }
 
+    if (calls.length === 1 && calls[0]?.seat === partner && calls[0].bid === "2notrump") {
+      const hearts = hand.filter((card) => card.suit === "hearts").length;
+      const spades = hand.filter((card) => card.suit === "spades").length;
+      const noFourCardMajor = hearts < 4 && spades < 4;
+      const keepQuantitativeOrGerber = noFourCardMajor && isBalanced(hand) && points(hand) >= 12;
+      if (Math.max(hearts, spades) < 5 && Math.max(hearts, spades) >= 3 && !keepQuantitativeOrGerber) {
+        return Promise.resolve("3clubs");
+      }
+    }
+
+    if (calls.length === 2) {
+      const [opening, puppet] = calls;
+      if (opening?.seat === seat && opening.bid === "2notrump" && puppet?.seat === partner && puppet.bid === "3clubs") {
+        const hearts = hand.filter((card) => card.suit === "hearts").length;
+        const spades = hand.filter((card) => card.suit === "spades").length;
+        if (hearts >= 5) return Promise.resolve("3hearts");
+        if (spades >= 5) return Promise.resolve("3spades");
+        if (hearts >= 4 || spades >= 4) return Promise.resolve("3diamonds");
+        return Promise.resolve("3notrump");
+      }
+    }
+
+    if (calls.length === 3) {
+      const [opening, puppet, response] = calls;
+      if (opening?.seat === partner && opening.bid === "2notrump" && puppet?.seat === seat && puppet.bid === "3clubs" && response?.seat === partner) {
+        if (response.bid === "3hearts" || response.bid === "3spades") {
+          const shownMajor = response.bid.slice(1) as Suit;
+          return Promise.resolve(hand.filter((card) => card.suit === shownMajor).length >= 3 ? `4${shownMajor}` as Bid : "3notrump");
+        }
+        if (response.bid === "3diamonds") {
+          const hearts = hand.filter((card) => card.suit === "hearts").length;
+          const spades = hand.filter((card) => card.suit === "spades").length;
+          if (hearts >= 4 && spades >= 4) return Promise.resolve("4diamonds");
+          if (hearts >= 4) return Promise.resolve("3spades");
+          if (spades >= 4) return Promise.resolve("3hearts");
+          return Promise.resolve("3notrump");
+        }
+      }
+    }
+
+    if (calls.length === 4) {
+      const [opening, puppet, fourMajorReply, responderMajor] = calls;
+      if (
+        opening?.seat === seat && opening.bid === "2notrump" && puppet?.seat === partner && puppet.bid === "3clubs" &&
+        fourMajorReply?.seat === seat && fourMajorReply.bid === "3diamonds" && responderMajor?.seat === partner
+      ) {
+        if (responderMajor.bid === "4diamonds") {
+          const hearts = hand.filter((card) => card.suit === "hearts").length;
+          const spades = hand.filter((card) => card.suit === "spades").length;
+          if (spades >= 4 && spades >= hearts) return Promise.resolve("4spades");
+          if (hearts >= 4) return Promise.resolve("4hearts");
+          if (spades >= 4) return Promise.resolve("4spades");
+        }
+        const shownMajor = responderMajor.bid === "3spades" ? "hearts" : responderMajor.bid === "3hearts" ? "spades" : undefined;
+        if (shownMajor) return Promise.resolve(hand.filter((card) => card.suit === shownMajor).length >= 4 ? `4${shownMajor}` as Bid : "3notrump");
+      }
+    }
+
     if (calls.length === 3) {
       const [opening, stayman, denial] = calls;
       const spades = hand.filter((card) => card.suit === "spades").length;
