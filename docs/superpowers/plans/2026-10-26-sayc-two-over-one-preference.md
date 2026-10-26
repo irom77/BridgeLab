@@ -2,9 +2,9 @@
 
 > **For agentic workers:** Implement and verify each auction path with focused bot tests.
 
-**Goal:** Let a SAYC responder describe an invitational club holding or spade preference after 1♠–2♣–2♥.
+**Goal:** Let a SAYC responder describe a three-card heart fit, invitational club holding, or spade preference after 1♠–2♣–2♥.
 
-**Architecture:** Extend the existing uncontested SAYC major two-level response handler. Responder rebids 2♠ with 11–12 HCP and exactly two spades, or 3♣ with 10–11 HCP and five or more clubs, giving the 2♠ preference priority when both descriptions apply at 11 HCP.
+**Architecture:** Extend the existing uncontested SAYC major two-level response handler. Responder rebids 2♠ with 11–12 HCP and exactly two spades, bids 3♥ with 10–11 HCP and three-card heart support, or bids 3♣ with 10–11 HCP and five or more clubs. A three-card heart fit takes priority over either minor or spade preference.
 
 **Tech Stack:** TypeScript, Vitest, pnpm workspace scripts.
 
@@ -20,11 +20,12 @@
 
 - At both 11 and 12 HCP with exactly two spades, responder bids 2♠.
 - With 10 HCP and five clubs, responder bids 3♣; at 11 HCP, a doubleton spade takes priority for 2♠.
+- With 10–11 HCP and three hearts, responder invites in 3♥.
 - Other hands continue through the existing response logic.
 
 ## Implementation
 
-- [x] Add regression tests for 2♠ preference at 11 and 12 HCP and the natural 3♣ invitation at 10 HCP.
+- [x] Add regression tests for the 2♠ preference, natural 3♣ invitation, and three-card heart-fit invitation.
 - [x] Run the focused bot tests.
 
 ## Reference

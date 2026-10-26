@@ -341,6 +341,10 @@ export class BeginnerBot implements BotPlayer {
     ) {
       const alternateMajor = saycMajorTwoLevelResponse.openingSuit === "hearts" ? "spades" : "hearts";
       if (
+        alternateMajor === "hearts" && hand.filter((card) => card.suit === "hearts").length >= 3 &&
+        points(hand) >= 10 && points(hand) <= 11
+      ) return "3hearts";
+      if (
         saycMajorTwoLevelResponse.openingSuit === "spades" && saycMajorTwoLevelResponse.responseSuit === "clubs" &&
         points(hand) >= 11 && points(hand) <= 12 &&
         hand.filter((card) => card.suit === "spades").length === 2
