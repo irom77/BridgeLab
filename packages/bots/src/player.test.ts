@@ -2802,7 +2802,7 @@ describe("beginner bot", () => {
 
   it("shows a heart stopper by relaying before bidding 3NT", async () => {
     const bot = createBot({ skill: "expert", biddingStyle: "2/1" });
-    const responder = hand("spades:A", "spades:K", "spades:2", "spades:3", "hearts:A", "hearts:2", "hearts:3", "diamonds:Q", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4");
+    const responder = hand("spades:A", "spades:K", "spades:2", "hearts:A", "hearts:2", "hearts:3", "diamonds:Q", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
     const auction = [
       { seat: "north", bid: "1notrump" as const }, { seat: "east", bid: "2hearts" as const }
     ] as const;
@@ -2816,7 +2816,7 @@ describe("beginner bot", () => {
 
   it("bids 3NT directly without a stopper in the overcalled suit", async () => {
     const bot = createBot({ skill: "expert", biddingStyle: "2/1" });
-    const responder = hand("spades:A", "spades:K", "spades:2", "spades:3", "hearts:2", "hearts:3", "hearts:4", "diamonds:A", "diamonds:2", "diamonds:3", "clubs:Q", "clubs:2", "clubs:3");
+    const responder = hand("spades:A", "spades:K", "spades:2", "hearts:2", "hearts:3", "hearts:4", "diamonds:A", "diamonds:2", "diamonds:3", "clubs:Q", "clubs:2", "clubs:3", "clubs:4");
     const auction = [
       { seat: "north", bid: "1notrump" as const }, { seat: "east", bid: "2hearts" as const }
     ] as const;
@@ -2850,6 +2850,59 @@ describe("beginner bot", () => {
       { seat: "south", bid: "3hearts" as const }
     ] as const;
     expect(await bot.chooseBid(opener, auction, "north")).toBe("3notrump");
+  });
+
+  it("uses a direct cue-bid as Stayman without a stopper in the overcalled suit", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "SAYC" });
+    const responder = hand("spades:A", "spades:K", "spades:Q", "spades:2", "hearts:2", "hearts:3", "hearts:4", "diamonds:Q", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "1notrump" as const }, { seat: "east", bid: "2hearts" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("3hearts");
+  });
+
+  it("shows a four-card spade suit after responder's Lebensohl Stayman cue-bid", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "2/1" });
+    const opener = hand("spades:A", "spades:K", "spades:2", "spades:3", "hearts:K", "hearts:Q", "hearts:2", "diamonds:A", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "1notrump" as const }, { seat: "east", bid: "2hearts" as const },
+      { seat: "south", bid: "3hearts" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe("3spades");
+  });
+
+  it("places spade game after Stayman finds a four-card fit", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "SAYC" });
+    const responder = hand("spades:A", "spades:K", "spades:Q", "spades:2", "hearts:2", "hearts:3", "hearts:4", "diamonds:Q", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "1notrump" as const }, { seat: "east", bid: "2hearts" as const },
+      { seat: "south", bid: "3hearts" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "3spades" as const }, { seat: "east", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("4spades");
+  });
+
+  it("uses the relay before a Stayman cue-bid when responder has the overcalled-suit stopper", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "2/1" });
+    const responder = hand("spades:A", "spades:K", "spades:Q", "spades:2", "hearts:A", "hearts:2", "hearts:3", "diamonds:Q", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4");
+    const opener = hand("spades:A", "spades:K", "spades:2", "spades:3", "hearts:K", "hearts:Q", "hearts:2", "diamonds:A", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "1notrump" as const }, { seat: "east", bid: "2hearts" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("2notrump");
+    const afterRelay = [
+      ...auction, { seat: "south", bid: "2notrump" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "3clubs" as const }, { seat: "east", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, afterRelay, "south")).toBe("3hearts");
+    const afterCue = [
+      ...afterRelay, { seat: "south", bid: "3hearts" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, afterCue, "north")).toBe("3spades");
+    const afterSpadeReply = [
+      ...afterCue, { seat: "north", bid: "3spades" as const }, { seat: "east", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, afterSpadeReply, "south")).toBe("4spades");
   });
 
   it("signs off in the major after a Reverse Drury response with a minimum", async () => {

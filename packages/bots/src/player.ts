@@ -47,6 +47,13 @@ function hasStopper(hand: Hand, suit: Suit): boolean {
     (suitCards.length >= 3 && suitCards.some((card) => card.rank === "Q"));
 }
 
+function staymanMajor(hand: Hand, overcallSuit: Suit): Suit | undefined {
+  const candidateMajors: readonly Suit[] = overcallSuit === "hearts"
+    ? ["spades"]
+    : overcallSuit === "spades" ? ["hearts"] : ["spades", "hearts"];
+  return candidateMajors.find((suit) => hand.filter((card) => card.suit === suit).length >= 4);
+}
+
 function losingTricks(hand: Hand): number {
   return suits.reduce((losers, suit) => {
     const suitCards = hand.filter((card) => card.suit === suit)
@@ -1733,14 +1740,61 @@ export class ExpertBot implements BotPlayer {
             suitOrder.indexOf(b) - suitOrder.indexOf(a)
           )[0] : undefined;
         if (gameForcingSuit) return Promise.resolve(`3${gameForcingSuit}` as Bid);
+        const staymanSuit = overcallSuit ? staymanMajor(hand, overcallSuit) : undefined;
+        if (overcallSuit && staymanSuit && hcp >= 10 && !hasStopper(hand, overcallSuit)) {
+          return Promise.resolve(`3${overcallSuit}` as Bid);
+        }
         if (
           (weakLowerSuit && hcp <= 7) ||
           (invitationalSuit && hcp >= 8 && hcp <= 9) ||
+          (overcallSuit && staymanSuit && hcp >= 10 && hasStopper(hand, overcallSuit)) ||
           (overcallSuit && isBalanced(hand) && hcp >= 10 && hasStopper(hand, overcallSuit))
         ) return Promise.resolve("2notrump");
         if (overcallSuit && isBalanced(hand) && hcp >= 10 && !hasStopper(hand, overcallSuit)) {
           return Promise.resolve("3notrump");
         }
+      }
+    }
+
+    if (calls.length === 3) {
+      const [opening, overcall, response] = calls;
+      const overcallSuit = overcall?.bid.match(/^2(diamonds|hearts|spades)$/)?.[1] as Suit | undefined;
+      if (
+        opening?.bid === "1notrump" && opening.seat === seat && overcallSuit &&
+        overcall?.seat !== seat && overcall?.seat !== partner && response?.bid === `3${overcallSuit}` &&
+        response.seat === partner && auction.length === 3
+      ) {
+        const major = staymanMajor(hand, overcallSuit);
+        return Promise.resolve(major ? `3${major}` as Bid : "3notrump");
+      }
+    }
+
+    if (calls.length === 4) {
+      const [opening, overcall, relay, clubRelay] = calls;
+      const overcallSuit = overcall?.bid.match(/^2(diamonds|hearts|spades)$/)?.[1] as Suit | undefined;
+      if (
+        opening?.bid === "1notrump" && opening.seat === partner && overcallSuit &&
+        overcall?.seat !== seat && overcall?.seat !== partner && relay?.bid === "2notrump" && relay.seat === seat &&
+        clubRelay?.bid === "3clubs" && clubRelay.seat === partner && auction.length === 6 &&
+        auction[3]?.bid === "pass" && auction[5]?.bid === "pass" && points(hand) >= 10 &&
+        staymanMajor(hand, overcallSuit) && hasStopper(hand, overcallSuit)
+      ) return Promise.resolve(`3${overcallSuit}` as Bid);
+    }
+
+    if (calls.length === 4) {
+      const [opening, overcall, cueBid, shownMajor] = calls;
+      const overcallSuit = overcall?.bid.match(/^2(diamonds|hearts|spades)$/)?.[1] as Suit | undefined;
+      const shownMajorSuit = shownMajor?.bid.match(/^3(hearts|spades)$/)?.[1] as Suit | undefined;
+      if (
+        opening?.bid === "1notrump" && opening.seat === partner && overcallSuit &&
+        overcall?.seat !== seat && overcall?.seat !== partner && cueBid?.bid === `3${overcallSuit}` &&
+        cueBid.seat === seat && shownMajorSuit && shownMajor?.seat === partner && auction.length === 6 &&
+        auction[3]?.bid === "pass" && auction[5]?.bid === "pass"
+      ) {
+        if (hand.filter((card) => card.suit === shownMajorSuit).length >= 4) {
+          return Promise.resolve(`4${shownMajorSuit}` as Bid);
+        }
+        return Promise.resolve("3notrump");
       }
     }
 
@@ -1795,7 +1849,43 @@ export class ExpertBot implements BotPlayer {
       ) {
         if (hcp <= 7 && weakLowerSuit) return Promise.resolve(weakLowerSuit === "clubs" ? "pass" : `3${weakLowerSuit}` as Bid);
         if (hcp >= 8 && hcp <= 9 && invitationalSuit) return Promise.resolve(`3${invitationalSuit}` as Bid);
+        if (hcp >= 10 && staymanMajor(hand, overcallSuit) && hasStopper(hand, overcallSuit)) {
+          return Promise.resolve(`3${overcallSuit}` as Bid);
+        }
         if (hcp >= 10 && isBalanced(hand) && hasStopper(hand, overcallSuit)) return Promise.resolve("3notrump");
+      }
+    }
+
+    if (calls.length === 5) {
+      const [opening, overcall, relay, clubRelay, cueBid] = calls;
+      const overcallSuit = overcall?.bid.match(/^2(diamonds|hearts|spades)$/)?.[1] as Suit | undefined;
+      if (
+        opening?.bid === "1notrump" && opening.seat === seat && overcallSuit &&
+        overcall?.seat !== seat && overcall?.seat !== partner && relay?.bid === "2notrump" && relay.seat === partner &&
+        clubRelay?.bid === "3clubs" && clubRelay.seat === seat && cueBid?.bid === `3${overcallSuit}` &&
+        cueBid.seat === partner && auction.length === 8 && auction[3]?.bid === "pass" &&
+        auction[5]?.bid === "pass" && auction[7]?.bid === "pass"
+      ) {
+        const major = staymanMajor(hand, overcallSuit);
+        return Promise.resolve(major ? `3${major}` as Bid : "3notrump");
+      }
+    }
+
+    if (calls.length === 6) {
+      const [opening, overcall, relay, clubRelay, cueBid, shownMajor] = calls;
+      const overcallSuit = overcall?.bid.match(/^2(diamonds|hearts|spades)$/)?.[1] as Suit | undefined;
+      const shownMajorSuit = shownMajor?.bid.match(/^3(hearts|spades)$/)?.[1] as Suit | undefined;
+      if (
+        opening?.bid === "1notrump" && opening.seat === partner && overcallSuit &&
+        overcall?.seat !== seat && overcall?.seat !== partner && relay?.bid === "2notrump" && relay.seat === seat &&
+        clubRelay?.bid === "3clubs" && clubRelay.seat === partner && cueBid?.bid === `3${overcallSuit}` &&
+        cueBid.seat === seat && shownMajorSuit && shownMajor?.seat === partner && auction.length === 10 &&
+        auction[3]?.bid === "pass" && auction[5]?.bid === "pass" && auction[7]?.bid === "pass" && auction[9]?.bid === "pass"
+      ) {
+        if (hand.filter((card) => card.suit === shownMajorSuit).length >= 4) {
+          return Promise.resolve(`4${shownMajorSuit}` as Bid);
+        }
+        return Promise.resolve("3notrump");
       }
     }
 
