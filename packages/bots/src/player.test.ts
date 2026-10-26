@@ -2208,6 +2208,29 @@ describe("beginner bot", () => {
     expect(await bot.chooseBid(overcaller, [{ seat: "north", bid: "1spades" }], "east")).toBe("3clubs");
   });
 
+  it("uses a minor cuebid to show both majors with 8+ HCP", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const overcaller = hand("hearts:K", "hearts:Q", "hearts:2", "hearts:3", "hearts:4", "spades:K", "spades:2", "spades:3", "spades:4", "spades:5", "diamonds:2", "diamonds:3", "clubs:2");
+    expect(await bot.chooseBid(overcaller, [{ seat: "north", bid: "1diamonds" }], "east")).toBe("2diamonds");
+  });
+
+  it("uses a major cuebid to show the other major and a minor with 10+ HCP", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "2/1" });
+    const overcaller = hand("spades:A", "spades:K", "spades:Q", "spades:2", "spades:3", "clubs:A", "clubs:K", "clubs:2", "clubs:3", "clubs:4", "hearts:2", "hearts:3", "diamonds:2");
+    expect(await bot.chooseBid(overcaller, [{ seat: "north", bid: "1hearts" }], "east")).toBe("2hearts");
+  });
+
+  it("shows its longer minor after partner asks with 2NT over a major Michaels cue-bid", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const overcaller = hand("clubs:A", "clubs:K", "clubs:2", "clubs:3", "clubs:4", "diamonds:A", "diamonds:K", "diamonds:2", "diamonds:3", "diamonds:4", "hearts:2", "spades:2", "spades:3");
+    const auction = [
+      { seat: "north", bid: "1hearts" as const }, { seat: "east", bid: "2hearts" as const },
+      { seat: "south", bid: "pass" as const }, { seat: "west", bid: "2notrump" as const },
+      { seat: "north", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(overcaller, auction, "east")).toBe("3clubs");
+  });
+
   it("passes a direct overcall with fewer than five cards in every suit", async () => {
     const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
     const balanced = hand("spades:A", "spades:2", "spades:3", "spades:4", "hearts:K", "hearts:2", "hearts:3", "diamonds:Q", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4");

@@ -1210,6 +1210,37 @@ export class IntermediateBot implements BotPlayer {
   chooseBid(hand: Hand, auction: readonly PublicBid[], seat: Seat): Promise<Bid> {
     const partner = SEATS[(SEATS.indexOf(seat) + 2) % SEATS.length]!;
     const contractCalls = auction.filter(({ bid }) => bid !== "pass");
+    if (contractCalls.length === 1 && auction.length === 1) {
+      const opening = contractCalls[0]!;
+      const openingSuit = opening.bid.match(/^1(clubs|diamonds|hearts|spades)$/)?.[1] as Suit | undefined;
+      if (opening.seat !== seat && opening.seat !== partner && openingSuit) {
+        const hcp = points(hand);
+        if (openingSuit === "clubs" || openingSuit === "diamonds") {
+          const hearts = hand.filter((card) => card.suit === "hearts").length;
+          const spades = hand.filter((card) => card.suit === "spades").length;
+          if (hcp >= 8 && hearts >= 5 && spades >= 5) return Promise.resolve(`2${openingSuit}` as Bid);
+        } else {
+          const otherMajor = openingSuit === "hearts" ? "spades" : "hearts";
+          const minorLength = Math.max(hand.filter((card) => card.suit === "clubs").length, hand.filter((card) => card.suit === "diamonds").length);
+          if (hcp >= 10 && hand.filter((card) => card.suit === otherMajor).length >= 5 && minorLength >= 5) {
+            return Promise.resolve(`2${openingSuit}` as Bid);
+          }
+        }
+      }
+    }
+    if (contractCalls.length === 3) {
+      const [opening, cueBid, inquiry] = contractCalls;
+      const openingMajor = opening?.bid.match(/^1(hearts|spades)$/)?.[1] as Suit | undefined;
+      if (
+        opening?.seat !== seat && opening?.seat !== partner && openingMajor &&
+        cueBid?.seat === seat && cueBid.bid === `2${openingMajor}` && inquiry?.seat === partner && inquiry.bid === "2notrump"
+      ) {
+        const minor = (["clubs", "diamonds"] as const)
+          .filter((suit) => hand.filter((card) => card.suit === suit).length >= 5)
+          .sort((a, b) => hand.filter((card) => card.suit === b).length - hand.filter((card) => card.suit === a).length || (a === "clubs" ? -1 : 1))[0];
+        if (minor) return Promise.resolve(`3${minor}` as Bid);
+      }
+    }
     if (auction.every(({ bid }) => bid === "pass")) {
       const hcp = points(hand);
       if (hcp >= 5 && hcp <= 11) {

@@ -4,6 +4,7 @@ Project changes are recorded here, newest first. Keep entries short and link imp
 
 ## Unreleased
 
+- Intermediate bots now use Michaels cue-bids over one-level openings and answer a partner's 2NT minor-suit ask after a major cue-bid.
 - Intermediate bots now make preemptive jump overcalls in a six-card major or seven-card minor with 5–11 HCP and at least two honors.
 - Added fourth-suit forcing after a one-level response and opener's suit rebid: with 10+ HCP, responder may bid the only unbid suit artificially, and opener continues by showing support, a notrump stopper, or the opening suit.
 - Card-play hints now show a brief message if a host-provided solver fails; stale hint requests do not affect a replacement hand.
