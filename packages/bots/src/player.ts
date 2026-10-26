@@ -1210,6 +1210,22 @@ export class IntermediateBot implements BotPlayer {
   chooseBid(hand: Hand, auction: readonly PublicBid[], seat: Seat): Promise<Bid> {
     const partner = SEATS[(SEATS.indexOf(seat) + 2) % SEATS.length]!;
     const contractCalls = auction.filter(({ bid }) => bid !== "pass");
+    if (auction.length === 3 && contractCalls.length === 2 && auction[2]?.bid === "pass") {
+      const [opening, unusualNotrump] = contractCalls;
+      const openingSuit = opening?.bid.match(/^1(clubs|diamonds|hearts|spades)$/)?.[1] as Suit | undefined;
+      if (
+        opening && unusualNotrump && openingSuit && opening.seat !== seat && opening.seat !== partner &&
+        unusualNotrump.seat === partner && unusualNotrump.bid === "2notrump"
+      ) {
+        const suitOrder: readonly Suit[] = ["clubs", "diamonds", "hearts", "spades"];
+        const preferredSuit = suitOrder
+          .filter((suit) => suit !== openingSuit)
+          .slice(0, 2)
+          .map((suit) => ({ suit, support: hand.filter((card) => card.suit === suit).length }))
+          .sort((a, b) => b.support - a.support || suitOrder.indexOf(a.suit) - suitOrder.indexOf(b.suit))[0]?.suit;
+        if (preferredSuit) return Promise.resolve(`3${preferredSuit}` as Bid);
+      }
+    }
     if (contractCalls.length === 1 && auction.length === 1) {
       const opening = contractCalls[0]!;
       const openingSuit = opening.bid.match(/^1(clubs|diamonds|hearts|spades)$/)?.[1] as Suit | undefined;

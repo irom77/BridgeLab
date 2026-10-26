@@ -1886,6 +1886,18 @@ describe("beginner bot", () => {
     expect(await bot.chooseBid(overcaller, [{ seat: "north", bid: openingBid }], "east")).toBe("2notrump");
   });
 
+  it.each([
+    ["1clubs", "hearts", "diamonds", hand("hearts:A", "hearts:K", "hearts:Q", "hearts:2", "diamonds:K", "diamonds:2", "diamonds:3", "spades:2", "spades:3", "spades:4", "clubs:7", "clubs:8", "clubs:9")],
+    ["1spades", "clubs", "diamonds", hand("clubs:A", "clubs:K", "clubs:Q", "clubs:2", "clubs:3", "diamonds:K", "diamonds:2", "diamonds:3", "hearts:2", "hearts:3", "hearts:4", "spades:2", "spades:3")]
+  ] as const)("prefers a shown suit after partner's Unusual 2NT over %s", async (openingBid, preferredSuit, _otherSuit, advancer) => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const auction = [
+      { seat: "north", bid: openingBid }, { seat: "east", bid: "2notrump" as const },
+      { seat: "south", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(advancer, auction, "west")).toBe(`3${preferredSuit}`);
+  });
+
   it.each([15, 18])("makes a natural 1NT overcall with a balanced %i-HCP hand and opener-suit stopper", async (expectedHcp) => {
     const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
     const overcaller = expectedHcp === 15
