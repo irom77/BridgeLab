@@ -40,6 +40,13 @@ function isBalanced(hand: Hand): boolean {
   return counts.every((count) => count >= 2) && counts.filter((count) => count === 2).length <= 1;
 }
 
+function hasStopper(hand: Hand, suit: Suit): boolean {
+  const suitCards = hand.filter((card) => card.suit === suit);
+  return suitCards.some((card) => card.rank === "A") ||
+    (suitCards.length >= 2 && suitCards.some((card) => card.rank === "K")) ||
+    (suitCards.length >= 3 && suitCards.some((card) => card.rank === "Q"));
+}
+
 function losingTricks(hand: Hand): number {
   return suits.reduce((losers, suit) => {
     const suitCards = hand.filter((card) => card.suit === suit)
@@ -1703,14 +1710,30 @@ export class ExpertBot implements BotPlayer {
       ) {
         const overcallSuit = overcall.bid.match(/^2(diamonds|hearts|spades)$/)?.[1] as Suit | undefined;
         const suitOrder: readonly Suit[] = ["clubs", "diamonds", "hearts", "spades"];
-        const weakLowerSuit = overcallSuit && suitOrder
-          .slice(0, suitOrder.indexOf(overcallSuit))
+        const overcallIndex = overcallSuit ? suitOrder.indexOf(overcallSuit) : -1;
+        const weakLowerSuit = overcallIndex >= 0 ? suitOrder
+          .slice(0, overcallIndex)
           .filter((suit) => hand.filter((card) => card.suit === suit).length >= 5)
           .sort((a, b) =>
             hand.filter((card) => card.suit === b).length - hand.filter((card) => card.suit === a).length ||
             suitOrder.indexOf(b) - suitOrder.indexOf(a)
-          )[0];
-        if (weakLowerSuit && points(hand) <= 7) return Promise.resolve("2notrump");
+          )[0] : undefined;
+        const invitationalSuit = overcallIndex >= 0 ? suitOrder
+          .slice(overcallIndex + 1)
+          .filter((suit) => hand.filter((card) => card.suit === suit).length >= 5)
+          .sort((a, b) =>
+            hand.filter((card) => card.suit === b).length - hand.filter((card) => card.suit === a).length ||
+            suitOrder.indexOf(b) - suitOrder.indexOf(a)
+          )[0] : undefined;
+        const hcp = points(hand);
+        if (
+          (weakLowerSuit && hcp <= 7) ||
+          (invitationalSuit && hcp >= 8 && hcp <= 9) ||
+          (overcallSuit && isBalanced(hand) && hcp >= 10 && hasStopper(hand, overcallSuit))
+        ) return Promise.resolve("2notrump");
+        if (overcallSuit && isBalanced(hand) && hcp >= 10 && !hasStopper(hand, overcallSuit)) {
+          return Promise.resolve("3notrump");
+        }
       }
     }
 
@@ -1727,19 +1750,32 @@ export class ExpertBot implements BotPlayer {
       const [opening, overcall, relay, clubRelay] = calls;
       const overcallSuit = overcall?.bid.match(/^2(diamonds|hearts|spades)$/)?.[1] as Suit | undefined;
       const suitOrder: readonly Suit[] = ["clubs", "diamonds", "hearts", "spades"];
-      const weakLowerSuit = overcallSuit && suitOrder
-        .slice(0, suitOrder.indexOf(overcallSuit))
+      const overcallIndex = overcallSuit ? suitOrder.indexOf(overcallSuit) : -1;
+      const weakLowerSuit = overcallIndex >= 0 ? suitOrder
+        .slice(0, overcallIndex)
         .filter((suit) => hand.filter((card) => card.suit === suit).length >= 5)
         .sort((a, b) =>
           hand.filter((card) => card.suit === b).length - hand.filter((card) => card.suit === a).length ||
           suitOrder.indexOf(b) - suitOrder.indexOf(a)
-        )[0];
+        )[0] : undefined;
+      const invitationalSuit = overcallIndex >= 0 ? suitOrder
+        .slice(overcallIndex + 1)
+        .filter((suit) => hand.filter((card) => card.suit === suit).length >= 5)
+        .sort((a, b) =>
+          hand.filter((card) => card.suit === b).length - hand.filter((card) => card.suit === a).length ||
+          suitOrder.indexOf(b) - suitOrder.indexOf(a)
+        )[0] : undefined;
+      const hcp = points(hand);
       if (
         opening?.bid === "1notrump" && opening.seat === partner && overcallSuit &&
         overcall?.seat !== seat && overcall?.seat !== partner && relay?.bid === "2notrump" && relay.seat === seat &&
         clubRelay?.bid === "3clubs" && clubRelay.seat === partner && auction.length === 6 &&
-        auction[3]?.bid === "pass" && auction[5]?.bid === "pass" && points(hand) <= 7 && weakLowerSuit
-      ) return Promise.resolve(weakLowerSuit === "clubs" ? "pass" : `3${weakLowerSuit}` as Bid);
+        auction[3]?.bid === "pass" && auction[5]?.bid === "pass"
+      ) {
+        if (hcp <= 7 && weakLowerSuit) return Promise.resolve(weakLowerSuit === "clubs" ? "pass" : `3${weakLowerSuit}` as Bid);
+        if (hcp >= 8 && hcp <= 9 && invitationalSuit) return Promise.resolve(`3${invitationalSuit}` as Bid);
+        if (hcp >= 10 && isBalanced(hand) && hasStopper(hand, overcallSuit)) return Promise.resolve("3notrump");
+      }
     }
 
     const possibleMajorOpening = calls[0];

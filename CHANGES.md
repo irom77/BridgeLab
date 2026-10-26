@@ -4,7 +4,7 @@ Project changes are recorded here, newest first. Keep entries short and link imp
 
 ## Unreleased
 
-- Expert bots now use Lebensohl's 2NT relay to sign off in a weak lower-ranking suit after a natural 2♦/2♥/2♠ overcall of 1NT. See [implementation plan](docs/superpowers/plans/2026-10-26-expert-lebensohl-weak-suits.md).
+- Expert bots now use Lebensohl after a natural 2♦/2♥/2♠ overcall of 1NT to show weak suits, invite in a higher suit, or distinguish 3NT stopper holdings through direct versus relay sequences. See [implementation plan](docs/superpowers/plans/2026-10-26-expert-lebensohl-weak-suits.md).
 - Expert bots now use Reverse Drury after a third- or fourth-seat major opening: a passed responder with a limit raise starts with artificial 2♣, then both hands place or invite game based on their strength. See [implementation plan](docs/superpowers/plans/2026-10-26-expert-reverse-drury.md).
 - After the Unusual 2NT overcaller shows a minimum in response to a strong cue-bid, advancer places game with 16+ HCP and three-card support or passes with 13–15 HCP.
 - Added a game-invitational cue-bid after Unusual 2NT: advancer shows 13+ HCP and a fit; overcaller places game with 13+ HCP or rebids the preferred suit at level 3. See [implementation plan](docs/superpowers/plans/2026-10-26-intermediate-unusual-notrump-advance.md).
