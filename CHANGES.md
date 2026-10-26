@@ -8,6 +8,7 @@ Project changes are recorded here, newest first. Keep entries short and link imp
 
 ## Unreleased
 
+- Expert Blackwood auctions now ask for kings with 5NT after all four aces are confirmed; the bot uses the king count to choose 6M or 7M. The Jacoby Grand Slam Force remains separate. See [implementation plan](docs/superpowers/plans/2026-10-26-expert-blackwood-kings.md).
 - Expert Puppet Stayman over 2NT now finds opener's four- or five-card major, with follow-ups to place a fit in game or choose notrump. A responder with a 6–4 major holding can transfer to game after opener denies a fit. See [implementation plan](docs/superpowers/plans/2026-10-26-expert-puppet-stayman.md).
 - Expert responders use Texas transfers over notrump openings to place game in a six-card major while keeping opener as declarer. Over 1NT, use 8–9 HCP; over 2NT, use 0–9 HCP. See [implementation plan](docs/superpowers/plans/2026-10-26-expert-texas-transfers.md).
 - Intermediate bots now use Support Doubles after a minor opening and a one-level major response: double with exactly three-card support or raise with four or more after an opponent's suit overcall. See [implementation plan](docs/superpowers/plans/2026-10-26-intermediate-support-doubles.md).
