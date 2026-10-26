@@ -3467,13 +3467,41 @@ describe("beginner bot", () => {
 
   it("asks for aces after opener accepts an expert splinter with game", async () => {
     const bot = createBot({ skill: "expert", biddingStyle: "SAYC" });
-    const responder = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:J", "spades:A", "spades:2", "spades:3", "diamonds:K", "diamonds:Q", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2");
+    const responder = hand("hearts:K", "hearts:J", "hearts:2", "hearts:3", "spades:A", "spades:K", "diamonds:A", "diamonds:K", "diamonds:Q", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3");
     const auction = [
       { seat: "north", bid: "1hearts" as const }, { seat: "east", bid: "pass" as const },
       { seat: "south", bid: "3clubs" as const }, { seat: "west", bid: "pass" as const },
       { seat: "north", bid: "4hearts" as const }, { seat: "east", bid: "pass" as const }
     ] as const;
     expect(await bot.chooseBid(responder, auction, "south")).toBe("4notrump");
+  });
+
+  it("uses the Grand Slam Force after opener accepts a splinter with game", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "SAYC" });
+    const responder = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:2", "spades:A", "spades:K", "diamonds:K", "diamonds:Q", "diamonds:2", "diamonds:3", "diamonds:4", "diamonds:5", "clubs:2");
+    const minimumResponder = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:2", "spades:2", "spades:3", "spades:4", "spades:5", "spades:6", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2");
+    const auction = [
+      { seat: "north", bid: "1hearts" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "3clubs" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "4hearts" as const }, { seat: "east", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("5notrump");
+    expect(await bot.chooseBid(minimumResponder, auction, "south")).not.toBe("5notrump");
+  });
+
+  it.each([
+    ["hearts:A", "hearts:K", "7hearts"],
+    ["hearts:Q", "hearts:J", "6hearts"]
+  ] as const)("answers a splinter Grand Slam Force with %s and %s", async (firstHonor, secondHonor, expected) => {
+    const bot = createBot({ skill: "expert", biddingStyle: "2/1" });
+    const opener = hand(firstHonor, secondHonor, "hearts:2", "hearts:3", "spades:A", "spades:2", "spades:3", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:K", "clubs:2", "clubs:3");
+    const auction = [
+      { seat: "north", bid: "1hearts" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "3clubs" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "4hearts" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "5notrump" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe(expected);
   });
 
   it("answers ace-asking after accepting a splinter", async () => {

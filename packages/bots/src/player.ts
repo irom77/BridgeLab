@@ -2425,6 +2425,19 @@ export class ExpertBot implements BotPlayer {
       }
     }
 
+    if (calls.length === 4) {
+      const [opening, splinter, openerGame, grandSlamAsk] = calls;
+      const major = opening?.bid.match(/^1(hearts|spades)$/)?.[1] as Suit | undefined;
+      const shortSuit = splinter?.bid.match(/^[34](clubs|diamonds|hearts|spades)$/)?.[1] as Suit | undefined;
+      if (
+        opening?.seat === seat && major && splinter?.seat === partner && shortSuit && shortSuit !== major &&
+        openerGame?.seat === seat && openerGame.bid === `4${major}` && grandSlamAsk?.seat === partner && grandSlamAsk.bid === "5notrump"
+      ) {
+        const topTrumpHonors = hand.filter((card) => card.suit === major && ["A", "K", "Q"].includes(card.rank)).length;
+        return Promise.resolve(`${topTrumpHonors >= 2 ? 7 : 6}${major}` as Bid);
+      }
+    }
+
     if (calls.length === 5 && this.config.biddingStyle === "2/1") {
       const [opening, response, openerRaise, responderGame, grandSlamAsk] = calls;
       const openingMajor = opening?.bid.match(/^1(hearts|spades)$/)?.[1] as Suit | undefined;
@@ -2503,6 +2516,19 @@ export class ExpertBot implements BotPlayer {
         const answerSuit = aceAnswer.bid.slice(1) as Suit;
         return Promise.resolve(suitOrder.indexOf(agreedMajor) > suitOrder.indexOf(answerSuit) ? `5${agreedMajor}` as Bid : "pass");
       }
+    }
+
+    if (calls.length === 3) {
+      const [opening, splinter, game] = calls;
+      const major = opening?.bid.match(/^1(hearts|spades)$/)?.[1] as Suit | undefined;
+      const shortSuit = splinter?.bid.match(/^[34](clubs|diamonds|hearts|spades)$/)?.[1] as Suit | undefined;
+      const topTrumpHonors = major
+        ? hand.filter((card) => card.suit === major && ["A", "K", "Q"].includes(card.rank)).length
+        : 0;
+      if (
+        opening?.seat === partner && major && splinter?.seat === seat && shortSuit && shortSuit !== major &&
+        game?.seat === partner && game.bid === `4${major}` && points(hand) >= 18 && topTrumpHonors >= 2
+      ) return Promise.resolve("5notrump");
     }
 
     if (calls.length === 3) {
