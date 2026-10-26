@@ -8,6 +8,7 @@ Project changes are recorded here, newest first. Keep entries short and link imp
 
 ## Unreleased
 
+- Expert responders use Texas transfers over an uncontested 2NT opening to place game with a six-card major and 0–9 HCP, keeping opener as declarer. See [implementation plan](docs/superpowers/plans/2026-10-26-expert-texas-transfers.md).
 - Intermediate bots now use Support Doubles after a minor opening and a one-level major response: double with exactly three-card support or raise with four or more after an opponent's suit overcall. See [implementation plan](docs/superpowers/plans/2026-10-26-intermediate-support-doubles.md).
 - Weak-two openings now deny an outside four-card major, protecting possible 4–4 major fits.
 - Over a 1NT opening, a six-card minor with invitational values and two top honors can invite 3NT; opener accepts with a top honor and support. See [implementation plan](docs/superpowers/plans/2026-10-26-notrump-minor-invitations.md).

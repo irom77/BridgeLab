@@ -3618,6 +3618,59 @@ describe("beginner bot", () => {
     expect(await bot.chooseBid(hand(...cards), auction, "north")).toBe(expected);
   });
 
+  it.each([
+    ["hearts", "4diamonds"],
+    ["spades", "4hearts"]
+  ] as const)("uses Texas to transfer a six-card %s suit to game in Expert", async (major, expected) => {
+    const bot = createBot({ skill: "expert", biddingStyle: "SAYC" });
+    const responder = major === "hearts"
+      ? hand("hearts:K", "hearts:Q", "hearts:2", "hearts:3", "hearts:4", "hearts:5", "spades:2", "spades:3", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4")
+      : hand("spades:K", "spades:Q", "spades:2", "spades:3", "spades:4", "spades:5", "hearts:2", "hearts:3", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4");
+    expect(await bot.chooseBid(responder, [{ seat: "north", bid: "2notrump" }], "south")).toBe(expected);
+  });
+
+  it("prefers the spade Texas transfer when both majors are six cards long", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "SAYC" });
+    const responder = hand("spades:2", "spades:3", "spades:4", "spades:5", "spades:6", "spades:7", "hearts:2", "hearts:3", "hearts:4", "hearts:5", "hearts:6", "hearts:7", "clubs:2");
+    expect(await bot.chooseBid(responder, [{ seat: "north", bid: "2notrump" }], "south")).toBe("4hearts");
+  });
+
+  it.each([
+    ["4diamonds", "4hearts"],
+    ["4hearts", "4spades"]
+  ] as const)("accepts the Expert Texas transfer %s with %s", async (transfer, expected) => {
+    const bot = createBot({ skill: "expert", biddingStyle: "2/1" });
+    const auction = [
+      { seat: "north", bid: "2notrump" as const }, { seat: "south", bid: transfer as "4diamonds" },
+    ] as const;
+    expect(await bot.chooseBid(hand(), auction, "north")).toBe(expected);
+  });
+
+  it("passes after opener accepts an Expert Texas transfer", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "SAYC" });
+    const responder = hand("hearts:K", "hearts:Q", "hearts:2", "hearts:3", "hearts:4", "hearts:5", "spades:2", "spades:3", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "2notrump" as const }, { seat: "south", bid: "4diamonds" as const },
+      { seat: "west", bid: "pass" as const }, { seat: "north", bid: "4hearts" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("pass");
+  });
+
+  it("keeps existing Jacoby transfers for five-card majors and slam values", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "SAYC" });
+    const responder = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:2", "hearts:3", "spades:A", "spades:2", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:K", "clubs:2", "clubs:3");
+    expect(await bot.chooseBid(responder, [{ seat: "north", bid: "2notrump" }], "south")).toBe("3diamonds");
+  });
+
+  it("does not use a Texas transfer after interference over 2NT", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "2/1" });
+    const responder = hand("hearts:K", "hearts:Q", "hearts:2", "hearts:3", "hearts:4", "hearts:5", "spades:2", "spades:3", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "2notrump" as const }, { seat: "east", bid: "3clubs" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).not.toBe("4diamonds");
+  });
+
   it("uses Gerber instead of a quantitative invitation with 16 HCP over a 2NT opening", async () => {
     const bot = createBot({ skill: "expert", biddingStyle: "2/1" });
     const responder = hand("spades:A", "spades:K", "spades:Q", "hearts:A", "hearts:K", "hearts:2", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
