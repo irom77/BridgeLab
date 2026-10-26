@@ -1218,6 +1218,7 @@ export class IntermediateBot implements BotPlayer {
         unusualNotrump.seat === partner && unusualNotrump.bid === "2notrump"
       ) {
         const suitOrder: readonly Suit[] = ["clubs", "diamonds", "hearts", "spades"];
+        if (isBalanced(hand) && points(hand) >= 13) return Promise.resolve("3notrump");
         const preferredSuit = suitOrder
           .filter((suit) => suit !== openingSuit)
           .slice(0, 2)

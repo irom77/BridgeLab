@@ -2,7 +2,7 @@
 
 ## Status
 
-Completed. After partner makes the direct Unusual 2NT overcall and the next opponent passes, Intermediate bids level 3 in the better-supported of the two lowest unbid suits. Ties prefer the lower-ranking suit.
+Completed. After partner makes the direct Unusual 2NT overcall and the next opponent passes, a balanced advancer with 13+ HCP places 3NT. Otherwise, Intermediate bids level 3 in the better-supported of the two lowest unbid suits. Ties prefer the lower-ranking suit.
 
 ## Goal
 
@@ -19,4 +19,5 @@ Give advancer a simple, nonforcing preference for one of partner's shown suits.
 
 - [x] Test preference over a club opening, where 2NT shows diamonds and hearts.
 - [x] Test preference over a spade opening, where 2NT shows clubs and diamonds.
-- [x] `pnpm test` passes (474 tests).
+- [x] Test 3NT placement with a balanced game hand.
+- [x] `pnpm test` passes (475 tests).

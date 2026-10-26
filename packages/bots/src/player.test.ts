@@ -1898,6 +1898,16 @@ describe("beginner bot", () => {
     expect(await bot.chooseBid(advancer, auction, "west")).toBe(`3${preferredSuit}`);
   });
 
+  it("places 3NT with a balanced game hand after partner's Unusual 2NT", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const advancer = hand("spades:K", "spades:Q", "spades:2", "spades:3", "hearts:A", "hearts:2", "hearts:3", "diamonds:K", "diamonds:Q", "diamonds:2", "clubs:A", "clubs:2", "clubs:3");
+    const auction = [
+      { seat: "north", bid: "1hearts" as const }, { seat: "east", bid: "2notrump" as const },
+      { seat: "south", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(advancer, auction, "west")).toBe("3notrump");
+  });
+
   it.each([15, 18])("makes a natural 1NT overcall with a balanced %i-HCP hand and opener-suit stopper", async (expectedHcp) => {
     const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
     const overcaller = expectedHcp === 15
