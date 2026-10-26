@@ -2166,6 +2166,15 @@ describe("beginner bot", () => {
     expect(await bot.chooseBid(weakSuit, [], "north")).toBe("pass");
   });
 
+  it.each([
+    ["hearts with four spades", hand("hearts:K", "hearts:J", "hearts:T", "hearts:9", "hearts:8", "hearts:7", "spades:A", "spades:2", "spades:3", "spades:4", "diamonds:Q", "diamonds:2", "clubs:2")],
+    ["diamonds with four hearts", hand("diamonds:A", "diamonds:J", "diamonds:T", "diamonds:9", "diamonds:8", "diamonds:7", "hearts:K", "hearts:2", "hearts:3", "hearts:4", "spades:2", "clubs:2", "clubs:3")],
+    ["spades with four hearts", hand("spades:K", "spades:J", "spades:T", "spades:9", "spades:8", "spades:7", "hearts:A", "hearts:2", "hearts:3", "hearts:4", "diamonds:Q", "diamonds:2", "clubs:2")]
+  ] as const)("does not open a weak two in the presence of an outside major: %s", async (_shape, cards) => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    expect(await bot.chooseBid(cards, [], "north")).toBe("pass");
+  });
+
   it("opens a six-card diamond weak two in 2/1 style", async () => {
     const bot = createBot({ skill: "intermediate", biddingStyle: "2/1" });
     const weakTwo = hand("diamonds:A", "diamonds:J", "diamonds:2", "diamonds:3", "diamonds:4", "diamonds:5", "spades:2", "spades:3", "hearts:2", "hearts:3", "clubs:2", "clubs:3", "clubs:4");

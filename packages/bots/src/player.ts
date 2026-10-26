@@ -25,6 +25,12 @@ function hasReasonableWeakTwoSuit(hand: Hand, suit: Suit): boolean {
   return hasReasonablePreemptiveSuit(hand, suit, 6);
 }
 
+function hasOutsideFourCardMajor(hand: Hand, suit: Suit): boolean {
+  return (["hearts", "spades"] as const)
+    .filter((major) => major !== suit)
+    .some((major) => hand.filter((card) => card.suit === major).length >= 4);
+}
+
 function supportPoints(hand: Hand, trumpSuit: Suit): number {
   const shortSuitPoints = suits
     .filter((suit) => suit !== trumpSuit)
@@ -1397,7 +1403,7 @@ export class IntermediateBot implements BotPlayer {
       if (hcp >= 5 && hcp <= 11) {
         const suitOrder: readonly Suit[] = ["spades", "hearts", "diamonds"];
         const weakTwoSuit = suitOrder
-          .filter((suit) => hasReasonableWeakTwoSuit(hand, suit))
+          .filter((suit) => hasReasonableWeakTwoSuit(hand, suit) && !hasOutsideFourCardMajor(hand, suit))
           .sort((a, b) => hand.filter((card) => card.suit === b).length - hand.filter((card) => card.suit === a).length || suitOrder.indexOf(a) - suitOrder.indexOf(b))[0];
         if (weakTwoSuit) return Promise.resolve(`2${weakTwoSuit}` as Bid);
       }
