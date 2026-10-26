@@ -123,12 +123,14 @@ function twoOverOneAuction(auction: readonly PublicBid[], style: ConventionSyste
   const sideMinor = responseSuit === "clubs" && (openingSuit === "hearts" || openingSuit === "spades")
     ? "diamonds"
     : undefined;
+  const lowerMinorRebid = responseSuit === "diamonds" ? "clubs" : undefined;
   if (contracts.length >= 3 && (
     contracts[2]!.seat !== opening.seat ||
     (contracts[2]!.bid !== `2${openingSuit}` && contracts[2]!.bid !== "2notrump" &&
       !(sideMajor !== responseSuit && contracts[2]!.bid === `2${sideMajor}`) &&
       contracts[2]!.bid !== `3${sideMajor}` &&
-      (!sideMinor || contracts[2]!.bid !== `2${sideMinor}`))
+      (!sideMinor || contracts[2]!.bid !== `2${sideMinor}`) &&
+      (!lowerMinorRebid || contracts[2]!.bid !== `3${lowerMinorRebid}`))
   )) return undefined;
   if (contracts.length >= 4 && (
     contracts[3]!.seat !== expectedResponder ||
@@ -1242,6 +1244,10 @@ export class BeginnerBot implements BotPlayer {
         twoOverOne.responseSuit === "clubs" && points(hand) >= 12 && points(hand) <= 17 &&
         hand.filter((card) => card.suit === "diamonds").length >= 4
       ) return "2diamonds";
+      if (
+        twoOverOne.responseSuit === "diamonds" && points(hand) >= 12 && points(hand) <= 17 &&
+        hand.filter((card) => card.suit === "clubs").length >= 4
+      ) return "3clubs";
       return `2${twoOverOne.openingSuit}` as Bid;
     }
     if (twoOverOne && contractCalls.length === 3 && twoOverOne.responderSeat === seat) {
@@ -1262,12 +1268,23 @@ export class BeginnerBot implements BotPlayer {
       }
       const support = hand.filter((card) => card.suit === twoOverOne.openingSuit).length;
       if (support >= 3) return `4${twoOverOne.openingSuit}` as Bid;
+      const sideMajor = twoOverOne.openingSuit === "hearts" ? "spades" : "hearts";
+      if (contractCalls[2]?.bid === "3clubs" && hand.filter((card) => card.suit === sideMajor).length >= 4) {
+        return `3${sideMajor}` as Bid;
+      }
+      if (contractCalls[2]?.bid === "3clubs" && hand.filter((card) => card.suit === "diamonds").length >= 6) {
+        return "3diamonds";
+      }
+      if (
+        contractCalls[2]?.bid === "3clubs" &&
+        hand.filter((card) => card.suit === "clubs").length >= 4
+      ) return "5clubs";
+      if (contractCalls[2]?.bid === "3clubs") return "3notrump";
       if (
         twoOverOne.responseSuit === "clubs" && contractCalls[2]?.bid === "2diamonds" &&
         hand.filter((card) => card.suit === "diamonds").length >= 4
       ) return "5diamonds";
       if (hand.filter((card) => card.suit === twoOverOne.responseSuit).length >= 6) return `3${twoOverOne.responseSuit}` as Bid;
-      const sideMajor = twoOverOne.openingSuit === "spades" ? "hearts" : "spades";
       if (hand.filter((card) => card.suit === sideMajor).length >= 4) return `3${sideMajor}` as Bid;
       return "3notrump";
     }

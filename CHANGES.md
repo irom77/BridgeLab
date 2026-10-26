@@ -15,6 +15,7 @@ Project changes are recorded here, newest first. Keep entries short and link imp
 
 ## Unreleased
 
+- After a direct 2/1 1M–2♦ response, opener can show four clubs with 3♣; responder shows a four-card side major, places 5♣ with four-card support, rebids six diamonds, or chooses 3NT without a fit. See [implementation plan](docs/superpowers/plans/2026-10-26-two-over-one-club-rebid.md).
 - Expert opening leads against suit contracts no longer underlead an ace from the selected suit; notrump lead choices are unchanged. See [implementation plan](docs/superpowers/plans/2026-10-26-expert-suit-contract-ace-lead.md).
 - Intermediate and Advanced bots now play the lowest legal card as second hand, avoiding unnecessary overtakes of an opponent's lead.
 - After a SAYC major reverse to the alternate major, responder can invite with four-card support and 10+ HCP; opener accepts with three-card support and 16+ HCP. See [implementation plan](docs/superpowers/plans/2026-10-26-sayc-two-level-opener-rebid.md).
