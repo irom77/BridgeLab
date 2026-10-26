@@ -1694,6 +1694,59 @@ export class ExpertBot implements BotPlayer {
     const calls = auction.filter(({ bid }) => bid !== "pass");
     const partner = SEATS[(SEATS.indexOf(seat) + 2) % SEATS.length]!;
     const isNotrumpOpening = (bid: Bid | undefined) => bid === "1notrump" || bid === "2notrump";
+    const possibleMajorOpening = calls[0];
+    const possibleMajor = possibleMajorOpening?.bid.match(/^1(hearts|spades)$/)?.[1] as Suit | undefined;
+    const possibleMajorOpeningIndex = possibleMajorOpening ? auction.indexOf(possibleMajorOpening) : -1;
+    const passedResponder = possibleMajorOpeningIndex >= 0 &&
+      auction.slice(0, possibleMajorOpeningIndex).some((call) => call.seat === seat && call.bid === "pass");
+    const thirdOrFourthSeatOpening = possibleMajorOpeningIndex >= 0 &&
+      auction.slice(0, possibleMajorOpeningIndex).filter((call) => call.bid === "pass").length >= 2;
+
+    if (
+      calls.length === 1 && possibleMajorOpening && possibleMajor && possibleMajorOpening.seat === partner &&
+      passedResponder && thirdOrFourthSeatOpening && auction.slice(possibleMajorOpeningIndex + 1).every((call) => call.bid === "pass")
+    ) {
+      const support = hand.filter((card) => card.suit === possibleMajor).length;
+      const raisePoints = supportPoints(hand, possibleMajor);
+      if (support >= 3 && raisePoints >= 10 && raisePoints <= 12) return Promise.resolve("2clubs");
+    }
+
+    if (calls.length === 2 && possibleMajorOpening && possibleMajor && possibleMajorOpening.seat === seat) {
+      const [opening, druryResponse] = calls;
+      if (
+        opening && druryResponse && thirdOrFourthSeatOpening && druryResponse.seat === partner &&
+        druryResponse.bid === "2clubs" && passedBeforeOpening(auction, partner, opening) &&
+        auction.slice(auction.indexOf(druryResponse) + 1).every((call) => call.bid === "pass")
+      ) {
+        const hcp = points(hand);
+        if (hcp <= 12) return Promise.resolve(`2${possibleMajor}` as Bid);
+        if (hcp <= 15) return Promise.resolve("2diamonds");
+        return Promise.resolve(`4${possibleMajor}` as Bid);
+      }
+    }
+
+    if (calls.length === 3 && possibleMajorOpening && possibleMajor && possibleMajorOpening.seat === partner) {
+      const [opening, druryResponse, soundOpening] = calls;
+      if (
+        opening && druryResponse && soundOpening && druryResponse.seat === seat && druryResponse.bid === "2clubs" &&
+        soundOpening.seat === partner && soundOpening.bid === "2diamonds" &&
+        passedBeforeOpening(auction, seat, opening) && auction.slice(auction.indexOf(soundOpening) + 1).every((call) => call.bid === "pass")
+      ) {
+        const supportPointsInMajor = supportPoints(hand, possibleMajor);
+        if (supportPointsInMajor >= 12) return Promise.resolve(`4${possibleMajor}` as Bid);
+        if (supportPointsInMajor >= 10) return Promise.resolve(`3${possibleMajor}` as Bid);
+      }
+    }
+
+    if (calls.length === 4 && possibleMajorOpening && possibleMajor && possibleMajorOpening.seat === seat) {
+      const [opening, druryResponse, soundOpening, limitRaise] = calls;
+      if (
+        opening && druryResponse && soundOpening && limitRaise && druryResponse.seat === partner &&
+        druryResponse.bid === "2clubs" && soundOpening.seat === seat && soundOpening.bid === "2diamonds" &&
+        limitRaise.seat === partner && limitRaise.bid === `3${possibleMajor}` &&
+        points(hand) >= 15
+      ) return Promise.resolve(`4${possibleMajor}` as Bid);
+    }
 
     if (calls.length === 3) {
       const [opening, jacobyRaise, openerGame] = calls;
