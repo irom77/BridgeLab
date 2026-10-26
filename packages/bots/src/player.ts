@@ -360,6 +360,12 @@ export class BeginnerBot implements BotPlayer {
     }
     if (
       saycMajorTwoLevelResponse && contractCalls.length === 3 && saycMajorTwoLevelResponse.response.seat === seat &&
+      saycMajorTwoLevelResponse.openingSuit === "spades" && saycMajorTwoLevelResponse.responseSuit === "clubs" &&
+      contractCalls[2]?.bid === "2diamonds" && points(hand) >= 11 && points(hand) <= 12 &&
+      hand.filter((card) => card.suit === "spades").length === 2
+    ) return "2spades";
+    if (
+      saycMajorTwoLevelResponse && contractCalls.length === 3 && saycMajorTwoLevelResponse.response.seat === seat &&
       /^3(clubs|diamonds|hearts|spades)$/.test(contractCalls[2]?.bid ?? "")
     ) {
       const openerRebidSuit = contractCalls[2]!.bid.slice(1) as Suit;

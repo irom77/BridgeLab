@@ -15,7 +15,7 @@ Project changes are recorded here, newest first. Keep entries short and link imp
 
 ## Unreleased
 
-- After SAYC 1♠–2♣–2♥, responder now invites with 3♥ on 10–11 HCP and three-card support, prefers spades with 11–12 HCP and a doubleton, or invites with 3♣ on 10–11 HCP and five clubs. See [implementation plan](docs/superpowers/plans/2026-10-26-sayc-two-over-one-preference.md).
+- SAYC responder continuations after 1♠–2♣ now include 2♠ preference with a doubleton after either a 2♦ or 2♥ rebid, plus invitations in 3♥ with a three-card fit or 3♣ with a five-card suit. See [implementation plan](docs/superpowers/plans/2026-10-26-sayc-two-over-one-preference.md).
 - After a direct 2/1 minor response, an unbalanced opener with 12+ HCP now shows a four-card fit with a three-level raise; responder places the minor game with four-card support. Balanced 18–19 HCP hands retain the 2NT rebid. See [implementation plan](docs/superpowers/plans/2026-10-26-two-over-one-minor-raise.md).
 - After a direct 2/1 1M–2♦ response, opener can show four clubs with 3♣; responder shows a four-card side major, places 5♣ with four-card support, rebids six diamonds, or chooses 3NT without a fit. See [implementation plan](docs/superpowers/plans/2026-10-26-two-over-one-club-rebid.md).
 - Expert opening leads against suit contracts no longer underlead an ace from the selected suit; notrump lead choices are unchanged. See [implementation plan](docs/superpowers/plans/2026-10-26-expert-suit-contract-ace-lead.md).

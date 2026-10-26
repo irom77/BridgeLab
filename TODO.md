@@ -49,6 +49,7 @@ The core rules, PBN package, and solo client are in place. Beginner through Expe
     - [x] After SAYC 1♠–2♣–2♥, responder shows invitational preference with 2♠ on 11–12 HCP and exactly two spades.
     - [x] In the same auction, responder can invite with a natural 3♣ on 10–11 HCP and five or more clubs; at 11 HCP, the documented 2♠ preference takes priority with a doubleton spade.
     - [x] In the same auction, responder can invite with a three-card heart fit and 10–11 HCP; show the fit ahead of minor-suit or doubleton-spade preference.
+    - [x] After SAYC 1♠–2♣–2♦, responder can limit an 11–12 HCP hand with exactly two spades by rebidding 2♠.
     - [x] After 1♥–2♦–2♠ or 1♠–2♦–2♥, responder can raise the shown major with four-card support and 10+ HCP; opener accepts with 16+ HCP and passes the invitation with less.
   - [x] Add natural opener rebids in a separate four-card higher suit, including 16+ HCP reverses when responder's suit makes a one-level rebid unavailable.
   - [x] After an uncontested one-level suit response, rebid a separate four-card lower-ranking suit naturally at the two level with an unbalanced 12–18 HCP hand in SAYC and 2/1.
