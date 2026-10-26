@@ -152,6 +152,7 @@ packages/
 - [x] Add deterministic seeded-deal tests for legality, no hidden-information access, and stable output. (Five fixed seeds exercise both Beginner and Intermediate bots across all four seats; bids and card choices repeat deterministically, cards stay in hand and follow suit, and play contexts contain only the acting hand and public trick data.)
 - [x] Add an intermediate opening-lead tactic that leads the top honor from a touching honor sequence.
 - [x] When no touching honor sequence applies, lead fourth-highest from the longest suit of four or more cards.
+- [x] In Intermediate play, use second-hand-low when following an opponent's lead; Advanced inherits the tactic and keeps its third-hand honor play.
 - [x] Add strong SAYC opening bands: balanced 20–21 HCP with 2NT, 22+ HCP with strong 2♣, a waiting 2♦ response, and balanced opener rebids of 2NT with 22–24 or 3NT with 25–27.
 - [x] Support Stayman, transfers, and direct 3NT over a 2NT opening, including alternate-major discovery after a heart reply and responder game placement.
 - [x] Support Stayman and Jacoby transfers over a 1NT opening, including opener's major response, transfer acceptance, responder placement, and alternate spade fit discovery.

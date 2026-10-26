@@ -2047,6 +2047,7 @@ export class IntermediateBot implements BotPlayer {
 
   async chooseCard(context: PlayContext) {
     const choices = legalCards(context);
+    if (context.currentTrick.length === 1) return lowestCard(choices);
     const ledSuit = context.ledSuit ?? context.currentTrick[0]?.card.suit;
     if (!ledSuit || context.currentTrick.length === 0) {
       return topOfTouchingHonorSequence(choices) ?? fourthHighestFromLongestSuit(choices) ?? lowestCard(choices);
