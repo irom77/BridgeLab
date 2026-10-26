@@ -44,6 +44,8 @@ The core is TypeScript and designed to stay independent of UI and platform APIs.
 
 Intermediate bidding uses Support Doubles after a minor opening and a one-level major response: opener doubles with exactly three-card support after a suit overcall, or raises with four or more.
 
+SAYC bots also use strong natural jump shifts with a five-card suit and 19+ HCP when unpassed. Opener shows a major fit, a strong balanced hand, or a natural suit rebid, and responder places game; slam continuations remain planned.
+
 Expert responders can use Texas transfers to place game in a six-card major while keeping opener as declarer: with 8–9 HCP over 1NT or 0–9 HCP over 2NT. Higher-strength hands continue with the existing slam-aware transfer methods.
 
 Expert responders use Puppet Stayman over 2NT to find opener's four- or five-card major, then place game in a fit or notrump. With a 6–4 major holding, responder can transfer to the longer major after opener denies a fit.

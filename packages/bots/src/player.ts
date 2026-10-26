@@ -139,6 +139,27 @@ function twoOverOneAuction(auction: readonly PublicBid[], style: ConventionSyste
   return { openingSeat: opening.seat, responderSeat: response.seat, openingSuit, responseSuit };
 }
 
+function saycJumpShiftAuction(auction: readonly PublicBid[], style: ConventionSystem["style"]) {
+  if (style !== "SAYC") return undefined;
+  const contracts = auction.filter(({ bid }) => bid !== "pass");
+  if (contracts.length < 2) return undefined;
+  const opening = contracts[0]!;
+  const response = contracts[1]!;
+  const openingSuit = opening.bid.match(/^1(clubs|diamonds|hearts|spades)$/)?.[1] as Suit | undefined;
+  const responseMatch = response.bid.match(/^([23])(clubs|diamonds|hearts|spades)$/);
+  const responseLevel = responseMatch ? Number(responseMatch[1]) : undefined;
+  const responseSuit = responseMatch?.[2] as Suit | undefined;
+  const suitOrder: readonly Suit[] = ["clubs", "diamonds", "hearts", "spades"];
+  const expectedResponder = SEATS[(SEATS.indexOf(opening.seat) + 2) % SEATS.length]!;
+  const expectedLevel = openingSuit && responseSuit && suitOrder.indexOf(responseSuit) > suitOrder.indexOf(openingSuit) ? 1 : 2;
+  if (
+    !openingSuit || !responseSuit || !responseLevel || response.seat !== expectedResponder ||
+    responseLevel !== expectedLevel + 1 || passedBeforeOpening(auction, response.seat, opening) ||
+    auction.some(({ seat, bid }) => bid !== "pass" && seat !== opening.seat && seat !== response.seat)
+  ) return undefined;
+  return { opening, response, openingSuit, responseSuit, responseLevel };
+}
+
 function makeConvention(style: ConventionSystem["style"]): ConventionSystem {
   return {
     style,
@@ -215,6 +236,56 @@ export class BeginnerBot implements BotPlayer {
 
     const contractCalls = auction.filter(({ bid }) => bid !== "pass");
     const partner = SEATS[(SEATS.indexOf(seat) + 2) % SEATS.length]!;
+    const saycJumpShift = saycJumpShiftAuction(auction, this.convention.style);
+    if (saycJumpShift && contractCalls.length === 2 && saycJumpShift.opening.seat === seat) {
+      const support = hand.filter((card) => card.suit === saycJumpShift.responseSuit).length;
+      if ((saycJumpShift.responseSuit === "hearts" || saycJumpShift.responseSuit === "spades") && support >= 3) {
+        return `4${saycJumpShift.responseSuit}` as Bid;
+      }
+      if ((saycJumpShift.responseSuit === "clubs" || saycJumpShift.responseSuit === "diamonds") && support >= 5) {
+        return `5${saycJumpShift.responseSuit}` as Bid;
+      }
+      if (isBalanced(hand) && points(hand) >= 18) return `${saycJumpShift.responseLevel}notrump` as Bid;
+      const suitOrder: readonly Suit[] = ["clubs", "diamonds", "hearts", "spades"];
+      const sideSuit = [...suitOrder]
+        .filter((suit) => suit !== saycJumpShift.responseSuit && suit !== saycJumpShift.openingSuit && hand.filter((card) => card.suit === suit).length >= 4)
+        .sort((a, b) => hand.filter((card) => card.suit === b).length - hand.filter((card) => card.suit === a).length || suitOrder.indexOf(b) - suitOrder.indexOf(a))[0];
+      if (sideSuit) {
+        const level = saycJumpShift.responseLevel + (suitOrder.indexOf(sideSuit) < suitOrder.indexOf(saycJumpShift.responseSuit) ? 1 : 0);
+        return `${level}${sideSuit}` as Bid;
+      }
+      const openingSuitLength = hand.filter((card) => card.suit === saycJumpShift.openingSuit).length;
+      if (openingSuitLength >= 5) {
+        const level = saycJumpShift.responseLevel + (suitOrder.indexOf(saycJumpShift.openingSuit) < suitOrder.indexOf(saycJumpShift.responseSuit) ? 1 : 0);
+        return `${level}${saycJumpShift.openingSuit}` as Bid;
+      }
+      const openingSuitLevel = saycJumpShift.responseLevel + (suitOrder.indexOf(saycJumpShift.openingSuit) < suitOrder.indexOf(saycJumpShift.responseSuit) ? 1 : 0);
+      return `${openingSuitLevel}${saycJumpShift.openingSuit}` as Bid;
+    }
+    if (saycJumpShift && contractCalls.length === 3 && saycJumpShift.response.seat === seat) {
+      const openerRebid = contractCalls[2]?.bid;
+      if (openerRebid === "3notrump" || openerRebid === "4hearts" || openerRebid === "4spades" || openerRebid === "5clubs" || openerRebid === "5diamonds") {
+        return "pass";
+      }
+      if (openerRebid === "2notrump") return "3notrump";
+      const shownMajor = openerRebid?.match(/^[23](hearts|spades)$/)?.[1] as Suit | undefined;
+      if (shownMajor && hand.filter((card) => card.suit === shownMajor).length >= 3) return `4${shownMajor}` as Bid;
+      if (saycJumpShift.openingSuit === "hearts" && hand.filter((card) => card.suit === "hearts").length >= 3) return "4hearts";
+      if (saycJumpShift.openingSuit === "spades" && hand.filter((card) => card.suit === "spades").length >= 3) return "4spades";
+      const longMajor = (["spades", "hearts"] as const).find((suit) => hand.filter((card) => card.suit === suit).length >= 5);
+      if (longMajor) return `4${longMajor}` as Bid;
+      const responseLength = hand.filter((card) => card.suit === saycJumpShift.responseSuit).length;
+      if (responseLength >= 6) {
+        return saycJumpShift.responseSuit === "hearts" || saycJumpShift.responseSuit === "spades"
+          ? `4${saycJumpShift.responseSuit}` as Bid
+          : `5${saycJumpShift.responseSuit}` as Bid;
+      }
+      const openerLevel = Number(openerRebid?.[0] ?? 0);
+      if (isBalanced(hand) && openerLevel < 4) return "3notrump";
+      const longMinor = (["diamonds", "clubs"] as const).find((suit) => hand.filter((card) => card.suit === suit).length >= 6);
+      if (longMinor) return `5${longMinor}` as Bid;
+      return openerLevel < 3 ? "3notrump" : "4notrump";
+    }
     if (contractCalls.length === 3) {
       const [opening, response, rebid] = contractCalls;
       const suitOrder: readonly Suit[] = ["clubs", "diamonds", "hearts", "spades"];
