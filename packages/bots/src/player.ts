@@ -1779,6 +1779,21 @@ export class IntermediateBot implements BotPlayer {
         }
       }
     }
+    if (auction.length === 4 && contractCalls.length === 3) {
+      const [opening, response, overcall] = contractCalls;
+      const openingSuit = opening?.bid.match(/^1(clubs|diamonds)$/)?.[1] as Suit | undefined;
+      const responseSuit = response?.bid.match(/^1(hearts|spades)$/)?.[1] as Suit | undefined;
+      const overcallMatch = overcall?.bid.match(/^([12])(clubs|diamonds|hearts|spades)$/);
+      if (
+        opening && response && overcall && openingSuit && responseSuit && overcallMatch &&
+        opening.seat === seat && response.seat === partner && overcall.seat !== seat && overcall.seat !== partner &&
+        auction[1]?.bid === "pass" && auction[3]?.seat === overcall.seat
+      ) {
+        const support = hand.filter((card) => card.suit === responseSuit).length;
+        if (support >= 4) return Promise.resolve(`${Number(overcallMatch[1]) + 1}${responseSuit}` as Bid);
+        if (support === 3) return Promise.resolve("double");
+      }
+    }
     return this.biddingBot.chooseBid(hand, auction, seat);
   }
 

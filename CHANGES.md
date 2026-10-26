@@ -8,6 +8,7 @@ Project changes are recorded here, newest first. Keep entries short and link imp
 
 ## Unreleased
 
+- Intermediate bots now use Support Doubles after a minor opening and a one-level major response: double with exactly three-card support or raise with four or more after an opponent's suit overcall. See [implementation plan](docs/superpowers/plans/2026-10-26-intermediate-support-doubles.md).
 - Weak-two openings now deny an outside four-card major, protecting possible 4–4 major fits.
 - Over a 1NT opening, a six-card minor with invitational values and two top honors can invite 3NT; opener accepts with a top honor and support. See [implementation plan](docs/superpowers/plans/2026-10-26-notrump-minor-invitations.md).
 - After a weak-two opening, responder can show a natural five-card suit with 10–14 HCP; opener rebids the weak suit with a minimum or shows a feature with a maximum. See [implementation plan](docs/superpowers/plans/2026-10-26-weak-two-new-suit-response.md).

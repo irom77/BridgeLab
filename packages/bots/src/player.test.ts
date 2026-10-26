@@ -2148,6 +2148,49 @@ describe("beginner bot", () => {
     expect(await bot.chooseBid(unbalanced, auction, "south")).toBe("pass");
   });
 
+  it.each(["2/1", "SAYC"] as const)("uses a support double with exactly three-card major support in %s", async (biddingStyle) => {
+    const bot = createBot({ skill: "intermediate", biddingStyle });
+    const opener = hand("clubs:A", "clubs:K", "clubs:Q", "clubs:2", "hearts:A", "hearts:2", "hearts:3", "spades:K", "spades:2", "spades:3", "diamonds:K", "diamonds:2", "diamonds:3");
+    const auction = [
+      { seat: "north", bid: "1clubs" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "1hearts" as const }, { seat: "west", bid: "1spades" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe("double");
+  });
+
+  it.each([
+    ["1hearts", "2spades"],
+    ["2hearts", "3spades"]
+  ] as const)("raises responder's major with four-card support after a %s overcall", async (overcall, expected) => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const opener = hand("clubs:A", "clubs:K", "clubs:Q", "clubs:2", "hearts:A", "spades:K", "spades:Q", "spades:2", "spades:3", "diamonds:K", "diamonds:2", "diamonds:3", "diamonds:4");
+    const auction = [
+      { seat: "north", bid: "1clubs" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "1spades" as const }, { seat: "west", bid: overcall as "1hearts" },
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe(expected);
+  });
+
+  it("does not use a support double with fewer than three cards in responder's major", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const opener = hand("clubs:A", "clubs:K", "clubs:Q", "clubs:2", "hearts:A", "hearts:2", "spades:K", "spades:Q", "spades:J", "spades:2", "diamonds:K", "diamonds:2", "diamonds:3");
+    const auction = [
+      { seat: "north", bid: "1clubs" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "1hearts" as const }, { seat: "west", bid: "1spades" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).not.toBe("double");
+  });
+
+  it("does not use a support double after a major opening", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const opener = hand("hearts:A", "hearts:K", "hearts:2", "hearts:3", "spades:A", "spades:2", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:K", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "1hearts" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "1spades" as const }, { seat: "west", bid: "2clubs" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).not.toBe("double");
+  });
+
   it("makes a natural one-level overcall with 8+ HCP and a five-card suit", async () => {
     const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
     const overcaller = hand("hearts:A", "hearts:Q", "hearts:2", "hearts:3", "hearts:4", "spades:K", "spades:2", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4");
