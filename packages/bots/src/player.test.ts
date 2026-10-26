@@ -1722,7 +1722,7 @@ describe("beginner bot", () => {
   it("shows a side major and finds opener's fit after 1S-2C-2D in a 2/1 game force", async () => {
     const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
     const responder = hand("spades:2", "spades:3", "hearts:A", "hearts:K", "hearts:Q", "hearts:J", "diamonds:2", "diamonds:3", "clubs:K", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
-    const opener = hand("spades:A", "spades:K", "spades:2", "spades:3", "spades:4", "hearts:K", "hearts:Q", "hearts:2", "diamonds:K", "diamonds:Q", "diamonds:2", "diamonds:3", "clubs:2");
+    const opener = hand("spades:A", "spades:K", "spades:2", "spades:3", "spades:4", "hearts:2", "hearts:3", "hearts:4", "diamonds:K", "diamonds:Q", "diamonds:4", "diamonds:5", "clubs:2");
     const auction = [
       { seat: "north", bid: "1spades" as const }, { seat: "east", bid: "pass" as const },
       { seat: "south", bid: "2clubs" as const }, { seat: "west", bid: "pass" as const },
