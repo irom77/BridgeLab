@@ -3082,6 +3082,43 @@ describe("beginner bot", () => {
     expect(await bot.chooseBid(responder, [{ seat: "north", bid: "1notrump" }], "south")).toBe("4clubs");
   });
 
+  it("uses checkback after an uncontested minor opening and major response", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "2/1" });
+    const responder = hand("spades:A", "spades:K", "spades:Q", "spades:J", "spades:2", "hearts:Q", "hearts:J", "hearts:2", "hearts:3", "diamonds:2", "diamonds:3", "clubs:4", "clubs:5");
+    const auction = [
+      { seat: "north", bid: "1clubs" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "1spades" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "1notrump" as const }, { seat: "east", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("2clubs");
+  });
+
+  it("does not use checkback below invitational strength", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "2/1" });
+    const responder = hand("spades:K", "spades:Q", "spades:J", "spades:8", "spades:2", "hearts:Q", "hearts:4", "hearts:3", "diamonds:J", "diamonds:4", "diamonds:3", "clubs:4", "clubs:2");
+    const auction = [
+      { seat: "north", bid: "1clubs" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "1spades" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "1notrump" as const }, { seat: "east", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).not.toBe("2clubs");
+  });
+
+  it.each([
+    ["three-card major support", hand("spades:K", "spades:Q", "spades:2", "hearts:A", "hearts:K", "hearts:Q", "hearts:2", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:K", "clubs:2", "clubs:3"), "2spades"],
+    ["a four-card side major", hand("spades:K", "spades:Q", "hearts:A", "hearts:K", "hearts:Q", "hearts:J", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:K", "clubs:2", "clubs:3", "clubs:4"), "2hearts"],
+    ["neither major", hand("spades:K", "spades:Q", "hearts:K", "hearts:Q", "diamonds:J", "diamonds:4", "diamonds:3", "diamonds:2", "clubs:J", "clubs:4", "clubs:3", "clubs:2", "clubs:5"), "2diamonds"]
+  ] as const)("answers checkback by showing %s", async (_shape, opener, expected) => {
+    const bot = createBot({ skill: "expert", biddingStyle: "SAYC" });
+    const auction = [
+      { seat: "north", bid: "1diamonds" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "1spades" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "1notrump" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2clubs" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe(expected);
+  });
+
   it("uses a splinter raise with four-card support and shortness over a major opening", async () => {
     const bot = createBot({ skill: "expert", biddingStyle: "SAYC" });
     const responder = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:2", "clubs:K", "spades:A", "spades:K", "spades:2", "spades:3", "diamonds:2", "diamonds:3", "diamonds:4", "diamonds:5");

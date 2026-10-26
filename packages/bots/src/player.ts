@@ -1753,6 +1753,36 @@ export class ExpertBot implements BotPlayer {
     const partner = SEATS[(SEATS.indexOf(seat) + 2) % SEATS.length]!;
     const isNotrumpOpening = (bid: Bid | undefined) => bid === "1notrump" || bid === "2notrump";
 
+    if (calls.length === 3) {
+      const [opening, response, openerRebid] = calls;
+      const openingMinor = opening?.bid.match(/^1(clubs|diamonds)$/)?.[1] as Suit | undefined;
+      const responderMajor = response?.bid.match(/^1(hearts|spades)$/)?.[1] as Suit | undefined;
+      if (
+        openingMinor && opening?.seat === partner && responderMajor && response?.seat === seat &&
+        openerRebid?.bid === "1notrump" && openerRebid.seat === partner && points(hand) >= 10 &&
+        (
+          hand.filter((card) => card.suit === responderMajor).length >= 5 ||
+          hand.filter((card) => card.suit === (responderMajor === "hearts" ? "spades" : "hearts")).length >= 4
+        ) && auction.every(({ bid }) => bid === "pass" || bid === opening.bid || bid === response.bid || bid === openerRebid.bid)
+      ) return Promise.resolve("2clubs");
+    }
+
+    if (calls.length === 4) {
+      const [opening, response, openerRebid, checkback] = calls;
+      const openingMinor = opening?.bid.match(/^1(clubs|diamonds)$/)?.[1] as Suit | undefined;
+      const responderMajor = response?.bid.match(/^1(hearts|spades)$/)?.[1] as Suit | undefined;
+      if (
+        openingMinor && opening?.seat === seat && responderMajor && response?.seat === partner &&
+        openerRebid?.bid === "1notrump" && openerRebid.seat === seat && checkback?.bid === "2clubs" &&
+        checkback.seat === partner && auction.every(({ bid }) => bid === "pass" || bid === opening.bid || bid === response.bid || bid === openerRebid.bid || bid === checkback.bid)
+      ) {
+        if (hand.filter((card) => card.suit === responderMajor).length >= 3) return Promise.resolve(`2${responderMajor}` as Bid);
+        const otherMajor = responderMajor === "hearts" ? "spades" : "hearts";
+        if (hand.filter((card) => card.suit === otherMajor).length >= 4) return Promise.resolve(`2${otherMajor}` as Bid);
+        return Promise.resolve("2diamonds");
+      }
+    }
+
     if (calls.length === 2) {
       const [opening, overcall] = calls;
       if (
