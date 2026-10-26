@@ -2747,6 +2747,25 @@ describe("beginner bot", () => {
     expect(await bot.chooseBid(responder, auction, "north")).toBe("2clubs");
   });
 
+  it("uses a Lebensohl relay for a weak long-club hand after a natural 2-level overcall of 1NT", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "2/1" });
+    const responder = hand("clubs:2", "clubs:3", "clubs:4", "clubs:5", "clubs:6", "clubs:7", "spades:2", "spades:3", "hearts:2", "hearts:3", "diamonds:2", "diamonds:3", "diamonds:4");
+    const auction = [
+      { seat: "north", bid: "1notrump" as const }, { seat: "east", bid: "2diamonds" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("2notrump");
+  });
+
+  it("completes the Lebensohl relay with 3 clubs", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "SAYC" });
+    const opener = hand("spades:A", "spades:K", "spades:2", "hearts:K", "hearts:Q", "hearts:2", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:Q", "clubs:2", "clubs:3", "clubs:4");
+    const auction = [
+      { seat: "north", bid: "1notrump" as const }, { seat: "east", bid: "2hearts" as const },
+      { seat: "south", bid: "2notrump" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe("3clubs");
+  });
+
   it("signs off in the major after a Reverse Drury response with a minimum", async () => {
     const bot = createBot({ skill: "expert", biddingStyle: "SAYC" });
     const opener = hand("spades:A", "spades:K", "spades:Q", "spades:J", "spades:2", "hearts:2", "hearts:3", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4");

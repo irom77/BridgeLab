@@ -1694,6 +1694,27 @@ export class ExpertBot implements BotPlayer {
     const calls = auction.filter(({ bid }) => bid !== "pass");
     const partner = SEATS[(SEATS.indexOf(seat) + 2) % SEATS.length]!;
     const isNotrumpOpening = (bid: Bid | undefined) => bid === "1notrump" || bid === "2notrump";
+
+    if (calls.length === 2) {
+      const [opening, overcall] = calls;
+      if (
+        opening?.bid === "1notrump" && opening.seat === partner &&
+        overcall?.bid.match(/^2(diamonds|hearts|spades)$/) && overcall.seat !== seat && overcall.seat !== partner
+      ) {
+        const clubs = hand.filter((card) => card.suit === "clubs").length;
+        if (clubs >= 5 && points(hand) <= 7) return Promise.resolve("2notrump");
+      }
+    }
+
+    if (calls.length === 3) {
+      const [opening, overcall, relay] = calls;
+      if (
+        opening?.bid === "1notrump" && opening.seat === seat &&
+        overcall?.bid.match(/^2(diamonds|hearts|spades)$/) && overcall.seat !== seat && overcall.seat !== partner &&
+        relay?.bid === "2notrump" && relay.seat === partner && auction.length === 4 && auction[3]?.bid === "pass"
+      ) return Promise.resolve("3clubs");
+    }
+
     const possibleMajorOpening = calls[0];
     const possibleMajor = possibleMajorOpening?.bid.match(/^1(hearts|spades)$/)?.[1] as Suit | undefined;
     const possibleMajorOpeningIndex = possibleMajorOpening ? auction.indexOf(possibleMajorOpening) : -1;
