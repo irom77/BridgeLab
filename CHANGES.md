@@ -4,7 +4,7 @@ Project changes are recorded here, newest first. Keep entries short and link imp
 
 ## Unreleased
 
-- Expert responders can start Checkback Stayman after a minor opening, major response, and 1NT rebid; opener identifies three-card support, a four-card side major, or neither.
+- Expert responders use Checkback Stayman after a minor opening, major response, and 1NT rebid to find major fits, then invite or place game; balanced hands with stoppers can place or invite in notrump after opener denies both majors.
 - After a major opening and 1NT response, responders can show a five-card second major naturally after opener rebids a minor, below the direct two-level response strength. Opener invites with 3M on 16+ HCP and three-card support or returns to the opening major; responder accepts at 8+ HCP in SAYC or 10+ in 2/1.
 - 2/1 bots now treat 1♥–2♠ as game-forcing when responder has 13+ HCP and five spades, and continue to game after opener shows spade support or a balanced 2NT rebid. SAYC keeps the natural one-level spade response.
 - Expert bots now use Lebensohl after a natural 2♦/2♥/2♠ overcall of 1NT to show weak or invitational suits, distinguish 3NT stopper holdings, find a major through Stayman cue-bids, and start game-forcing three-level suit sequences. See [implementation plan](docs/superpowers/plans/2026-10-26-expert-lebensohl-weak-suits.md).

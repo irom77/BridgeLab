@@ -1783,6 +1783,56 @@ export class ExpertBot implements BotPlayer {
       }
     }
 
+    if (calls.length === 5) {
+      const [opening, response, openerRebid, checkback, majorReply] = calls;
+      const openingMinor = opening?.bid.match(/^1(clubs|diamonds)$/)?.[1] as Suit | undefined;
+      const responderMajor = response?.bid.match(/^1(hearts|spades)$/)?.[1] as Suit | undefined;
+      const major = majorReply?.bid.match(/^2(hearts|spades)$/)?.[1] as Suit | undefined;
+      if (
+        openingMinor && opening?.seat === partner && responderMajor && response?.seat === seat &&
+        openerRebid?.bid === "1notrump" && openerRebid.seat === partner && checkback?.bid === "2clubs" &&
+        checkback.seat === seat && majorReply?.bid === "2diamonds" && majorReply.seat === partner &&
+        auction.every(({ bid }) => bid === "pass" || bid === opening.bid || bid === response.bid || bid === openerRebid.bid || bid === checkback.bid || bid === majorReply.bid)
+      ) {
+        const responderPoints = points(hand);
+        const hasStoppers = suits.every((suit) => hasStopper(hand, suit));
+        if (isBalanced(hand) && hasStoppers && responderPoints >= 13) return Promise.resolve("3notrump");
+        if (isBalanced(hand) && hasStoppers && responderPoints >= 10 && responderPoints <= 12) return Promise.resolve("2notrump");
+        if (hand.filter((card) => card.suit === responderMajor).length >= 5) return Promise.resolve(`2${responderMajor}` as Bid);
+      }
+      if (
+        openingMinor && opening?.seat === partner && responderMajor && response?.seat === seat &&
+        openerRebid?.bid === "1notrump" && openerRebid.seat === partner && checkback?.bid === "2clubs" &&
+        checkback.seat === seat && major && majorReply?.seat === partner &&
+        auction.every(({ bid }) => bid === "pass" || bid === opening.bid || bid === response.bid || bid === openerRebid.bid || bid === checkback.bid || bid === majorReply.bid)
+      ) {
+        const fitLength = hand.filter((card) => card.suit === major).length;
+        if (fitLength >= 4) return Promise.resolve(points(hand) >= 13 ? `4${major}` as Bid : `3${major}` as Bid);
+        if (isBalanced(hand) && points(hand) >= 13 && suits.every((suit) => hasStopper(hand, suit))) {
+          return Promise.resolve("3notrump");
+        }
+        if (isBalanced(hand) && points(hand) >= 10 && points(hand) <= 12 && suits.every((suit) => hasStopper(hand, suit))) {
+          return Promise.resolve("2notrump");
+        }
+        if (hand.filter((card) => card.suit === responderMajor).length >= 5) {
+          return Promise.resolve(`2${responderMajor}` as Bid);
+        }
+      }
+    }
+
+    if (calls.length === 6) {
+      const [opening, response, openerRebid, checkback, majorReply, responderInvite] = calls;
+      const openingMinor = opening?.bid.match(/^1(clubs|diamonds)$/)?.[1] as Suit | undefined;
+      const major = majorReply?.bid.match(/^2(hearts|spades)$/)?.[1] as Suit | undefined;
+      if (
+        openingMinor && opening?.seat === seat && response?.bid.match(/^1(hearts|spades)$/) && response.seat === partner &&
+        openerRebid?.bid === "1notrump" && openerRebid.seat === seat && checkback?.bid === "2clubs" &&
+        checkback.seat === partner && major && majorReply?.seat === seat && responderInvite?.bid === `3${major}` &&
+        responderInvite.seat === partner && hand.filter((card) => card.suit === major).length >= 3 &&
+        auction.every(({ bid }) => bid === "pass" || bid === opening.bid || bid === response.bid || bid === openerRebid.bid || bid === checkback.bid || bid === majorReply.bid || bid === responderInvite.bid)
+      ) return Promise.resolve(points(hand) >= 14 ? `4${major}` as Bid : "pass");
+    }
+
     if (calls.length === 2) {
       const [opening, overcall] = calls;
       if (
