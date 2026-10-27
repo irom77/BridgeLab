@@ -24,6 +24,7 @@ Project changes are recorded here, newest first. Keep entries short and link imp
 
 ## Unreleased
 
+- Over a weak three-level opening, responders with three to six trumps now place a preemptive raise one level above their trump length; stronger game, 3NT, and forcing-suit responses retain priority, and opener passes. See [implementation plan](docs/superpowers/plans/2026-10-27-intermediate-weak-three-preemptive-fit-raise.md).
 - The client now exports completed hands as PBN and retains imported tags and comments through autosave and hand completion; PBN play import follows the trick winner when assigning the next lead.
 - After an uncontested 3♥ opening, Intermediate, Advanced, and Expert responders with 16+ HCP and a six-card spade suit containing two honors can bid 3♠; after 3♠, the same agreement allows 4♥ with a six-card heart suit. Opener raises a three-card fit to game or repeats the preempt suit, then responder places the contract. See [implementation plan](docs/superpowers/plans/2026-10-26-intermediate-weak-three-major-new-suit-response.md).
 - After an uncontested 3♣/3♦ opening, Intermediate, Advanced, and Expert responders with 16+ HCP and a six-card major containing two honors among ace through ten can make a natural forcing response; opener raises a three-card fit or repeats the minor, then responder places 4M. See [implementation plan](docs/superpowers/plans/2026-10-26-intermediate-weak-three-natural-major-response.md).

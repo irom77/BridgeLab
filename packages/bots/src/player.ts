@@ -1718,6 +1718,8 @@ export class IntermediateBot implements BotPlayer {
           if (naturalMajor) return Promise.resolve(`${openedSuit === "spades" ? "4" : "3"}${naturalMajor}` as Bid);
           if (openedSuit === "spades" && hasReasonablePreemptiveSuit(hand, "hearts", 6)) return Promise.resolve("4hearts");
         }
+        const fitLength = hand.filter((card) => card.suit === openedSuit).length;
+        if (fitLength >= 3) return Promise.resolve(`${Math.min(7, fitLength + 1)}${openedSuit}` as Bid);
       }
     }
     if (contractCalls.length === 2) {

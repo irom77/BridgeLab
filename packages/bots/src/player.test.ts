@@ -7,6 +7,19 @@ const hand = (...cards: string[]): Hand => cards.map((value) => {
   return { suit, rank };
 });
 
+function handWithSuitSupport(suit: Suit, supportLength: number): Hand {
+  const ranks = ["2", "3", "4", "5", "6", "7", "8", "9", "T", "J", "Q", "K", "A"];
+  const cards = ranks.slice(0, supportLength).map((rank) => `${suit}:${rank}`);
+  for (const otherSuit of ["clubs", "diamonds", "hearts", "spades"] as const) {
+    if (otherSuit === suit) continue;
+    for (const rank of ranks) {
+      if (cards.length === 13) return hand(...cards);
+      cards.push(`${otherSuit}:${rank}`);
+    }
+  }
+  return hand(...cards);
+}
+
 function seededRandom(seed: number) {
   let state = seed >>> 0;
   return () => {
@@ -3116,14 +3129,14 @@ describe("beginner bot", () => {
   });
 
   it.each([
-    ["14 HCP", hand("hearts:K", "hearts:Q", "hearts:J", "hearts:2", "spades:A", "spades:K", "spades:2", "diamonds:J", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4")],
-    ["three-card support", hand("hearts:K", "hearts:Q", "hearts:J", "spades:A", "spades:K", "spades:Q", "spades:2", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4")]
-  ] as const)("does not raise partner's 3♥ to game with %s", async (_case, responder) => {
+    ["14 HCP with four-card support", hand("hearts:K", "hearts:Q", "hearts:J", "hearts:2", "spades:A", "spades:K", "spades:2", "diamonds:J", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4"), "5hearts"],
+    ["three-card support", hand("hearts:K", "hearts:Q", "hearts:J", "spades:A", "spades:K", "spades:Q", "spades:2", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4"), "4hearts"]
+  ] as const)("uses the preemptive fit raise for %s", async (_case, responder, expected) => {
     const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
     const auction = [
       { seat: "north", bid: "3hearts" as const }, { seat: "east", bid: "pass" as const }
     ] as const;
-    expect(await bot.chooseBid(responder, auction, "south")).not.toBe("4hearts");
+    expect(await bot.chooseBid(responder, auction, "south")).toBe(expected);
   });
 
   it("does not apply the uncontested major-game raise after an opponent overcalls", async () => {
@@ -3290,6 +3303,35 @@ describe("beginner bot", () => {
       { seat: "north", bid: "4spades" as const }, { seat: "east", bid: "pass" as const }
     ] as const;
     expect(await bot.chooseBid(hand("hearts:A", "hearts:K", "hearts:Q", "hearts:J", "hearts:9", "hearts:8", "spades:K", "spades:J", "clubs:Q", "diamonds:2", "diamonds:3", "diamonds:4", "diamonds:5"), auction, "south")).toBe("pass");
+  });
+
+  it.each(((["clubs", "diamonds", "hearts", "spades"] as const).flatMap((suit) => [3, 4, 5, 6].map((supportLength) => [suit, supportLength] as const))))(
+    "raises a weak three-level %s preempt with %i-card support",
+    async (suit, supportLength) => {
+      const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+      const auction = [{ seat: "north", bid: `3${suit}` as const }, { seat: "east", bid: "pass" as const }] as const;
+      expect(await bot.chooseBid(handWithSuitSupport(suit, supportLength), auction, "south")).toBe(`${supportLength + 1}${suit}`);
+    }
+  );
+
+  it.each(["clubs", "diamonds", "hearts", "spades"] as const)("passes after partner raises the weak three-level %s preempt", async (suit) => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "2/1" });
+    const auction = [
+      { seat: "north", bid: `3${suit}` as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: `5${suit}` as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(handWithSuitSupport(suit, 7), auction, "north")).toBe("pass");
+  });
+
+  it.each(["advanced", "expert"] as const)("inherits preemptive weak-three fit raises in %s", async (skill) => {
+    const bot = createBot({ skill, biddingStyle: "2/1" });
+    expect(await bot.chooseBid(handWithSuitSupport("hearts", 3), [{ seat: "north", bid: "3hearts" }], "south")).toBe("4hearts");
+  });
+
+  it("does not make a preemptive fit raise after interference", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "2/1" });
+    const auction = [{ seat: "north", bid: "3hearts" as const }, { seat: "east", bid: "3spades" as const }] as const;
+    expect(await bot.chooseBid(handWithSuitSupport("hearts", 3), auction, "south")).not.toBe("4hearts");
   });
 
   it.each([
