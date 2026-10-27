@@ -1657,6 +1657,16 @@ export class IntermediateBot implements BotPlayer {
   chooseBid(hand: Hand, auction: readonly PublicBid[], seat: Seat): Promise<Bid> {
     const partner = SEATS[(SEATS.indexOf(seat) + 2) % SEATS.length]!;
     const contractCalls = auction.filter(({ bid }) => bid !== "pass");
+    if (auction.every(({ bid }) => bid === "pass")) {
+      const hcp = points(hand);
+      if (hcp >= 5 && hcp <= 10) {
+        const suitOrder: readonly Suit[] = ["spades", "hearts", "diamonds", "clubs"];
+        const preemptiveSuit = suitOrder.find((suit) =>
+          hasReasonablePreemptiveSuit(hand, suit, 7) && !hasOutsideFourCardMajor(hand, suit)
+        );
+        if (preemptiveSuit) return Promise.resolve(`3${preemptiveSuit}` as Bid);
+      }
+    }
     if (auction.length === 3 && contractCalls.length === 2 && auction[2]?.bid === "pass") {
       const [opening, unusualNotrump] = contractCalls;
       const openingSuit = opening?.bid.match(/^1(clubs|diamonds|hearts|spades)$/)?.[1] as Suit | undefined;

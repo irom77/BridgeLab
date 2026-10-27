@@ -3029,6 +3029,50 @@ describe("beginner bot", () => {
     expect(await bot.chooseBid(weakTwo, [], "north")).toBe("2diamonds");
   });
 
+  it.each([
+    ["five HCP in clubs", hand("clubs:K", "clubs:Q", "clubs:T", "clubs:2", "clubs:3", "clubs:4", "clubs:5", "spades:2", "hearts:2", "diamonds:2", "diamonds:3", "diamonds:4", "diamonds:5"), "3clubs", "SAYC"],
+    ["ten HCP in spades", hand("spades:K", "spades:Q", "spades:T", "spades:2", "spades:3", "spades:4", "spades:5", "clubs:A", "clubs:J", "diamonds:2", "diamonds:3", "diamonds:4", "diamonds:5"), "3spades", "2/1"]
+  ] as const)("opens a seven-card preempt with %s", async (_label, cards, expected, biddingStyle) => {
+    const bot = createBot({ skill: "intermediate", biddingStyle });
+    expect(await bot.chooseBid(cards, [], "north")).toBe(expected);
+  });
+
+  it("does not open a three-level preempt above 10 HCP", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "2/1" });
+    const elevenHcp = hand("hearts:K", "hearts:Q", "hearts:T", "hearts:2", "hearts:3", "hearts:4", "hearts:5", "clubs:A", "clubs:Q", "diamonds:2", "diamonds:3", "diamonds:4", "diamonds:5");
+    expect(await bot.chooseBid(elevenHcp, [], "north")).not.toBe("3hearts");
+  });
+
+  it("does not open a three-level preempt with fewer than five HCP", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const fourHcp = hand("hearts:K", "hearts:J", "hearts:T", "hearts:2", "hearts:3", "hearts:4", "hearts:5", "spades:2", "spades:3", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3");
+    expect(await bot.chooseBid(fourHcp, [], "north")).not.toBe("3hearts");
+  });
+
+  it("requires two honors in the preemptive suit", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const oneHonor = hand("hearts:K", "hearts:2", "hearts:3", "hearts:4", "hearts:5", "hearts:6", "hearts:7", "clubs:A", "spades:2", "diamonds:2", "diamonds:3", "diamonds:4", "diamonds:5");
+    expect(await bot.chooseBid(oneHonor, [], "north")).not.toBe("3hearts");
+  });
+
+  it("does not make a weak three-level opening with an outside four-card major", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const outsideMajor = hand("spades:K", "spades:Q", "spades:T", "spades:2", "spades:3", "spades:4", "spades:5", "hearts:2", "hearts:3", "hearts:4", "hearts:5", "diamonds:2", "diamonds:3");
+    expect(await bot.chooseBid(outsideMajor, [], "north")).not.toBe("3spades");
+  });
+
+  it("does not add weak three-level openings to Beginner", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
+    const weakThree = hand("hearts:K", "hearts:Q", "hearts:T", "hearts:2", "hearts:3", "hearts:4", "hearts:5", "spades:2", "spades:3", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3");
+    expect(await bot.chooseBid(weakThree, [], "north")).not.toBe("3hearts");
+  });
+
+  it("does not use a weak three-level opening after an opponent has opened", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const weakThree = hand("hearts:K", "hearts:Q", "hearts:T", "hearts:2", "hearts:3", "hearts:4", "hearts:5", "spades:2", "spades:3", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3");
+    expect(await bot.chooseBid(weakThree, [{ seat: "north", bid: "1clubs" }], "east")).not.toBe("3hearts");
+  });
+
   it("asks for a feature with 2NT over partner's weak two when holding game interest", async () => {
     const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
     const responder = hand("hearts:K", "hearts:Q", "hearts:J", "spades:A", "spades:2", "diamonds:K", "diamonds:Q", "diamonds:2", "clubs:2", "clubs:3", "clubs:4", "clubs:5", "clubs:6");
