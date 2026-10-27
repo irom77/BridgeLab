@@ -4084,6 +4084,28 @@ describe("beginner bot", () => {
     expect(await bot.chooseBid(responder, auction, "south")).toBe("4notrump");
   });
 
+  it("uses Blackwood after a side-major fit is found in a 2/1 game force", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "2/1" });
+    const responder = hand("spades:A", "spades:K", "hearts:A", "hearts:K", "hearts:Q", "hearts:J", "diamonds:K", "diamonds:Q", "clubs:K", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
+    const opener = hand("spades:Q", "spades:J", "spades:10", "spades:9", "spades:8", "hearts:2", "hearts:3", "hearts:4", "diamonds:A", "diamonds:J", "diamonds:6", "diamonds:7", "clubs:A", "clubs:6");
+    const auction = [
+      { seat: "north", bid: "1spades" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2clubs" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "2diamonds" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2hearts" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "3hearts" as const }, { seat: "east", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("4notrump");
+    const afterAsk = [...auction, { seat: "south", bid: "4notrump" as const }, { seat: "west", bid: "pass" as const }] as const;
+    expect(await bot.chooseBid(opener, afterAsk, "north")).toBe("5hearts");
+    const afterAceAnswer = [...afterAsk, { seat: "north", bid: "5hearts" as const }, { seat: "east", bid: "pass" as const }] as const;
+    expect(await bot.chooseBid(responder, afterAceAnswer, "south")).toBe("5notrump");
+    const afterKingAsk = [...afterAceAnswer, { seat: "south", bid: "5notrump" as const }, { seat: "west", bid: "pass" as const }] as const;
+    expect(await bot.chooseBid(opener, afterKingAsk, "north")).toBe("6clubs");
+    const afterKingAnswer = [...afterKingAsk, { seat: "north", bid: "6clubs" as const }, { seat: "east", bid: "pass" as const }] as const;
+    expect(await bot.chooseBid(responder, afterKingAnswer, "south")).toBe("7hearts");
+  });
+
   it("asks the Grand Slam Force after Jacoby game with two top trump honors", async () => {
     const bot = createBot({ skill: "expert", biddingStyle: "SAYC" });
     const responder = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:J", "spades:A", "spades:2", "spades:3", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:J", "clubs:2", "clubs:3");

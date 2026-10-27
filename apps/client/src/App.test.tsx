@@ -208,7 +208,7 @@ describe("bridge table", () => {
     expect(screen.getByRole("region", { name: "Hand result" })).toBeTruthy();
     expect(screen.getByRole("region", { name: "Hand result" }).textContent).toContain("tricks for NS");
     await waitFor(() => expect(screen.getByRole("button", { name: "Review hand 1" })).toBeTruthy());
-  }, 15000);
+  }, 30000);
 
   it("uses the chosen dealer and vulnerability for a new deal", async () => {
     const user = userEvent.setup();

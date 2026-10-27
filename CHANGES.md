@@ -1,5 +1,6 @@
 # Changes
 
+- Expert 2/1 slam tools now continue through the side-major fit route: responder can ask for aces with 4NT, ask for kings with 5NT after all aces are known, and place a grand slam only when all kings are confirmed. See [implementation plan](docs/superpowers/plans/2026-10-26-expert-two-over-one-blackwood.md).
 - After an uncontested 1M–2♣–2♦ 2/1 game force, responder can show a four-card side major at the two level without three-card support for opener; opener raises a three-card fit and responder places game, or opener places 3NT without one. See [implementation plan](docs/superpowers/plans/2026-10-26-two-over-one-responder-side-major.md).
 - SAYC bots now use a natural jump-shift response with a five-card suit and 19+ HCP, continue with opener's fit or natural description, and place game; 2/1 response selection remains distinct.
 - SAYC openers now require 16+ HCP to reverse to 2♠ after 1♥–2♦; below that strength they repeat hearts when no eligible side suit applies.

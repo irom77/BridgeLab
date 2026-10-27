@@ -2199,6 +2199,11 @@ export class ExpertBot implements BotPlayer {
             : undefined;
         if (agreedMajor) return agreedMajor;
       }
+      const sideMajor = major === "hearts" ? "spades" : "hearts";
+      if (
+        this.config.biddingStyle === "2/1" && response.bid === "2clubs" && openerRebid.bid === "2diamonds" &&
+        calls[3]?.bid === `2${sideMajor}` && calls[4]?.bid === `3${sideMajor}`
+      ) return sideMajor;
       const acceptedSplinter = splinterSequence(opening, response);
       if (acceptedSplinter && openerRebid.bid === `4${acceptedSplinter.major}`) return acceptedSplinter.major;
       return undefined;
@@ -2848,6 +2853,17 @@ export class ExpertBot implements BotPlayer {
       ) return Promise.resolve("4notrump");
     }
 
+    if (calls.length === 5 && this.config.biddingStyle === "2/1" && agreedBlackwoodMajor) {
+      const [opening, response, openerRebid, sideMajorResponse, sideMajorRaise] = calls;
+      if (
+        opening?.seat === partner && response?.seat === seat && response.bid === "2clubs" &&
+        openerRebid?.seat === partner && openerRebid.bid === "2diamonds" &&
+        sideMajorResponse?.seat === seat && sideMajorResponse.bid === `2${agreedBlackwoodMajor}` &&
+        sideMajorRaise?.seat === partner && sideMajorRaise.bid === `3${agreedBlackwoodMajor}` &&
+        points(hand) >= 18
+      ) return Promise.resolve("4notrump");
+    }
+
     if (calls.length === 4 && this.config.biddingStyle === "2/1") {
       const [opening, response, openerRaise, aceAsk] = calls;
       const openingMajor = opening?.bid.match(/^1(hearts|spades)$/)?.[1] as Suit | undefined;
@@ -2860,6 +2876,23 @@ export class ExpertBot implements BotPlayer {
       if (
         opening?.seat === seat && openingMajor && response?.seat === partner && responseSuit && responseSuit !== openingMajor && agreedMajor &&
         openerRaise?.seat === seat &&
+        aceAsk?.seat === partner && aceAsk.bid === "4notrump"
+      ) {
+        const aces = aceCount(hand);
+        if (aces === 0 || aces === 4) return Promise.resolve("5clubs");
+        if (aces === 1) return Promise.resolve("5diamonds");
+        if (aces === 2) return Promise.resolve("5hearts");
+        return Promise.resolve("5spades");
+      }
+    }
+
+    if (calls.length === 6 && this.config.biddingStyle === "2/1" && agreedBlackwoodMajor) {
+      const [opening, response, openerRebid, sideMajorResponse, sideMajorRaise, aceAsk] = calls;
+      if (
+        opening?.seat === seat && response?.seat === partner && response.bid === "2clubs" &&
+        openerRebid?.seat === seat && openerRebid.bid === "2diamonds" &&
+        sideMajorResponse?.seat === partner && sideMajorResponse.bid === `2${agreedBlackwoodMajor}` &&
+        sideMajorRaise?.seat === seat && sideMajorRaise.bid === `3${agreedBlackwoodMajor}` &&
         aceAsk?.seat === partner && aceAsk.bid === "4notrump"
       ) {
         const aces = aceCount(hand);
@@ -2892,6 +2925,71 @@ export class ExpertBot implements BotPlayer {
         const suitOrder: readonly Suit[] = ["clubs", "diamonds", "hearts", "spades"];
         const answerSuit = aceAnswer.bid.slice(1) as Suit;
         return Promise.resolve(suitOrder.indexOf(agreedMajor) > suitOrder.indexOf(answerSuit) ? `5${agreedMajor}` as Bid : "pass");
+      }
+    }
+
+    if (calls.length === 7 && this.config.biddingStyle === "2/1" && agreedBlackwoodMajor) {
+      const [opening, response, openerRebid, sideMajorResponse, sideMajorRaise, aceAsk, aceAnswer] = calls;
+      if (
+        opening?.seat === partner && response?.seat === seat && response.bid === "2clubs" &&
+        openerRebid?.seat === partner && openerRebid.bid === "2diamonds" &&
+        sideMajorResponse?.seat === seat && sideMajorResponse.bid === `2${agreedBlackwoodMajor}` &&
+        sideMajorRaise?.seat === partner && sideMajorRaise.bid === `3${agreedBlackwoodMajor}` &&
+        aceAsk?.seat === seat && aceAsk.bid === "4notrump" && aceAnswer?.seat === partner &&
+        ["5clubs", "5diamonds", "5hearts", "5spades"].includes(aceAnswer.bid)
+      ) {
+        const ownAces = aceCount(hand);
+        const partnerAces = aceAnswer.bid === "5clubs" ? undefined : aceAnswer.bid === "5diamonds" ? 1 : aceAnswer.bid === "5hearts" ? 2 : 3;
+        const allAcesKnown = partnerAces === undefined ? ownAces === 4 : ownAces + partnerAces === 4;
+        if (allAcesKnown) return Promise.resolve("5notrump");
+        const enoughAces = partnerAces === undefined ? ownAces >= 3 : ownAces + partnerAces >= 3;
+        if (enoughAces) return Promise.resolve(`6${agreedBlackwoodMajor}` as Bid);
+        const suitOrder: readonly Suit[] = ["clubs", "diamonds", "hearts", "spades"];
+        return Promise.resolve(suitOrder.indexOf(agreedBlackwoodMajor) > suitOrder.indexOf(aceAnswer.bid.slice(1) as Suit)
+          ? `5${agreedBlackwoodMajor}` as Bid
+          : "pass");
+      }
+    }
+
+    if (calls.length === 8 && this.config.biddingStyle === "2/1" && agreedBlackwoodMajor) {
+      const [opening, response, openerRebid, sideMajorResponse, sideMajorRaise, aceAsk, aceAnswer, kingAsk] = calls;
+      if (
+        opening?.seat === seat && response?.seat === partner && response.bid === "2clubs" &&
+        openerRebid?.seat === seat && openerRebid.bid === "2diamonds" &&
+        sideMajorResponse?.seat === partner && sideMajorResponse.bid === `2${agreedBlackwoodMajor}` &&
+        sideMajorRaise?.seat === seat && sideMajorRaise.bid === `3${agreedBlackwoodMajor}` &&
+        aceAsk?.seat === partner && aceAsk.bid === "4notrump" && aceAnswer?.seat === seat &&
+        ["5clubs", "5diamonds", "5hearts", "5spades"].includes(aceAnswer.bid) &&
+        kingAsk?.seat === partner && kingAsk.bid === "5notrump"
+      ) {
+        const kings = hand.filter((card) => card.rank === "K").length;
+        if (kings === 0 || kings === 4) return Promise.resolve("6clubs");
+        if (kings === 1) return Promise.resolve("6diamonds");
+        if (kings === 2) return Promise.resolve("6hearts");
+        return Promise.resolve("6spades");
+      }
+    }
+
+    if (calls.length === 9 && this.config.biddingStyle === "2/1" && agreedBlackwoodMajor) {
+      const [opening, response, openerRebid, sideMajorResponse, sideMajorRaise, aceAsk, aceAnswer, kingAsk, kingAnswer] = calls;
+      if (
+        opening?.seat === partner && response?.seat === seat && response.bid === "2clubs" &&
+        openerRebid?.seat === partner && openerRebid.bid === "2diamonds" &&
+        sideMajorResponse?.seat === seat && sideMajorResponse.bid === `2${agreedBlackwoodMajor}` &&
+        sideMajorRaise?.seat === partner && sideMajorRaise.bid === `3${agreedBlackwoodMajor}` &&
+        aceAsk?.seat === seat && aceAsk.bid === "4notrump" && aceAnswer?.seat === partner &&
+        ["5clubs", "5diamonds", "5hearts", "5spades"].includes(aceAnswer.bid) &&
+        kingAsk?.seat === seat && kingAsk.bid === "5notrump" && kingAnswer?.seat === partner &&
+        ["6clubs", "6diamonds", "6hearts", "6spades", "6notrump"].includes(kingAnswer.bid)
+      ) {
+        const ownKings = hand.filter((card) => card.rank === "K").length;
+        const partnerKings = kingAnswer.bid === "6clubs" ? (ownKings === 4 ? 4 : undefined)
+          : kingAnswer.bid === "6diamonds" ? 1
+            : kingAnswer.bid === "6hearts" ? 2
+              : kingAnswer.bid === "6spades" ? 3
+                : kingAnswer.bid === "6notrump" ? 4 : undefined;
+        const allKingsKnown = partnerKings === 4 || (partnerKings !== undefined && ownKings + partnerKings === 4);
+        return Promise.resolve(`${allKingsKnown ? 7 : 6}${agreedBlackwoodMajor}` as Bid);
       }
     }
 
