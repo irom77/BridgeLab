@@ -24,6 +24,7 @@ Project changes are recorded here, newest first. Keep entries short and link imp
 
 ## Unreleased
 
+- Expert responders with 19+ HCP and three-card support can use direct 4NT Blackwood over an uncontested weak 3♥/3♠ opening; opener answers aces and responder places 5M or 6M. See [implementation plan](docs/superpowers/plans/2026-10-26-expert-blackwood-over-weak-three.md).
 - Over partner's 3♣/3♦/3♥/3♠ preempt, Intermediate responders bid 3NT only with an eight-card AKQJ side suit, an outside ace, and stoppers in the other side suits; opener passes. See [implementation plan](docs/superpowers/plans/2026-10-26-intermediate-weak-three-notrump-response.md).
 - After an uncontested partner 3♥/3♠ opening, Intermediate responders with four-card support and 15+ HCP, or 4.5+ estimated quick tricks, bid 4M; opener passes. See [implementation plan](docs/superpowers/plans/2026-10-26-intermediate-weak-three-quick-trick-game-response.md).
 - Intermediate, Advanced, and Expert open 3♣/3♦/3♥/3♠ with 5–10 HCP, a seven-card suit with two honors among ace through ten, and no outside four-card major; Beginner behavior and responses to these openings are unchanged. See [implementation plan](docs/superpowers/plans/2026-10-26-intermediate-weak-three-opening.md).

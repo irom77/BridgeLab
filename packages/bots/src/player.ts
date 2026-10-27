@@ -2348,6 +2348,14 @@ export class ExpertBot implements BotPlayer {
       if (responseSuit !== openingMajor && openerRaise.bid === `3${responseSuit}`) return responseSuit;
       return undefined;
     };
+    const weakThreeMajorOpening = () => {
+      const opening = calls[0];
+      const major = opening?.bid.match(/^3(hearts|spades)$/)?.[1] as Suit | undefined;
+      if (!opening || !major) return undefined;
+      const responderSeat = SEATS[(SEATS.indexOf(opening.seat) + 2) % SEATS.length]!;
+      if (passedBeforeOpening(auction, responderSeat, opening)) return undefined;
+      return { opening, major, responderSeat };
+    };
     const blackwoodTrump = (): Suit | undefined => {
       const [opening, response, openerRebid] = calls;
       const major = opening?.bid.match(/^1(hearts|spades)$/)?.[1] as Suit | undefined;
@@ -2377,6 +2385,38 @@ export class ExpertBot implements BotPlayer {
       calls[2]?.bid === `4${saycJumpShift.responseSuit}`
       ? saycJumpShift.responseSuit
       : undefined;
+    const weakThree = weakThreeMajorOpening();
+    if (
+      calls.length === 1 && weakThree?.opening.seat === partner && auction.every(({ bid }) => bid === "pass" || bid === weakThree.opening.bid) &&
+      points(hand) >= 19 && hand.filter((card) => card.suit === weakThree.major).length >= 3
+    ) return Promise.resolve("4notrump");
+
+    if (
+      calls.length === 2 && weakThree?.opening.seat === seat && calls[1]?.seat === partner && calls[1].bid === "4notrump" &&
+      auction.every(({ bid }) => bid === "pass" || bid === weakThree.opening.bid || bid === "4notrump")
+    ) {
+      const aces = aceCount(hand);
+      if (aces === 0 || aces === 4) return Promise.resolve("5clubs");
+      if (aces === 1) return Promise.resolve("5diamonds");
+      if (aces === 2) return Promise.resolve("5hearts");
+      return Promise.resolve("5spades");
+    }
+
+    if (
+      calls.length === 3 && weakThree?.opening.seat === partner && calls[1]?.seat === seat && calls[1].bid === "4notrump" &&
+      calls[2]?.seat === partner && ["5clubs", "5diamonds", "5hearts", "5spades"].includes(calls[2].bid) &&
+      auction.every(({ bid }) => bid === "pass" || [weakThree.opening.bid, "4notrump", calls[2]!.bid].includes(bid))
+    ) {
+      const partnerAces = calls[2].bid === "5clubs" ? 0 : calls[2].bid === "5diamonds" ? 1 : calls[2].bid === "5hearts" ? 2 : 3;
+      return Promise.resolve(`${aceCount(hand) + partnerAces >= 3 ? 6 : 5}${weakThree.major}` as Bid);
+    }
+
+    if (
+      calls.length === 4 && weakThree?.opening.seat === seat && calls[1]?.seat === partner && calls[1].bid === "4notrump" &&
+      calls[2]?.seat === seat && ["5clubs", "5diamonds", "5hearts", "5spades"].includes(calls[2].bid) &&
+      calls[3]?.seat === partner && (calls[3].bid === `5${weakThree.major}` || calls[3].bid === `6${weakThree.major}`)
+    ) return Promise.resolve("pass");
+
     if (
       calls.length === 3 && this.config.biddingStyle === "SAYC" &&
       saycJumpShiftBlackwoodMajor &&

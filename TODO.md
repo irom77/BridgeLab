@@ -138,7 +138,8 @@ The core rules, PBN package, and solo client are in place. Beginner through Expe
     - [x] In Intermediate, open 3♣/3♦/3♥/3♠ with 5–10 HCP, a seven-card suit with two honors among ace through ten, and no outside four-card major. See [opening plan](docs/superpowers/plans/2026-10-26-intermediate-weak-three-opening.md).
       - [x] After an uncontested 3♥/3♠ opening, raise to 4M with four-card support and 15+ HCP, or with 4.5+ estimated quick tricks even with singleton trump support; opener passes. See [game-raise plan](docs/superpowers/plans/2026-10-26-intermediate-weak-three-major-game-response.md) and [quick-trick plan](docs/superpowers/plans/2026-10-26-intermediate-weak-three-quick-trick-game-response.md).
       - [x] Bid 3NT over partner's 3♣/3♦/3♥/3♠ only with nine own tricks (an eight-card AKQJ side suit, an outside ace, and A or Kx in the other side suits); opener passes. See [notrump response plan](docs/superpowers/plans/2026-10-26-intermediate-weak-three-notrump-response.md).
-      - [ ] Other weak-three responses, including other game tries and slam exploration, remain open.
+      - [x] In Expert, use 4NT Blackwood directly over an uncontested 3♥/3♠ with 19+ HCP and three-card support; opener answers aces and responder places 5M or 6M. See [Blackwood plan](docs/superpowers/plans/2026-10-26-expert-blackwood-over-weak-three.md).
+      - [ ] Other weak-three game tries and continuations remain open.
     - [x] Use Michaels cue-bids over one-level openings: show both majors over a minor or the other major plus a minor over a major; accept 2NT as a minor-suit ask after a major cue-bid.
     - [x] Make a direct 2NT overcall over a one-level suit opening with at least five cards in each of the two lowest unbid suits.
     - [x] After partner's Unusual 2NT and an opponent's pass, make a simple level-three preference for the better-supported shown suit.
