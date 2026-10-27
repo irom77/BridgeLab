@@ -2057,6 +2057,25 @@ export class IntermediateBot implements BotPlayer {
         support < 3 && isBalanced(hand) && hasOpeningSuitStopper && hcp >= 8 && hcp <= 11
       ) return Promise.resolve("1notrump");
     }
+    if (
+      auction.length === 3 && auction[1]?.bid === "pass" && auction[2]?.bid === "pass" &&
+      auction[0]?.seat === SEATS[(SEATS.indexOf(seat) + 1) % SEATS.length]!
+    ) {
+      const openingSuit = auction[0]?.bid.match(/^1(clubs|diamonds|hearts|spades)$/)?.[1] as Suit | undefined;
+      if (openingSuit) {
+        const length = (suit: Suit) => hand.filter((card) => card.suit === suit).length;
+        const openingLength = length(openingSuit);
+        const shortnessPoints = openingLength === 0 ? 5 : openingLength === 1 ? 3 : openingLength === 2 ? 1 : 0;
+        const unbidSuitsSupported = openingSuit === "hearts"
+          ? length("spades") >= 4 && length("diamonds") >= 3 && length("clubs") >= 3
+          : openingSuit === "spades"
+            ? length("hearts") >= 4 && length("diamonds") >= 3 && length("clubs") >= 3
+            : length("hearts") >= 4 && length("spades") >= 4 && length(openingSuit === "clubs" ? "diamonds" : "clubs") >= 3;
+        if (points(hand) + shortnessPoints >= 10 && openingLength <= 2 && unbidSuitsSupported) {
+          return Promise.resolve("double");
+        }
+      }
+    }
     if (auction.length === 1 && auction[0]?.seat !== SEATS[(SEATS.indexOf(seat) + 2) % SEATS.length]!) {
       const openingSuit = auction[0]?.bid.match(/^1(clubs|diamonds|hearts|spades)$/)?.[1] as Suit | undefined;
       if (openingSuit) {
