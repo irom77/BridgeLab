@@ -1074,7 +1074,7 @@ export class BeginnerBot implements BotPlayer {
         if (majorSupport >= 3 && responderPoints >= 13) return `4${openingMajor}` as Bid;
         if (majorSupport >= 3 && responderPoints >= 11 && responderPoints <= 12) return `3${openingMajor}` as Bid;
         if (isBalanced(hand) && hasUnbidStoppers && responderPoints >= 11 && responderPoints <= 12) return "2notrump";
-        if (isBalanced(hand) && !hasUnbidStoppers && majorSupport === 2 && responderPoints >= 11 && responderPoints <= 12) {
+        if (isBalanced(hand) && !hasUnbidStoppers && majorSupport === 2 && minorSupport < 4 && responderPoints >= 11 && responderPoints <= 12) {
           return `2${openingMajor}` as Bid;
         }
         if (!isBalanced(hand) && minorSupport >= 5 && responderPoints >= 11 && responderPoints <= 12) {
@@ -1086,6 +1086,9 @@ export class BeginnerBot implements BotPlayer {
           alternateMajor && responderPoints < directTwoLevelMinimum &&
           hand.filter((card) => card.suit === alternateMajor).length >= 5
         ) return `2${alternateMajor}` as Bid;
+        if (majorSupport === 2 && minorSupport < 4 && responderPoints <= 9) {
+          return `2${openingMajor}` as Bid;
+        }
       }
       const isOneLevelSuit = (bid: Bid | undefined) => bid !== undefined && /^1(clubs|diamonds|hearts|spades)$/.test(bid);
       if (
