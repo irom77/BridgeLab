@@ -24,7 +24,7 @@ Project changes are recorded here, newest first. Keep entries short and link imp
 
 ## Unreleased
 
-- After 1M–1NT–2m, an unbalanced responder with 11–12 HCP and five-card support now invites in opener's minor at 3m in both SAYC and 2/1. See [implementation plan](docs/superpowers/plans/2026-10-26-forcing-notrump-minor-raise.md).
+- After 1M–1NT–2m, an unbalanced responder with 11–12 HCP and five-card support now invites at 3m in both SAYC and 2/1; opener accepts in 3NT with 16+ HCP, four-card support, and stoppers in the other suits. See [implementation plan](docs/superpowers/plans/2026-10-26-forcing-notrump-minor-raise.md).
 - After 1M–1NT–2m, a balanced responder with 11–12 HCP now needs stoppers in both unbid suits to invite in 2NT; with a doubleton in opener's major and a missing stopper, responder prefers 2M. See [implementation plan](docs/superpowers/plans/2026-10-26-forcing-notrump-stopper-requirement.md).
 - Intermediate bots can make a balancing takeout double after a one-level opening and two passes with 10+ total points, shortness in opener's suit, and support for the unbid suits; a passed advancer can still make a natural minimum advance if opener passes. See [implementation plan](docs/superpowers/plans/2026-10-26-intermediate-balancing-double.md).
 - SAYC responder continuations after 1♠–2♣ now include 2♠ preference, a balanced 2NT invitation, a six-card club rebid, or a diamond raise after opener's 2♦; after 2♥, responder can invite with a heart fit or club suit, or prefer spades. See [implementation plan](docs/superpowers/plans/2026-10-26-sayc-two-over-one-preference.md).

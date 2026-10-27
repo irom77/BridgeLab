@@ -6,12 +6,12 @@ Let responder show invitational values and a long fit for opener's minor rebid a
 
 ## Agreement
 
-After an uncontested 1M–1NT–2m auction, an unbalanced responder with 11–12 HCP and five or more cards in opener's rebid minor bids 3m. Balanced hands retain the notrump continuation; stronger major fits and other established continuations keep priority.
+After an uncontested 1M–1NT–2m auction, an unbalanced responder with 11–12 HCP and five or more cards in opener's rebid minor bids 3m. Opener accepts in 3NT with 16+ HCP, at least four-card support for the minor, and stoppers in all other suits. Balanced hands retain the notrump continuation; stronger major fits and other established continuations keep priority.
 
 ## Approaches
 
 - Keep passing with unbalanced hands that lack an available major continuation: this loses a long minor fit.
-- Add a natural invitational raise with five-card support at 11–12 HCP: selected because it describes the fit and values at the lowest practical level.
+- Add a natural invitational raise with five-card support at 11–12 HCP and accept in 3NT with a strong, stopped opener: selected because it describes the fit and values while preserving a safe notrump game.
 
 ## Constraints and non-goals
 

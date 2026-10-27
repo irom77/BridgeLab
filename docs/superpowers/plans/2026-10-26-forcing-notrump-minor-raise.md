@@ -19,6 +19,7 @@
 ## Review Focus
 
 - Unbalanced 11–12 HCP with five-card minor support raises to 3m.
+- Opener accepts in 3NT with 16+ HCP, four-card minor support, and stoppers in every other suit.
 - Existing major-fit and balanced notrump continuations remain ahead of the minor raise.
 - Other hand strengths and competitive auctions remain unchanged.
 
@@ -33,5 +34,6 @@
 - [x] Add failing tests for both styles with an unbalanced 11-HCP responder and five-card support after 1♠–1NT–2♣; expect 3♣.
 - [x] Run the focused tests and observe the bot pass.
 - [x] Raise to 3m with 11–12 HCP, five-card support, and an unbalanced hand, after major-fit and balanced-notrump continuations.
+- [x] Add a test for opener accepting in 3NT with 16+ HCP, four-card minor support, and stoppers in every other suit; leave the invitation unaccepted without those conditions.
 - [x] Run `pnpm test`, `pnpm typecheck`, `pnpm lint`, and `git diff --check`.
 - [x] Record the agreement in `TODO.md` and `CHANGES.md`.

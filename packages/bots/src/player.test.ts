@@ -2757,6 +2757,32 @@ describe("beginner bot", () => {
     expect(await bot.chooseBid(responder, auction, "south")).toBe("3clubs");
   });
 
+  it("accepts a long-minor invitation in 3NT with a strong opener and stoppers", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
+    const opener = hand("spades:A", "spades:K", "spades:2", "spades:3", "spades:4", "clubs:K", "clubs:J", "clubs:2", "clubs:3", "hearts:K", "hearts:2", "diamonds:K", "diamonds:2");
+    const auction = [
+      { seat: "north", bid: "1spades" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "1notrump" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "2clubs" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "3clubs" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe("3notrump");
+  });
+
+  it.each([
+    ["fewer than 16 HCP", hand("spades:K", "spades:2", "spades:3", "spades:4", "spades:5", "clubs:A", "clubs:J", "clubs:2", "clubs:3", "hearts:K", "hearts:2", "diamonds:K", "diamonds:2")],
+    ["a missing diamond stopper", hand("spades:A", "spades:K", "spades:Q", "spades:2", "spades:3", "clubs:K", "clubs:J", "clubs:2", "clubs:3", "hearts:A", "hearts:2", "diamonds:2", "diamonds:3")]
+  ] as const)("does not accept a long-minor invitation with %s", async (_reason, opener) => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
+    const auction = [
+      { seat: "north", bid: "1spades" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "1notrump" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "2clubs" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "3clubs" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe("pass");
+  });
+
   it("does not make notrump continuations with an unbalanced hand", async () => {
     const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
     const unbalanced = hand("spades:A", "spades:K", "spades:Q", "spades:J", "spades:T", "spades:9", "hearts:A", "hearts:K", "hearts:Q", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3");

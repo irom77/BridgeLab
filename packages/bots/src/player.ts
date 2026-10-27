@@ -262,6 +262,18 @@ export class BeginnerBot implements BotPlayer {
     const partner = SEATS[(SEATS.indexOf(seat) + 2) % SEATS.length]!;
     const saycJumpShift = saycJumpShiftAuction(auction, this.convention.style);
     const saycMajorTwoLevelResponse = saycMajorTwoLevelResponseAuction(auction, this.convention.style);
+    if (contractCalls.length === 4) {
+      const [opening, response, openerRebid, responderRaise] = contractCalls;
+      const openingMajor = opening?.bid.match(/^1(hearts|spades)$/)?.[1] as Suit | undefined;
+      const minor = openerRebid?.bid.match(/^2(clubs|diamonds)$/)?.[1] as Suit | undefined;
+      if (
+        openingMajor && minor && opening?.seat === seat && response?.seat === partner && response.bid === "1notrump" &&
+        openerRebid?.seat === seat && responderRaise?.seat === partner && responderRaise.bid === `3${minor}` &&
+        hand.filter((card) => card.suit === minor).length >= 4 && points(hand) >= 16 &&
+        suits.filter((suit) => suit !== minor).every((suit) => hasStopper(hand, suit)) &&
+        auction.every(({ bid }) => bid === "pass" || bid === opening.bid || bid === response.bid || bid === openerRebid.bid || bid === responderRaise.bid)
+      ) return "3notrump";
+    }
     if (
       saycMajorTwoLevelResponse && contractCalls.length === 2 && saycMajorTwoLevelResponse.opening.seat === seat &&
       isBalanced(hand) && points(hand) >= 18 && points(hand) <= 19
