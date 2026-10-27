@@ -135,7 +135,8 @@ function twoOverOneAuction(auction: readonly PublicBid[], style: ConventionSyste
   )) return undefined;
   if (contracts.length >= 4 && (
     contracts[3]!.seat !== expectedResponder ||
-    (!(responseSuit === "clubs" && contracts[2]!.bid === "2diamonds" && contracts[3]!.bid === `2${sideMajor}`) &&
+    (!(responseSuit === "clubs" && contracts[2]!.bid === `2${openingSuit}` && contracts[3]!.bid === `2${sideMajor}`) &&
+      !(responseSuit === "clubs" && contracts[2]!.bid === "2diamonds" && contracts[3]!.bid === `2${sideMajor}`) &&
       contracts[3]!.bid !== `3${responseSuit}` && contracts[3]!.bid !== `3${openingSuit}` &&
       contracts[3]!.bid !== `3${sideMajor}` && contracts[3]!.bid !== "3notrump")
   )) return undefined;
@@ -1311,6 +1312,11 @@ export class BeginnerBot implements BotPlayer {
         contractCalls[2]?.bid === `3${twoOverOne.responseSuit}` &&
         hand.filter((card) => card.suit === twoOverOne.responseSuit).length >= 4
       ) return `5${twoOverOne.responseSuit}` as Bid;
+      if (
+        contractCalls[2]?.bid === `2${twoOverOne.openingSuit}` &&
+        twoOverOne.responseSuit === "clubs" &&
+        hand.filter((card) => card.suit === shownSideMajor).length >= 4
+      ) return `2${shownSideMajor}` as Bid;
       const sideMajor = twoOverOne.openingSuit === "hearts" ? "spades" : "hearts";
       if (contractCalls[2]?.bid === "3clubs" && hand.filter((card) => card.suit === sideMajor).length >= 4) {
         return `3${sideMajor}` as Bid;
