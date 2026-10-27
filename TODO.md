@@ -60,7 +60,7 @@ The core rules, PBN package, and solo client are in place. Beginner through Expe
   - [x] Require a 2/1 opener with 12–17 HCP to continue after forcing 1NT, including a manufactured three-card minor rebid when needed.
   - [x] Allow direct game-forcing 2/1 responses with three-card support for opener's major.
   - [x] Continue a 2/1 game force by showing a four-card side major when responder lacks three-card support for opener.
-    - [x] After 1♠–2♣–2♦, show four hearts at 2♥ without three-card spade support; opener raises a three-card heart fit to 3♥. See [implementation plan](docs/superpowers/plans/2026-10-26-two-over-one-responder-side-major.md).
+    - [x] After 1♠–2♣–2♦, show four hearts at 2♥ without three-card spade support; opener raises a three-card heart fit to 3♥ or places 3NT without the fit. See [implementation plan](docs/superpowers/plans/2026-10-26-two-over-one-responder-side-major.md).
   - [x] Rebids a six-card 2/1 response suit after opener repeats the major.
   - [x] Show a four-card side major after a direct 2/1 response with 12–17 HCP.
   - [x] After 1♥–2♣ or 1♠–2♣, show a four-card diamond suit with 12–17 HCP when a higher-priority four-card major is unavailable; responder can raise the shown diamonds with four-card support.

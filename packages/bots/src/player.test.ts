@@ -1733,6 +1733,20 @@ describe("beginner bot", () => {
     expect(await bot.chooseBid(opener, afterHeart, "north")).toBe("3hearts");
   });
 
+  it("places 3NT when opener has no fit for responder's side major in a 2/1 game force", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
+    const responder = hand("spades:2", "spades:3", "hearts:A", "hearts:K", "hearts:Q", "hearts:J", "diamonds:2", "diamonds:3", "clubs:K", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
+    const opener = hand("spades:A", "spades:K", "spades:Q", "spades:J", "spades:10", "hearts:4", "hearts:5", "diamonds:K", "diamonds:Q", "diamonds:4", "diamonds:5", "clubs:A", "clubs:Q");
+    const auction = [
+      { seat: "north", bid: "1spades" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2clubs" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "2diamonds" as const }, { seat: "east", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("2hearts");
+    const afterHeart = [...auction, { seat: "south", bid: "2hearts" as const }, { seat: "west", bid: "pass" as const }] as const;
+    expect(await bot.chooseBid(opener, afterHeart, "north")).toBe("3notrump");
+  });
+
   it.each([
     ["2clubs", "clubs", hand("spades:A", "spades:Q", "spades:2", "spades:3", "spades:4", "hearts:Q", "hearts:2", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:A", "clubs:Q", "clubs:2", "clubs:3"), hand("spades:2", "spades:3", "hearts:A", "hearts:2", "diamonds:A", "diamonds:K", "diamonds:Q", "diamonds:2", "clubs:A", "clubs:K", "clubs:Q", "clubs:2", "clubs:3")],
     ["2diamonds", "diamonds", hand("spades:A", "spades:Q", "spades:2", "spades:3", "spades:4", "hearts:Q", "hearts:2", "diamonds:A", "diamonds:Q", "diamonds:2", "diamonds:3", "clubs:K", "clubs:2"), hand("spades:2", "spades:3", "hearts:A", "hearts:2", "diamonds:A", "diamonds:K", "diamonds:Q", "diamonds:J", "clubs:K", "clubs:Q", "clubs:2", "clubs:3", "clubs:4")]

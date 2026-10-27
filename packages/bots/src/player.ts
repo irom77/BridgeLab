@@ -1338,6 +1338,7 @@ export class BeginnerBot implements BotPlayer {
         responderRebid === `2${sideMajor}` &&
         hand.filter((card) => card.suit === sideMajor).length >= 3
       ) return `3${sideMajor}` as Bid;
+      if (responderRebid === `2${sideMajor}`) return "3notrump";
       if (
         responderRebid === `3${sideMajor}` &&
         hand.filter((card) => card.suit === sideMajor).length >= 3
