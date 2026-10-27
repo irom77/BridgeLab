@@ -3322,6 +3322,19 @@ describe("beginner bot", () => {
     expect(await bot.chooseBid(weak, auction, "west")).toBe("pass");
   });
 
+  it("advances a balancing takeout double in a four-card major after opener passes", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const advancer = hand("hearts:A", "hearts:Q", "hearts:2", "hearts:3", "spades:2", "diamonds:2", "diamonds:3", "diamonds:4", "diamonds:5", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
+    const auction = [
+      { seat: "north", bid: "1spades" as const },
+      { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "pass" as const },
+      { seat: "west", bid: "double" as const },
+      { seat: "north", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(advancer, auction, "east")).toBe("2hearts");
+  });
+
   it("makes a takeout double of a minor opening with four-card support for both majors", async () => {
     const bot = createBot({ skill: "intermediate", biddingStyle: "2/1" });
     const doubler = hand("hearts:A", "hearts:K", "hearts:2", "hearts:3", "spades:A", "spades:2", "spades:3", "spades:4", "clubs:K", "clubs:2", "clubs:3", "diamonds:2", "diamonds:3");

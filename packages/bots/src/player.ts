@@ -1974,11 +1974,18 @@ export class IntermediateBot implements BotPlayer {
         }
       }
     }
-    if (auction.length <= 3 && contractCalls.length === 2 && auction.every(({ bid }) => bid === "pass" || bid === "double" || /^1(clubs|diamonds|hearts|spades)$/.test(bid))) {
+    const isBalancingDoubleResponse = auction.length === 5 && auction[1]?.bid === "pass" && auction[2]?.bid === "pass" &&
+      auction[3]?.bid === "double" && auction[3].seat === partner && auction[4]?.bid === "pass";
+    if (
+      (auction.length <= 3 || isBalancingDoubleResponse) && contractCalls.length === 2 &&
+      auction.every(({ bid }) => bid === "pass" || bid === "double" || /^1(clubs|diamonds|hearts|spades)$/.test(bid))
+    ) {
       const [opening, takeoutDouble] = contractCalls;
       const openingSuit = opening?.bid.match(/^1(clubs|diamonds|hearts|spades)$/)?.[1] as Suit | undefined;
       const isPartnerDouble = takeoutDouble?.bid === "double" && takeoutDouble.seat === partner;
-      if (opening && openingSuit && opening.seat !== seat && opening.seat !== partner && isPartnerDouble) {
+      if (
+        opening && openingSuit && opening.seat !== seat && opening.seat !== partner && isPartnerDouble
+      ) {
         const hcp = points(hand);
         if (hcp >= 12) return Promise.resolve(`2${openingSuit}` as Bid);
         const suitOrder: readonly Suit[] = ["clubs", "diamonds", "hearts", "spades"];

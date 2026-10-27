@@ -152,7 +152,7 @@ The core rules, PBN package, and solo client are in place. Beginner through Expe
     - [x] Advance a one-level overcall with natural 1NT on a balanced 8–11 HCP hand with a stopper in opener's suit.
     - [x] Advance an overcall with a natural five-card new suit: 6+ HCP at the one level and 11+ HCP when bidding at the two level.
     - [x] Make a direct takeout double with opening strength, shortness in opener's suit, and support for the unbid suits.
-    - [x] In Intermediate, make a balancing takeout double after a one-level opening and two passes with 10+ total points including shortness, shortness in opener's suit, and support for the unbid suits.
+    - [x] In Intermediate, make a balancing takeout double after a one-level opening and two passes with 10+ total points including shortness, shortness in opener's suit, and support for the unbid suits; permit the passed advancer to make a minimum natural advance after opener passes.
     - [x] In Intermediate, use Support Doubles after a minor opening, a one-level major response, and a suit overcall: double with exactly three-card support or raise with four or more at the cheapest legal level. See [implementation plan](docs/superpowers/plans/2026-10-26-intermediate-support-doubles.md).
     - [x] Advance partner's takeout double with minimum or jump suit bids, natural notrump with a stopper, or a strong cuebid.
     - [x] After a major-suit advance of a takeout double, pass with a minimum, raise with 16–18 support points, jump-raise with 19+ support points, and accept game over a jump advance with 15+ support points.

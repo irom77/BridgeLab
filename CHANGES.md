@@ -24,7 +24,7 @@ Project changes are recorded here, newest first. Keep entries short and link imp
 
 ## Unreleased
 
-- Intermediate bots can make a balancing takeout double after a one-level opening and two passes with 10+ total points, shortness in opener's suit, and support for the unbid suits. See [implementation plan](docs/superpowers/plans/2026-10-26-intermediate-balancing-double.md).
+- Intermediate bots can make a balancing takeout double after a one-level opening and two passes with 10+ total points, shortness in opener's suit, and support for the unbid suits; a passed advancer can still make a natural minimum advance if opener passes. See [implementation plan](docs/superpowers/plans/2026-10-26-intermediate-balancing-double.md).
 - SAYC responder continuations after 1♠–2♣ now include 2♠ preference, a balanced 2NT invitation, a six-card club rebid, or a diamond raise after opener's 2♦; after 2♥, responder can invite with a heart fit or club suit, or prefer spades. See [implementation plan](docs/superpowers/plans/2026-10-26-sayc-two-over-one-preference.md).
 - After a direct 2/1 minor response, an unbalanced opener with 12+ HCP now shows a four-card fit with a three-level raise; responder places the minor game with four-card support. Balanced 18–19 HCP hands retain the 2NT rebid. See [implementation plan](docs/superpowers/plans/2026-10-26-two-over-one-minor-raise.md).
 - After a direct 2/1 1M–2♦ response, opener can show four clubs with 3♣; responder shows a four-card side major, places 5♣ with four-card support, rebids six diamonds, or chooses 3NT without a fit. See [implementation plan](docs/superpowers/plans/2026-10-26-two-over-one-club-rebid.md).
