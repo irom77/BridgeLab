@@ -2735,6 +2735,17 @@ describe("beginner bot", () => {
     expect(await bot.chooseBid(handWithFiveHearts, auction, "south")).toBe("2hearts");
   });
 
+  it("prefers opener's major over a notrump invitation without stoppers after a minor rebid", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
+    const responder = hand("spades:A", "spades:K", "hearts:J", "hearts:2", "hearts:3", "hearts:4", "diamonds:2", "diamonds:3", "diamonds:4", "diamonds:5", "clubs:Q", "clubs:J", "clubs:2");
+    const auction = [
+      { seat: "north", bid: "1spades" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "1notrump" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "2clubs" as const }, { seat: "east", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("2spades");
+  });
+
   it("does not make notrump continuations with an unbalanced hand", async () => {
     const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
     const unbalanced = hand("spades:A", "spades:K", "spades:Q", "spades:J", "spades:T", "spades:9", "hearts:A", "hearts:K", "hearts:Q", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3");

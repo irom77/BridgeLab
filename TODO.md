@@ -90,6 +90,7 @@ The core rules, PBN package, and solo client are in place. Beginner through Expe
   - [x] After 1M–1NT in SAYC, rebid a five-card opening major with 12–15 HCP when no side suit is available.
     - [x] After 1M–1NT, rebid 2NT with a balanced 18–19 HCP hand.
     - [x] After 1M–1NT–2m, responder raises opener's major to game with 13+ HCP and three-card support; 11–12 HCP remains invitational.
+    - [x] After 1M–1NT–2m, require stoppers in both unbid suits for a balanced 11–12 HCP 2NT invitation; with a doubleton in opener's major and a missing stopper, prefer 2M. See [implementation plan](docs/superpowers/plans/2026-10-26-forcing-notrump-stopper-requirement.md).
     - [x] After 1M–1NT–2NT, responder bids 3NT with 6+ HCP to accept game.
   - [x] After 1M–1NT–2M, responder invites with 3M on 10–12 HCP and three-card support, or 2NT with a balanced hand.
   - [x] After 1♠–1NT–2♥, responder raises with three-card heart support on 10–12 HCP or places 4♥ with 13+; a balanced responder without a heart fit invites in 2NT or bids 3NT.
