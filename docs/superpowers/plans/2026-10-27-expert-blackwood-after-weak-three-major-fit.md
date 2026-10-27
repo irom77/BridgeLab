@@ -56,4 +56,4 @@
   Run: `pnpm test && pnpm typecheck && pnpm lint && pnpm build && git diff --check`
 
   Expected: all workspace checks pass.
-- [ ] **Step 6: Update roadmap and change history, commit, and push.**
+- [x] **Step 6: Update roadmap and change history, commit, and push.**
