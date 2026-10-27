@@ -1667,6 +1667,17 @@ export class IntermediateBot implements BotPlayer {
         if (preemptiveSuit) return Promise.resolve(`3${preemptiveSuit}` as Bid);
       }
     }
+    if (contractCalls.length === 1) {
+      const [opening] = contractCalls;
+      const openedMajor = opening?.bid.match(/^3(hearts|spades)$/)?.[1] as Suit | undefined;
+      if (
+        opening && openedMajor && opening.seat === partner &&
+        auction.slice(auction.indexOf(opening) + 1).every(({ bid }) => bid === "pass")
+      ) {
+        const support = hand.filter((card) => card.suit === openedMajor).length;
+        if (support >= 4 && points(hand) >= 15) return Promise.resolve(`4${openedMajor}` as Bid);
+      }
+    }
     if (auction.length === 3 && contractCalls.length === 2 && auction[2]?.bid === "pass") {
       const [opening, unusualNotrump] = contractCalls;
       const openingSuit = opening?.bid.match(/^1(clubs|diamonds|hearts|spades)$/)?.[1] as Suit | undefined;

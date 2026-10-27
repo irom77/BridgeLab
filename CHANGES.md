@@ -24,6 +24,7 @@ Project changes are recorded here, newest first. Keep entries short and link imp
 
 ## Unreleased
 
+- After an uncontested partner 3♥/3♠ opening, Intermediate responders with four-card support and 15+ HCP bid 4M; opener passes. See [implementation plan](docs/superpowers/plans/2026-10-26-intermediate-weak-three-major-game-response.md).
 - Intermediate, Advanced, and Expert open 3♣/3♦/3♥/3♠ with 5–10 HCP, a seven-card suit with two honors among ace through ten, and no outside four-card major; Beginner behavior and responses to these openings are unchanged. See [implementation plan](docs/superpowers/plans/2026-10-26-intermediate-weak-three-opening.md).
 - After 1M–1NT–2m, a weak responder with a doubleton in opener's major and fewer than four cards in opener's minor now prefers 2M; a five-card alternate major remains natural in both SAYC and 2/1. See [implementation plan](docs/superpowers/plans/2026-10-26-forcing-notrump-major-preference.md).
 - After 1M–1NT–2m, an unbalanced responder with 11–12 HCP and five-card support now invites at 3m in both SAYC and 2/1; opener accepts in 3NT with 16+ HCP, four-card support, and stoppers in the other suits. See [implementation plan](docs/superpowers/plans/2026-10-26-forcing-notrump-minor-raise.md).
