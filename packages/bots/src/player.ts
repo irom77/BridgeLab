@@ -1056,6 +1056,7 @@ export class BeginnerBot implements BotPlayer {
       ) {
         const responderPoints = points(hand);
         const majorSupport = hand.filter((card) => card.suit === openingMajor).length;
+        const minorSupport = hand.filter((card) => card.suit === rebidSuit).length;
         const unbidSuits = suits.filter((suit) => suit !== openingMajor && suit !== rebidSuit);
         const hasUnbidStoppers = unbidSuits.every((suit) => hasStopper(hand, suit));
         if (majorSupport >= 3 && responderPoints >= 13) return `4${openingMajor}` as Bid;
@@ -1063,6 +1064,9 @@ export class BeginnerBot implements BotPlayer {
         if (isBalanced(hand) && hasUnbidStoppers && responderPoints >= 11 && responderPoints <= 12) return "2notrump";
         if (isBalanced(hand) && !hasUnbidStoppers && majorSupport === 2 && responderPoints >= 11 && responderPoints <= 12) {
           return `2${openingMajor}` as Bid;
+        }
+        if (!isBalanced(hand) && minorSupport >= 5 && responderPoints >= 11 && responderPoints <= 12) {
+          return `3${rebidSuit}` as Bid;
         }
         const alternateMajor = openingMajor === "spades" ? "hearts" : "spades";
         const directTwoLevelMinimum = this.convention.style === "2/1" ? 13 : 10;
