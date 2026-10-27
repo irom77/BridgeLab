@@ -1749,6 +1749,22 @@ describe("beginner bot", () => {
     expect(await bot.chooseBid(opener, afterHeart, "north")).toBe("3notrump");
   });
 
+  it("shows and places a spade fit after 1H-2C-2D in a 2/1 game force", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "2/1" });
+    const responder = hand("spades:A", "spades:K", "spades:Q", "spades:J", "spades:2", "hearts:2", "hearts:3", "diamonds:2", "diamonds:3", "clubs:A", "clubs:K", "clubs:Q", "clubs:2");
+    const opener = hand("spades:4", "spades:5", "spades:6", "hearts:A", "hearts:K", "hearts:4", "hearts:5", "hearts:6", "diamonds:A", "diamonds:K", "diamonds:Q", "diamonds:4", "clubs:10");
+    const auction = [
+      { seat: "north", bid: "1hearts" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2clubs" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "2diamonds" as const }, { seat: "east", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("2spades");
+    const afterSpades = [...auction, { seat: "south", bid: "2spades" as const }, { seat: "west", bid: "pass" as const }] as const;
+    expect(await bot.chooseBid(opener, afterSpades, "north")).toBe("3spades");
+    const afterRaise = [...afterSpades, { seat: "north", bid: "3spades" as const }, { seat: "east", bid: "pass" as const }] as const;
+    expect(await bot.chooseBid(responder, afterRaise, "south")).toBe("4spades");
+  });
+
   it.each([
     ["2clubs", "clubs", hand("spades:A", "spades:Q", "spades:2", "spades:3", "spades:4", "hearts:Q", "hearts:2", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:A", "clubs:Q", "clubs:2", "clubs:3"), hand("spades:2", "spades:3", "hearts:A", "hearts:2", "diamonds:A", "diamonds:K", "diamonds:Q", "diamonds:2", "clubs:A", "clubs:K", "clubs:Q", "clubs:2", "clubs:3")],
     ["2diamonds", "diamonds", hand("spades:A", "spades:Q", "spades:2", "spades:3", "spades:4", "hearts:Q", "hearts:2", "diamonds:A", "diamonds:Q", "diamonds:2", "diamonds:3", "clubs:K", "clubs:2"), hand("spades:2", "spades:3", "hearts:A", "hearts:2", "diamonds:A", "diamonds:K", "diamonds:Q", "diamonds:J", "clubs:K", "clubs:Q", "clubs:2", "clubs:3", "clubs:4")]
