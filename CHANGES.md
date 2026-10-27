@@ -1,5 +1,6 @@
 # Changes
 
+- Expert can investigate slam after an uncontested 3♣/3♦ opening with 19+ HCP and five-card support, using Blackwood ace and king asks.
 - SAYC and 2/1 bots now invite or place game after a simple major raise, and SAYC openers accept limit raises only with game values; same-suit raises are no longer classified as jump shifts.
 - Expert Blackwood over an uncontested weak three major now asks for kings after all four aces are accounted for and places grand slam only when all four kings are known.
 - Expert Blackwood now continues after a direct 2/1 response, opener's natural side-major rebid, and responder's game raise; the sequence covers ace and king asks and slam placement.
