@@ -173,7 +173,7 @@ function saycJumpShiftAuction(auction: readonly PublicBid[], style: ConventionSy
   const expectedResponder = SEATS[(SEATS.indexOf(opening.seat) + 2) % SEATS.length]!;
   const expectedLevel = openingSuit && responseSuit && suitOrder.indexOf(responseSuit) > suitOrder.indexOf(openingSuit) ? 1 : 2;
   if (
-    !openingSuit || !responseSuit || !responseLevel || response.seat !== expectedResponder ||
+    !openingSuit || !responseSuit || responseSuit === openingSuit || !responseLevel || response.seat !== expectedResponder ||
     responseLevel !== expectedLevel + 1 || passedBeforeOpening(auction, response.seat, opening) ||
     auction.some(({ seat, bid }) => bid !== "pass" && seat !== opening.seat && seat !== response.seat)
   ) return undefined;
@@ -1412,9 +1412,33 @@ export class BeginnerBot implements BotPlayer {
         hand.filter((card) => card.suit === twoOverOne.responseSuit).length >= 6
       ) return `5${twoOverOne.responseSuit}` as Bid;
     }
+    if (contractCalls.length === 3) {
+      const [opening, raise, invitation] = contractCalls;
+      const major = opening?.bid.match(/^1(hearts|spades)$/)?.[1] as Suit | undefined;
+      if (
+        major && opening?.seat === partner && raise?.seat === seat && raise.bid === `2${major}` &&
+        invitation?.seat === partner && invitation.bid === `3${major}` &&
+        auction.every(({ bid }) => bid === "pass" || [opening.bid, raise.bid, invitation.bid].includes(bid))
+      ) return points(hand) >= 8 ? `4${major}` as Bid : "pass";
+    }
     if (contractCalls.length === 2) {
       const [opening, response] = contractCalls;
       const openingSuit = opening?.bid.match(/^1(clubs|diamonds|hearts|spades)$/)?.[1] as Suit | undefined;
+      const openingMajor = openingSuit === "hearts" || openingSuit === "spades" ? openingSuit : undefined;
+      const raisedMajor = response?.bid.match(/^([23])(hearts|spades)$/)?.[2] as Suit | undefined;
+      if (
+        openingMajor && opening?.seat === seat && response?.seat === partner && raisedMajor === openingMajor &&
+        auction.every(({ bid }) => bid === "pass" || bid === opening.bid || bid === response.bid)
+      ) {
+        const openerPoints = points(hand);
+        if (response.bid === `2${openingMajor}`) {
+          if (openerPoints >= 19) return `4${openingMajor}` as Bid;
+          if (openerPoints >= 16) return `3${openingMajor}` as Bid;
+        }
+        if (this.convention.style === "SAYC" && response.bid === `3${openingMajor}` && openerPoints >= 13) {
+          return `4${openingMajor}` as Bid;
+        }
+      }
       if (
         this.convention.style === "SAYC" && opening?.seat === seat && response?.seat === partner &&
         opening.bid === "1diamonds" && response.bid === "2clubs" &&

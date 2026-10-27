@@ -1,5 +1,6 @@
 # Changes
 
+- SAYC and 2/1 bots now invite or place game after a simple major raise, and SAYC openers accept limit raises only with game values; same-suit raises are no longer classified as jump shifts.
 - Expert Blackwood over an uncontested weak three major now asks for kings after all four aces are accounted for and places grand slam only when all four kings are known.
 - Expert Blackwood now continues after a direct 2/1 response, opener's natural side-major rebid, and responder's game raise; the sequence covers ace and king asks and slam placement.
 - Expert does not treat a passed responder's later two-level suit response as a 2/1 game force for Blackwood.
