@@ -289,9 +289,16 @@ describe("bridge table", () => {
     expect(await screen.findByText("Legal cards are highlighted.")).toBeTruthy();
     const hintedDummyCards = screen.getAllByRole("button", { name: /^Play / }).filter((button) => button.classList.contains("hinted-card"));
     expect(hintedDummyCards.length).toBeGreaterThan(0);
-    expect(hintedDummyCards.every((button) => !symbol || button.getAttribute("aria-label")?.endsWith(`of ${suitName[symbol]}`))).toBe(true);
-    const dummyCard = screen.getAllByRole("button", { name: /^Play / }).find((button) => !symbol || button.getAttribute("aria-label")?.endsWith(`of ${suitName[symbol]}`));
-    await user.click(dummyCard ?? screen.getAllByRole("button", { name: /^Play / })[0]!);
+    const dummyCards = screen.getAllByRole("button", { name: /^Play / });
+    const ledSuit = symbol ? suitName[symbol] : undefined;
+    const canFollowSuit = ledSuit !== undefined && dummyCards.some((button) => button.getAttribute("aria-label")?.endsWith(`of ${ledSuit}`));
+    if (canFollowSuit) {
+      expect(hintedDummyCards.every((button) => button.getAttribute("aria-label")?.endsWith(`of ${ledSuit}`))).toBe(true);
+    } else {
+      expect(hintedDummyCards).toHaveLength(dummyCards.length);
+    }
+    const dummyCard = canFollowSuit ? dummyCards.find((button) => button.getAttribute("aria-label")?.endsWith(`of ${ledSuit}`)) : dummyCards[0];
+    await user.click(dummyCard!);
     await waitFor(() => expect(screen.getByRole("region", { name: "Current trick" }).querySelectorAll(".trick-card")).toHaveLength(3));
   });
 

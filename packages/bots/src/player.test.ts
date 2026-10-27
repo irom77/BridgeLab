@@ -4448,6 +4448,20 @@ describe("beginner bot", () => {
     expect(await bot.chooseBid(responder, auction, "north")).not.toBe("4notrump");
   });
 
+  it("does not use side-major Blackwood after responder has passed", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "2/1" });
+    const responder = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:J", "spades:A", "spades:K", "spades:Q", "spades:J", "diamonds:A", "diamonds:K", "diamonds:2", "clubs:2", "clubs:3");
+    const auction = [
+      { seat: "north", bid: "pass" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "1hearts" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "2clubs" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2diamonds" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "2spades" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "3spades" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "north")).not.toBe("4notrump");
+  });
+
   it("places a 2/1 slam when the Blackwood response confirms three aces", async () => {
     const bot = createBot({ skill: "expert", biddingStyle: "2/1" });
     const responder = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:J", "hearts:T", "spades:A", "spades:2", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:K", "clubs:2", "clubs:3");

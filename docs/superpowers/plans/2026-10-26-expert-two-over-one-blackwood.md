@@ -9,5 +9,5 @@ After an unpassed direct 2/1 game-forcing response establishes a major fit, Expe
 - Cover the ace ask, opener answer, and slam placement in 1♠–2♥–3♥–4NT.
 - Cover the side-major route 1♠–2♣–2♦–2♥–3♥–4NT through the 5NT king ask and final slam placement.
 - Cover the natural side-major route 1♥–2♦–2♠–4♠–4NT through the 5NT king ask and final slam placement.
-- Verify that a passed responder does not enter the direct 2/1 Blackwood route.
+- Verify that a passed responder does not enter direct minor-fit, 2♣–2♦ side-major, or natural side-major Blackwood routes.
 - Run `pnpm test`, `pnpm typecheck`, `pnpm lint`, and `git diff --check`.

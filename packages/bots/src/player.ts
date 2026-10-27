@@ -2205,6 +2205,7 @@ export class ExpertBot implements BotPlayer {
       const responderSeat = SEATS[(SEATS.indexOf(opening.seat) + 2) % SEATS.length]!;
       const sideMajor = openingMajor === "hearts" ? "spades" : "hearts";
       if (
+        !passedBeforeOpening(auction, responderSeat, opening) &&
         response.seat === responderSeat && response.bid === "2clubs" &&
         openerRebid.seat === opening.seat && openerRebid.bid === "2diamonds" &&
         sideMajorResponse.seat === responderSeat && sideMajorResponse.bid === `2${sideMajor}` &&
