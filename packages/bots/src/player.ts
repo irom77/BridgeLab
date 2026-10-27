@@ -1298,6 +1298,10 @@ export class BeginnerBot implements BotPlayer {
         if (hand.filter((card) => card.suit === twoOverOne.openingSuit).length >= 3) {
           return `4${twoOverOne.openingSuit}` as Bid;
         }
+        if (
+          twoOverOne.responseSuit !== shownSideMajor &&
+          hand.filter((card) => card.suit === shownSideMajor).length >= 4
+        ) return `3${shownSideMajor}` as Bid;
         return "3notrump";
       }
       const support = hand.filter((card) => card.suit === twoOverOne.openingSuit).length;

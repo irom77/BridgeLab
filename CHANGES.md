@@ -2,6 +2,7 @@
 
 - Intermediate, Advanced, and Expert bots cover an opponent's led honor with the cheapest higher honor when acting second hand; they retain second-hand-low when no cover applies.
 - Expert 2/1 bidding now continues Blackwood after opener raises responder's minor to the three level, including the ace response, king ask, and minor-slam placement.
+- After a 2/1 game-forcing response and opener's balanced 2NT rebid, responder can show a four-card side major without support for opener; opener raises a three-card fit or places 3NT.
 
 - Expert 2/1 slam tools now continue through the side-major fit route: responder can ask for aces with 4NT, ask for kings with 5NT after all aces are known, and place a grand slam only when all kings are confirmed. See [implementation plan](docs/superpowers/plans/2026-10-26-expert-two-over-one-blackwood.md).
 - After an uncontested 1M–2♣–2♦ 2/1 game force, responder can show a four-card side major at the two level without three-card support for opener; opener raises a three-card fit and responder places game, or opener places 3NT without one. See [implementation plan](docs/superpowers/plans/2026-10-26-two-over-one-responder-side-major.md).

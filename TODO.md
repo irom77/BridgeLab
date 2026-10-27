@@ -99,6 +99,7 @@ The core rules, PBN package, and solo client are in place. Beginner through Expe
     - [x] Keep the 2/1 force active after responder rebids a six-card minor; opener raises three-card support and responder places the minor game.
     - [x] When opener lacks three-card support for that minor rebid, place the game force in 3NT.
     - [x] After opener's balanced 2NT rebid, responder chooses 3NT without a three-card major fit, even with a six-card 2/1 minor.
+    - [x] After opener's balanced 2NT rebid, show a four-card side major without a three-card fit for opener; opener raises a three-card fit and responder places game, or opener bids 3NT without the fit. See [implementation plan](docs/superpowers/plans/2026-10-26-two-over-one-side-major-after-notrump.md).
     - [x] After responder shows a four-card side major in a 2/1 game force, opener raises to game with three-card support.
     - [x] Without three-card support for responder's side major, opener places the game force in 3NT.
     - [x] Stop at 4M after opener accepts a major fit; continue to 5m only when a long minor fit remains below game.
