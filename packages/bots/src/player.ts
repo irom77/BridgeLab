@@ -2202,10 +2202,25 @@ export class ExpertBot implements BotPlayer {
       ) return { openingSeat: opening.seat, responderSeat, major: sideMajor };
       return undefined;
     };
+    const twoOverOneRaisedSuit = (): Suit | undefined => {
+      if (this.config.biddingStyle !== "2/1" || calls.length < 3) return undefined;
+      const [opening, response, openerRaise] = calls;
+      const openingMajor = opening?.bid.match(/^1(hearts|spades)$/)?.[1] as Suit | undefined;
+      const responseSuit = response?.bid.match(/^2(clubs|diamonds|hearts|spades)$/)?.[1] as Suit | undefined;
+      const responderSeat = opening ? SEATS[(SEATS.indexOf(opening.seat) + 2) % SEATS.length]! : undefined;
+      if (
+        !opening || !openingMajor || !response || !responseSuit || responseSuit === openingMajor || !openerRaise ||
+        response.seat !== responderSeat || openerRaise.seat !== opening.seat
+      ) {
+        return undefined;
+      }
+      if (openerRaise.bid === `3${openingMajor}`) return openingMajor;
+      if (responseSuit !== openingMajor && openerRaise.bid === `3${responseSuit}`) return responseSuit;
+      return undefined;
+    };
     const blackwoodTrump = (): Suit | undefined => {
       const [opening, response, openerRebid] = calls;
       const major = opening?.bid.match(/^1(hearts|spades)$/)?.[1] as Suit | undefined;
-      const responseSuit = response?.bid.match(/^[234](clubs|diamonds|hearts|spades)$/)?.[1] as Suit | undefined;
       const expectedResponder = opening ? SEATS[(SEATS.indexOf(opening.seat) + 2) % SEATS.length]! : undefined;
       if (!opening || !major || !response || !openerRebid || response.seat !== expectedResponder || openerRebid.seat !== opening.seat) return undefined;
       const saycJumpShift = this.config.biddingStyle === "SAYC" ? saycJumpShiftAuction(auction, "SAYC") : undefined;
@@ -2214,14 +2229,8 @@ export class ExpertBot implements BotPlayer {
         openerRebid.bid === `4${saycJumpShift.responseSuit}`
       ) return saycJumpShift.responseSuit;
       if (response.bid === "2notrump" && /^3(clubs|diamonds|hearts|spades)$/.test(openerRebid.bid) && openerRebid.bid !== `3${major}`) return major;
-      if (this.config.biddingStyle === "2/1" && responseSuit && response.bid.startsWith("2") && responseSuit !== major) {
-        const agreedMajor = openerRebid.bid === `3${major}`
-          ? major
-          : (responseSuit === "hearts" || responseSuit === "spades") && openerRebid.bid === `3${responseSuit}`
-            ? responseSuit
-            : undefined;
-        if (agreedMajor) return agreedMajor;
-      }
+      const raisedSuit = twoOverOneRaisedSuit();
+      if (raisedSuit) return raisedSuit;
       const sideMajorFit = twoOverOneSideMajorFit();
       if (sideMajorFit) return sideMajorFit.major;
       const acceptedSplinter = splinterSequence(opening, response);
@@ -2859,19 +2868,12 @@ export class ExpertBot implements BotPlayer {
       }
     }
 
-    if (calls.length === 3 && this.config.biddingStyle === "2/1") {
-      const [opening, response, openerRaise] = calls;
-      const openingMajor = opening?.bid.match(/^1(hearts|spades)$/)?.[1] as Suit | undefined;
-      const responseSuit = response?.bid.match(/^2(clubs|diamonds|hearts|spades)$/)?.[1] as Suit | undefined;
-      const agreedMajor = openerRaise?.bid === `3${openingMajor}`
-        ? openingMajor
-        : responseSuit && (responseSuit === "hearts" || responseSuit === "spades") && openerRaise?.bid === `3${responseSuit}`
-          ? responseSuit
-          : undefined;
-      if (
-        opening?.seat === partner && openingMajor && response?.seat === seat && responseSuit && responseSuit !== openingMajor &&
-        openerRaise?.seat === partner && agreedMajor && points(hand) >= 18
-      ) return Promise.resolve("4notrump");
+    if (
+      calls.length === 3 && this.config.biddingStyle === "2/1" &&
+      calls[0]?.seat === partner && calls[1]?.seat === seat && calls[2]?.seat === partner &&
+      twoOverOneRaisedSuit() && points(hand) >= 18
+    ) {
+      return Promise.resolve("4notrump");
     }
 
     if (calls.length === 5 && sideMajorBlackwoodFit?.responderSeat === seat && points(hand) >= 18) {
@@ -2880,15 +2882,9 @@ export class ExpertBot implements BotPlayer {
 
     if (calls.length === 4 && this.config.biddingStyle === "2/1") {
       const [opening, response, openerRaise, aceAsk] = calls;
-      const openingMajor = opening?.bid.match(/^1(hearts|spades)$/)?.[1] as Suit | undefined;
-      const responseSuit = response?.bid.match(/^2(clubs|diamonds|hearts|spades)$/)?.[1] as Suit | undefined;
-      const agreedMajor = openerRaise?.bid === `3${openingMajor}`
-        ? openingMajor
-        : responseSuit && (responseSuit === "hearts" || responseSuit === "spades") && openerRaise?.bid === `3${responseSuit}`
-          ? responseSuit
-          : undefined;
+      const agreedSuit = twoOverOneRaisedSuit();
       if (
-        opening?.seat === seat && openingMajor && response?.seat === partner && responseSuit && responseSuit !== openingMajor && agreedMajor &&
+        opening?.seat === seat && response?.seat === partner && agreedSuit &&
         openerRaise?.seat === seat &&
         aceAsk?.seat === partner && aceAsk.bid === "4notrump"
       ) {
@@ -2913,15 +2909,9 @@ export class ExpertBot implements BotPlayer {
 
     if (calls.length === 5 && this.config.biddingStyle === "2/1") {
       const [opening, response, openerRaise, aceAsk, aceAnswer] = calls;
-      const openingMajor = opening?.bid.match(/^1(hearts|spades)$/)?.[1] as Suit | undefined;
-      const responseSuit = response?.bid.match(/^2(clubs|diamonds|hearts|spades)$/)?.[1] as Suit | undefined;
-      const agreedMajor = openerRaise?.bid === `3${openingMajor}`
-        ? openingMajor
-        : responseSuit && (responseSuit === "hearts" || responseSuit === "spades") && openerRaise?.bid === `3${responseSuit}`
-          ? responseSuit
-          : undefined;
+      const agreedSuit = twoOverOneRaisedSuit();
       if (
-        opening?.seat === partner && openingMajor && response?.seat === seat && responseSuit && responseSuit !== openingMajor && agreedMajor &&
+        opening?.seat === partner && response?.seat === seat && agreedSuit &&
         openerRaise?.seat === partner &&
         aceAsk?.seat === seat && aceAsk.bid === "4notrump" &&
         aceAnswer?.seat === partner && ["5clubs", "5diamonds", "5hearts", "5spades"].includes(aceAnswer.bid)
@@ -2929,10 +2919,10 @@ export class ExpertBot implements BotPlayer {
         const ownAces = aceCount(hand);
         const partnerAces = aceAnswer.bid === "5clubs" ? undefined : aceAnswer.bid === "5diamonds" ? 1 : aceAnswer.bid === "5hearts" ? 2 : 3;
         const enoughAces = partnerAces === undefined ? ownAces >= 3 : ownAces + partnerAces >= 3;
-        if (enoughAces) return Promise.resolve(`6${agreedMajor}` as Bid);
+        if (enoughAces) return Promise.resolve(`6${agreedSuit}` as Bid);
         const suitOrder: readonly Suit[] = ["clubs", "diamonds", "hearts", "spades"];
         const answerSuit = aceAnswer.bid.slice(1) as Suit;
-        return Promise.resolve(suitOrder.indexOf(agreedMajor) > suitOrder.indexOf(answerSuit) ? `5${agreedMajor}` as Bid : "pass");
+        return Promise.resolve(suitOrder.indexOf(agreedSuit) > suitOrder.indexOf(answerSuit) ? `5${agreedSuit}` as Bid : "pass");
       }
     }
 
