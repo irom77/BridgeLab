@@ -1669,13 +1669,28 @@ export class IntermediateBot implements BotPlayer {
     }
     if (contractCalls.length === 1) {
       const [opening] = contractCalls;
-      const openedMajor = opening?.bid.match(/^3(hearts|spades)$/)?.[1] as Suit | undefined;
+      const openedSuit = opening?.bid.match(/^3(clubs|diamonds|hearts|spades)$/)?.[1] as Suit | undefined;
       if (
-        opening && openedMajor && opening.seat === partner &&
+        opening && openedSuit && opening.seat === partner &&
         auction.slice(auction.indexOf(opening) + 1).every(({ bid }) => bid === "pass")
       ) {
-        const support = hand.filter((card) => card.suit === openedMajor).length;
-        if (support >= 4 && points(hand) >= 15) return Promise.resolve(`4${openedMajor}` as Bid);
+        const support = hand.filter((card) => card.suit === openedSuit).length;
+        const openedMajor = openedSuit === "hearts" || openedSuit === "spades" ? openedSuit : undefined;
+        if (openedMajor && support >= 4 && points(hand) >= 15) return Promise.resolve(`4${openedMajor}` as Bid);
+        const sideSuits = suits.filter((suit) => suit !== openedSuit);
+        const runningSuit = sideSuits.find((suit) => {
+          const cards = hand.filter((card) => card.suit === suit);
+          return cards.length >= 8 && ["A", "K", "Q", "J"].every((rank) => cards.some((card) => card.rank === rank));
+        });
+        if (runningSuit) {
+          const stoppersNeeded = sideSuits.filter((suit) => suit !== runningSuit);
+          const hasOutsideAce = stoppersNeeded.some((suit) => hand.some((card) => card.suit === suit && card.rank === "A"));
+          const stoppers = stoppersNeeded.every((suit) => {
+            const cards = hand.filter((card) => card.suit === suit);
+            return cards.some((card) => card.rank === "A") || (cards.length >= 2 && cards.some((card) => card.rank === "K"));
+          });
+          if (hasOutsideAce && stoppers) return Promise.resolve("3notrump");
+        }
       }
     }
     if (auction.length === 3 && contractCalls.length === 2 && auction[2]?.bid === "pass") {
