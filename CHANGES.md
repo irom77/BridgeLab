@@ -1,5 +1,6 @@
 # Changes
 
+- Expert Blackwood over an uncontested weak three major now asks for kings after all four aces are accounted for and places grand slam only when all four kings are known.
 - Expert Blackwood now continues after a direct 2/1 response, opener's natural side-major rebid, and responder's game raise; the sequence covers ace and king asks and slam placement.
 - Expert does not treat a passed responder's later two-level suit response as a 2/1 game force for Blackwood.
 - Intermediate, Advanced, and Expert bots cover an opponent's led honor with the cheapest higher honor when acting second hand; they retain second-hand-low when no cover applies.
