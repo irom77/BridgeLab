@@ -12,6 +12,21 @@ function points(hand: Hand): number {
   return hand.reduce((total, card) => total + (highCardPoints[card.rank] ?? 0), 0);
 }
 
+function quickTricks(hand: Hand, preemptSuit: Suit): number {
+  return suits.reduce((total, suit) => {
+    const cards = hand.filter((card) => card.suit === suit);
+    const has = (rank: string) => cards.some((card) => card.rank === rank);
+    const length = cards.length;
+    if (has("A") && has("K") && has("Q")) return total + 3;
+    if (has("A") && has("K")) return total + 2;
+    if (has("A") && has("Q")) return total + 1.5;
+    if (has("A")) return total + 1;
+    if (has("K") && has("Q")) return total + 1;
+    if (has("K") && (length >= 2 || suit === preemptSuit)) return total + 0.5;
+    return total;
+  }, 0);
+}
+
 function aceCount(hand: Hand): number {
   return hand.filter((card) => card.rank === "A").length;
 }
@@ -1691,6 +1706,7 @@ export class IntermediateBot implements BotPlayer {
           });
           if (hasOutsideAce && stoppers) return Promise.resolve("3notrump");
         }
+        if (openedMajor && quickTricks(hand, openedMajor) >= 4.5) return Promise.resolve(`4${openedMajor}` as Bid);
       }
     }
     if (auction.length === 3 && contractCalls.length === 2 && auction[2]?.bid === "pass") {

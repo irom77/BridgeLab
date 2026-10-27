@@ -3085,6 +3085,37 @@ describe("beginner bot", () => {
   });
 
   it.each([
+    ["3♥ SAYC", "hearts", hand("spades:A", "spades:K", "spades:8", "spades:6", "hearts:K", "diamonds:A", "diamonds:9", "diamonds:6", "diamonds:4", "clubs:K", "clubs:Q", "clubs:8", "clubs:7"), "SAYC"],
+    ["3♥ 2/1", "hearts", hand("spades:A", "spades:K", "spades:8", "spades:6", "hearts:K", "diamonds:A", "diamonds:9", "diamonds:6", "diamonds:4", "clubs:K", "clubs:Q", "clubs:8", "clubs:7"), "2/1"],
+    ["3♠ SAYC", "spades", hand("hearts:A", "hearts:K", "hearts:8", "hearts:6", "spades:K", "diamonds:A", "diamonds:9", "diamonds:6", "diamonds:4", "clubs:K", "clubs:Q", "clubs:8", "clubs:7"), "SAYC"],
+    ["3♠ 2/1", "spades", hand("hearts:A", "hearts:K", "hearts:8", "hearts:6", "spades:K", "diamonds:A", "diamonds:9", "diamonds:6", "diamonds:4", "clubs:K", "clubs:Q", "clubs:8", "clubs:7"), "2/1"]
+  ] as const)("places 4M from 4.5 quick tricks over %s with singleton trump support", async (_label, openedMajor, responder, biddingStyle) => {
+    const bot = createBot({ skill: "intermediate", biddingStyle });
+    const auction = [
+      { seat: "north", bid: `3${openedMajor}` as const }, { seat: "east", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe(`4${openedMajor}`);
+  });
+
+  it("does not place game at the 4.0 quick-trick boundary with singleton trump support", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const responder = hand("spades:A", "spades:K", "spades:8", "spades:6", "hearts:2", "diamonds:A", "diamonds:9", "diamonds:6", "diamonds:4", "clubs:K", "clubs:Q", "clubs:8", "clubs:7");
+    const auction = [
+      { seat: "north", bid: "3hearts" as const }, { seat: "east", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).not.toBe("4hearts");
+  });
+
+  it("does not use the quick-trick major game raise after interference", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "2/1" });
+    const responder = hand("spades:A", "spades:K", "spades:8", "spades:6", "hearts:K", "diamonds:A", "diamonds:9", "diamonds:6", "diamonds:4", "clubs:K", "clubs:Q", "clubs:8", "clubs:7");
+    const auction = [
+      { seat: "north", bid: "3hearts" as const }, { seat: "east", bid: "double" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).not.toBe("4hearts");
+  });
+
+  it.each([
     ["14 HCP", hand("hearts:K", "hearts:Q", "hearts:J", "hearts:2", "spades:A", "spades:K", "spades:2", "diamonds:J", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4")],
     ["three-card support", hand("hearts:K", "hearts:Q", "hearts:J", "spades:A", "spades:K", "spades:Q", "spades:2", "diamonds:2", "diamonds:3", "diamonds:4", "clubs:2", "clubs:3", "clubs:4")]
   ] as const)("does not raise partner's 3♥ to game with %s", async (_case, responder) => {
