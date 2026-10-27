@@ -1,5 +1,6 @@
 # Changes
 
+- Expert Blackwood now continues after a direct 2/1 response, opener's natural side-major rebid, and responder's game raise; the sequence covers ace and king asks and slam placement.
 - Intermediate, Advanced, and Expert bots cover an opponent's led honor with the cheapest higher honor when acting second hand; they retain second-hand-low when no cover applies.
 - Expert 2/1 bidding now continues Blackwood after opener raises responder's minor to the three level, including the ace response, king ask, and minor-slam placement.
 - After a 2/1 game-forcing response and opener's balanced 2NT rebid, responder can show a four-card side major without support for opener; opener raises a three-card fit or places 3NT.

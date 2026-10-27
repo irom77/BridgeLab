@@ -4402,6 +4402,27 @@ describe("beginner bot", () => {
     expect(await bot.chooseBid(opener, auction, "north")).toBe("5hearts");
   });
 
+  it("uses Blackwood after a 2/1 side-major rebid is raised to game", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "2/1" });
+    const responder = hand("spades:A", "spades:K", "spades:Q", "spades:J", "diamonds:A", "diamonds:K", "diamonds:Q", "diamonds:J", "diamonds:T", "hearts:2", "hearts:3", "clubs:2", "clubs:3");
+    const auction = [
+      { seat: "north", bid: "1hearts" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "2diamonds" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "2spades" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "4spades" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe("4notrump");
+    const opener = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:J", "diamonds:8", "diamonds:2", "spades:2", "spades:3", "spades:4", "spades:5", "clubs:A", "clubs:4", "clubs:5");
+    const afterAsk = [...auction, { seat: "south", bid: "4notrump" as const }, { seat: "west", bid: "pass" as const }] as const;
+    expect(await bot.chooseBid(opener, afterAsk, "north")).toBe("5hearts");
+    const afterAnswer = [...afterAsk, { seat: "north", bid: "5hearts" as const }, { seat: "east", bid: "pass" as const }] as const;
+    expect(await bot.chooseBid(responder, afterAnswer, "south")).toBe("5notrump");
+    const afterKingAsk = [...afterAnswer, { seat: "south", bid: "5notrump" as const }, { seat: "west", bid: "pass" as const }] as const;
+    expect(await bot.chooseBid(opener, afterKingAsk, "north")).toBe("6diamonds");
+    const afterKingAnswer = [...afterKingAsk, { seat: "north", bid: "6diamonds" as const }, { seat: "east", bid: "pass" as const }] as const;
+    expect(await bot.chooseBid(responder, afterKingAnswer, "south")).toBe("6spades");
+  });
+
   it("places a 2/1 slam when the Blackwood response confirms three aces", async () => {
     const bot = createBot({ skill: "expert", biddingStyle: "2/1" });
     const responder = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:J", "hearts:T", "spades:A", "spades:2", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:K", "clubs:2", "clubs:3");
