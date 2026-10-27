@@ -3207,6 +3207,89 @@ describe("beginner bot", () => {
   });
 
   it.each([
+    ["3♣–3♥ SAYC", "clubs", "hearts", hand("hearts:A", "hearts:K", "hearts:Q", "hearts:J", "hearts:9", "hearts:8", "spades:K", "spades:J", "diamonds:Q", "clubs:2", "clubs:3", "clubs:4", "clubs:5"), "SAYC"],
+    ["3♣–3♠ 2/1", "clubs", "spades", hand("spades:A", "spades:K", "spades:Q", "spades:J", "spades:9", "spades:8", "hearts:K", "hearts:J", "clubs:Q", "diamonds:2", "diamonds:3", "diamonds:4", "diamonds:5"), "2/1"],
+    ["3♦–3♥ 2/1", "diamonds", "hearts", hand("hearts:A", "hearts:K", "hearts:Q", "hearts:J", "hearts:9", "hearts:8", "spades:K", "spades:J", "diamonds:Q", "clubs:2", "clubs:3", "clubs:4", "clubs:5"), "2/1"],
+    ["3♦–3♠ SAYC", "diamonds", "spades", hand("spades:A", "spades:K", "spades:Q", "spades:J", "spades:9", "spades:8", "hearts:K", "hearts:J", "clubs:Q", "diamonds:2", "diamonds:3", "diamonds:4", "diamonds:5"), "SAYC"]
+  ] as const)("uses a natural forcing major response with 16 HCP and six cards: %s", async (_label, openingSuit, responseMajor, responder, biddingStyle) => {
+    const bot = createBot({ skill: "intermediate", biddingStyle });
+    const auction = [{ seat: "north", bid: `3${openingSuit}` as const }, { seat: "east", bid: "pass" as const }] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).toBe(`3${responseMajor}`);
+  });
+
+  it.each(["advanced", "expert"] as const)("inherits the forcing weak-three major response at %s", async (skill) => {
+    const bot = createBot({ skill, biddingStyle: "2/1" });
+    const responder = hand("spades:A", "spades:K", "spades:Q", "spades:J", "spades:9", "spades:8", "hearts:K", "hearts:J", "clubs:Q", "diamonds:2", "diamonds:3", "diamonds:4", "diamonds:5");
+    expect(await bot.chooseBid(responder, [{ seat: "north", bid: "3clubs" }], "south")).toBe("3spades");
+  });
+
+  it("prefers the longer major and then spades when both qualify", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const responder = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:J", "hearts:9", "hearts:8", "spades:A", "spades:K", "spades:Q", "spades:J", "spades:9", "spades:8", "clubs:2");
+    expect(await bot.chooseBid(responder, [{ seat: "north", bid: "3clubs" }], "south")).toBe("3spades");
+  });
+
+  it("does not give the forcing response to Beginner", async () => {
+    const bot = createBot({ skill: "beginner", biddingStyle: "SAYC" });
+    const responder = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:J", "hearts:9", "hearts:8", "spades:K", "spades:J", "diamonds:Q", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
+    expect(await bot.chooseBid(responder, [{ seat: "north", bid: "3clubs" }], "south")).not.toBe("3hearts");
+  });
+
+  it.each([
+    ["15 HCP", hand("hearts:A", "hearts:K", "hearts:Q", "hearts:J", "hearts:9", "hearts:8", "spades:K", "spades:Q", "clubs:2", "clubs:3", "clubs:4", "clubs:5", "diamonds:2")],
+    ["five-card major", hand("hearts:A", "hearts:K", "hearts:Q", "hearts:J", "hearts:9", "spades:K", "spades:J", "diamonds:Q", "clubs:2", "clubs:3", "clubs:4", "clubs:5", "clubs:6")],
+    ["a six-card major without two honors", hand("hearts:9", "hearts:8", "hearts:7", "hearts:6", "hearts:5", "hearts:4", "spades:A", "spades:K", "spades:Q", "spades:J", "diamonds:A", "diamonds:K", "clubs:Q")]
+  ] as const)("does not force a new major with %s", async (_label, responder) => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const auction = [{ seat: "north", bid: "3clubs" as const }, { seat: "east", bid: "pass" as const }] as const;
+    expect(await bot.chooseBid(responder, auction, "south")).not.toBe("3hearts");
+  });
+
+  it("does not use the natural major response after a major preempt or interference", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "2/1" });
+    const responder = hand("spades:A", "spades:K", "spades:Q", "spades:J", "spades:9", "spades:8", "hearts:K", "hearts:J", "diamonds:Q", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
+    expect(await bot.chooseBid(responder, [{ seat: "north", bid: "3hearts" }, { seat: "east", bid: "pass" }], "south")).not.toBe("3spades");
+    expect(await bot.chooseBid(responder, [{ seat: "north", bid: "3clubs" }, { seat: "east", bid: "double" }], "south")).not.toBe("3spades");
+  });
+
+  it.each([
+    ["3♣–3♥", hand("clubs:K", "clubs:Q", "clubs:J", "clubs:9", "clubs:8", "clubs:7", "clubs:6", "hearts:A", "hearts:2", "hearts:3", "spades:2", "spades:3", "diamonds:2"), "3clubs", "3hearts", "4hearts"],
+    ["3♦–3♠", hand("diamonds:K", "diamonds:Q", "diamonds:J", "diamonds:9", "diamonds:8", "diamonds:7", "diamonds:6", "spades:A", "spades:2", "spades:3", "hearts:2", "clubs:2", "clubs:3"), "3diamonds", "3spades", "4spades"]
+  ] as const)("continues a forcing major response by raising three-card support to game: %s", async (_label, opener, openingBid, responseBid, expected) => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const auction = [
+      { seat: "north", bid: openingBid }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: responseBid }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe(expected);
+  });
+
+  it("repeats its minor without a major fit, then responder places major game", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "2/1" });
+    const opener = hand("clubs:A", "clubs:K", "clubs:Q", "clubs:9", "clubs:8", "clubs:7", "clubs:6", "hearts:2", "hearts:3", "spades:2", "spades:3", "diamonds:2", "diamonds:3");
+    const responder = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:J", "hearts:9", "hearts:8", "spades:K", "spades:J", "diamonds:Q", "clubs:2", "clubs:3", "clubs:4", "clubs:5");
+    const auction = [
+      { seat: "north", bid: "3clubs" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "3hearts" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe("4clubs");
+    const afterMinorRebid = [...auction, { seat: "north", bid: "4clubs" as const }, { seat: "east", bid: "pass" as const }] as const;
+    expect(await bot.chooseBid(responder, afterMinorRebid, "south")).toBe("4hearts");
+  });
+
+  it("passes after responder places game following the forcing major response", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const opener = hand("clubs:A", "clubs:K", "clubs:Q", "clubs:9", "clubs:8", "clubs:7", "clubs:6", "hearts:2", "hearts:3", "spades:2", "spades:3", "diamonds:2", "diamonds:3");
+    const auction = [
+      { seat: "north", bid: "3clubs" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "3hearts" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "4clubs" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "4hearts" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(opener, auction, "north")).toBe("pass");
+  });
+
+  it.each([
     ["hearts SAYC", "hearts", hand("hearts:A", "hearts:K", "hearts:Q", "spades:A", "spades:K", "spades:Q", "diamonds:K", "clubs:2", "clubs:3", "clubs:4", "clubs:5", "clubs:6", "clubs:7"), "SAYC"],
     ["hearts 2/1", "hearts", hand("hearts:A", "hearts:K", "hearts:Q", "spades:A", "spades:K", "spades:Q", "diamonds:K", "clubs:2", "clubs:3", "clubs:4", "clubs:5", "clubs:6", "clubs:7"), "2/1"],
     ["spades SAYC", "spades", hand("spades:A", "spades:K", "spades:Q", "hearts:A", "hearts:K", "hearts:Q", "diamonds:K", "clubs:2", "clubs:3", "clubs:4", "clubs:5", "clubs:6", "clubs:7"), "SAYC"],
