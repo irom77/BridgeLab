@@ -2235,7 +2235,8 @@ export class ExpertBot implements BotPlayer {
       const responseSuit = response?.bid.match(/^2(clubs|diamonds|hearts|spades)$/)?.[1] as Suit | undefined;
       const responderSeat = opening ? SEATS[(SEATS.indexOf(opening.seat) + 2) % SEATS.length]! : undefined;
       if (
-        !opening || !openingMajor || !response || !responseSuit || responseSuit === openingMajor || !openerRaise ||
+        !opening || !openingMajor || !response || !responseSuit || responseSuit === openingMajor || !openerRaise || !responderSeat ||
+        passedBeforeOpening(auction, responderSeat, opening) ||
         response.seat !== responderSeat || openerRaise.seat !== opening.seat
       ) {
         return undefined;

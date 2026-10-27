@@ -4436,6 +4436,18 @@ describe("beginner bot", () => {
     expect(await bot.chooseBid(responder, auction, "north")).not.toBe("4notrump");
   });
 
+  it("does not use minor-fit Blackwood after responder has passed", async () => {
+    const bot = createBot({ skill: "expert", biddingStyle: "2/1" });
+    const responder = hand("spades:A", "spades:K", "spades:Q", "hearts:A", "hearts:K", "diamonds:A", "diamonds:2", "diamonds:3", "clubs:2", "clubs:3", "clubs:4", "clubs:5", "clubs:6");
+    const auction = [
+      { seat: "north", bid: "pass" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "1spades" as const }, { seat: "west", bid: "pass" as const },
+      { seat: "north", bid: "2clubs" as const }, { seat: "east", bid: "pass" as const },
+      { seat: "south", bid: "3clubs" as const }, { seat: "west", bid: "pass" as const }
+    ] as const;
+    expect(await bot.chooseBid(responder, auction, "north")).not.toBe("4notrump");
+  });
+
   it("places a 2/1 slam when the Blackwood response confirms three aces", async () => {
     const bot = createBot({ skill: "expert", biddingStyle: "2/1" });
     const responder = hand("hearts:A", "hearts:K", "hearts:Q", "hearts:J", "hearts:T", "spades:A", "spades:2", "diamonds:K", "diamonds:2", "diamonds:3", "clubs:K", "clubs:2", "clubs:3");
