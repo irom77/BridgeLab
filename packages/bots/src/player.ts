@@ -1352,6 +1352,11 @@ export class BeginnerBot implements BotPlayer {
     }
     if (twoOverOne && contractCalls.length === 5 && twoOverOne.responderSeat === seat) {
       const openerSupport = contractCalls[4]?.bid;
+      const sideMajor = twoOverOne.openingSuit === "spades" ? "hearts" : "spades";
+      if (
+        openerSupport === `3${sideMajor}` &&
+        hand.filter((card) => card.suit === sideMajor).length >= 4
+      ) return `4${sideMajor}` as Bid;
       if (
         openerSupport === `4${twoOverOne.responseSuit}` &&
         (twoOverOne.responseSuit === "clubs" || twoOverOne.responseSuit === "diamonds") &&

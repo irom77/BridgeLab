@@ -1731,6 +1731,8 @@ describe("beginner bot", () => {
     expect(await bot.chooseBid(responder, auction, "south")).toBe("2hearts");
     const afterHeart = [...auction, { seat: "south", bid: "2hearts" as const }, { seat: "west", bid: "pass" as const }] as const;
     expect(await bot.chooseBid(opener, afterHeart, "north")).toBe("3hearts");
+    const afterRaise = [...afterHeart, { seat: "north", bid: "3hearts" as const }, { seat: "east", bid: "pass" as const }] as const;
+    expect(await bot.chooseBid(responder, afterRaise, "south")).toBe("4hearts");
   });
 
   it("places 3NT when opener has no fit for responder's side major in a 2/1 game force", async () => {
