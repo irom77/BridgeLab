@@ -2,7 +2,7 @@ import { SEATS, cardId, isValidDeal, type Card, type Deal, type Seat, type Suit 
 import { emptyHistory, recordAction, type Bid, type GameAction, type GameHistory } from "./history.js";
 import { trickWinner, validatePlay, type TrickCard } from "./rules.js";
 import { scoreContract, type ContractScore } from "./scoring.js";
-import type { Vulnerability } from "./pbn.js";
+import type { Vulnerability } from "./types.js";
 
 export type Contract = Readonly<{
   level: 1 | 2 | 3 | 4 | 5 | 6 | 7;

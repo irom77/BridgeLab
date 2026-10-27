@@ -1,55 +1,64 @@
 <p align="center">
-  <img src="docs/bridgelab-logo.svg" alt="BridgeLab — play, learn, and review contract bridge" width="520" />
+  <img src="docs/contractplay-logo.svg" alt="ContractPlay — play, learn, and review contract bridge" width="520" />
 </p>
 
-<h1 align="center">BridgeLab</h1>
+<h1 align="center">ContractPlay</h1>
 
-<p align="center">A cross-platform home for contract bridge: play, learn, and review every hand.</p>
+<p align="center">Play, learn, and review contract bridge.</p>
 
 ---
 
-## Project status
+## Status
 
-BridgeLab is at the foundation stage. The repository currently contains an initial TypeScript core package; the app, complete rules engine, PBN round-tripping, bots, and platform builds are planned work.
+ContractPlay currently provides a responsive browser table for local deals, configurable bots, PBN import, autosaved play, take-back, hand review, and card-play hints. A host can supply a solver for recommendations; without one, hints show legal cards.
 
-See [TODO.md](TODO.md) for the current roadmap and [CHANGES.md](CHANGES.md) for completed work.
+Native clients, online multiplayer, and complete SAYC and 2/1 agreements remain planned. See the [roadmap](TODO.md) and [change history](CHANGES.md).
 
-## Product goals
-
-- Play contract bridge on the web, Windows, macOS, iOS, and iPad.
-- Use one platform-neutral TypeScript rules core across clients.
-- Support solo play, configurable bots, hints, and hand review with take-back and replay.
-- Import and export hands in Portable Bridge Notation (PBN).
-- Add live multiplayer with server-validated actions and private hands.
-
-## Repository layout
+## Project structure
 
 ```text
-apps/                 Client and server applications (planned)
-packages/core/        Bridge cards, rules, and game state
-packages/pbn/         PBN parser and serializer (planned)
-packages/bots/        Bot strategies and solver adapters (planned)
-packages/protocol/    Shared network message types (planned)
-docs/superpowers/
-  plans/              Implementation plans
+apps/client/          React and Vite browser client
+packages/core/        Platform-neutral cards, rules, and game state
+packages/pbn/         PBN parser, serializer, and diagnostics
+packages/persistence/ Versioned local game storage
+packages/bots/        Bidding and card-play strategies
+docs/superpowers/     Feature plans and specifications
 ```
 
-## Core package
+The core package owns legal actions and immutable game transitions. PBN, persistence, bots, and the client build on its shared types and APIs.
 
-The initial package lives in `packages/core/src` and currently provides card/deal types, dealing and shuffle helpers, follow-suit validation, trick winner evaluation, an immutable auction/play reducer with undo/redo reconstruction, bot/solver interfaces, and basic PBN metadata utilities.
+## Bots
 
-The core is TypeScript and designed to stay independent of UI and platform APIs. It is part of the root pnpm workspace and builds to `packages/core/dist`.
+Choose Beginner, Intermediate, Advanced, or Expert play, and configure SAYC or 2/1 bidding. The beginner bot covers opening bids and common uncontested and competitive auctions. Intermediate adds natural overcalls, weak three-level openings, major game raises and qualified 3NT placement over them, takeout doubles, and card-play tactics; Advanced adds a third-hand honor play; Expert adds selected conventions and slam tools. Convention coverage is still limited; see [TODO.md](TODO.md) for exact scope.
+
+Card-play hints highlight all legal cards when no solver is configured. If a host supplies a solver, the client shows its legal recommendations without playing a card.
 
 ## Development
 
-Run `pnpm install` to install the development tools, then use `pnpm typecheck`, `pnpm lint`, `pnpm test`, and `pnpm build` from the repository root.
+Requires Node.js 20 or later and pnpm.
+
+```sh
+pnpm install
+pnpm test
+pnpm typecheck
+pnpm lint
+pnpm build
+```
+
+Start the browser client with:
+
+```sh
+pnpm --filter @contractplay/client dev
+```
+
+The browser client stores the current hand and up to 25 completed hands in local storage. PBN deals can be pasted into the import panel.
 
 ## Project guidance
 
-- [AGENTS.md](AGENTS.md) is the shared agent guidance.
-- [CLAUDE.md](CLAUDE.md) and [GEMINI.md](GEMINI.md) carry the same project rules for those tools.
-- Update `TODO.md` when work changes milestone status and add completed user-visible changes to `CHANGES.md`.
+- [AGENTS.md](AGENTS.md) contains shared project instructions.
+- [CLAUDE.md](CLAUDE.md) and [GEMINI.md](GEMINI.md) mirror those instructions.
+- Record roadmap changes in `TODO.md` and meaningful user-facing changes in `CHANGES.md`.
 
 ## License
 
-BridgeLab is licensed under the [MIT License](LICENSE).
+MIT. See [LICENSE](LICENSE).

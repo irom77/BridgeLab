@@ -1,4 +1,4 @@
-# BridgeLab agent guidance
+# ContractPlay agent guidance
 
 - Read `README.md` for project scope and `TODO.md` for current progress before making changes.
 - Keep `packages/core` platform-neutral: no UI, browser, native-host, or database imports.

@@ -1,4 +1,4 @@
-# BridgeLab guidance for Gemini
+# ContractPlay guidance for Gemini
 
 - Read `README.md` for project scope and `TODO.md` for current progress before making changes.
 - Keep `packages/core` platform-neutral and use the shared core for bridge rules and state transitions.

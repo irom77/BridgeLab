@@ -1,0 +1,21 @@
+{
+  "name": "@contractplay/pbn",
+  "version": "0.1.0",
+  "license": "MIT",
+  "type": "module",
+  "description": "PBN import, export, and diagnostics for ContractPlay",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@contractplay/core": "workspace:*"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/pbn.d.ts",
+      "import": "./dist/pbn.js"
+    }
+  }
+}

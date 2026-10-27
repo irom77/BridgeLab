@@ -1,0 +1,20 @@
+{
+  "name": "@contractplay/persistence",
+  "version": "0.1.0",
+  "license": "MIT",
+  "type": "module",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@contractplay/core": "workspace:*"
+  }
+}

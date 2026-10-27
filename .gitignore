@@ -4,6 +4,7 @@ dist/
 build/
 coverage/
 target/
+*.tsbuildinfo
 
 # Local environment and credentials
 .env
