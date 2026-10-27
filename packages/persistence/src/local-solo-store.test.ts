@@ -56,7 +56,14 @@ describe("local solo store", () => {
 
   it("round-trips current and completed games", () => {
     const storage = new MemoryStorage();
-    const data: SoloData = { version: 1, currentHandId: "hand-1", currentGame: game, completedHands: [record] };
+    const pbnMetadata = { tags: [{ name: "Event", value: "Club Night" }], comments: ["Imported note"] };
+    const data: SoloData = {
+      version: 1,
+      currentHandId: "hand-1",
+      currentGame: game,
+      currentPbnMetadata: pbnMetadata,
+      completedHands: [{ ...record, pbnMetadata }]
+    };
 
     saveSoloData(storage, data);
 

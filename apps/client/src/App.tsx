@@ -17,8 +17,8 @@ import {
   type Suit,
   type Vulnerability
 } from "@contractplay/core";
-import { parsePbn } from "@contractplay/pbn";
-import { deleteSavedHand, exportSavedHand, loadSoloData, saveSoloData, type SavedHand, type SoloData } from "@contractplay/persistence";
+import { exportPbn, parsePbn } from "@contractplay/pbn";
+import { deleteSavedHand, loadSoloData, saveSoloData, type PbnMetadata, type SavedHand, type SoloData } from "@contractplay/persistence";
 import { createBot } from "@contractplay/bots";
 
 const seatNames: Record<Seat, string> = { north: "North", east: "East", south: "South", west: "West" };
@@ -73,6 +73,7 @@ export default function App({ solver }: { solver?: Solver } = {}) {
   const [biddingStyle, setBiddingStyle] = useState<"SAYC" | "2/1">("SAYC");
   const [call, setCall] = useState<Bid>("pass");
   const [pbnInput, setPbnInput] = useState("");
+  const [currentPbnMetadata, setCurrentPbnMetadata] = useState<PbnMetadata | undefined>(() => soloData.currentPbnMetadata);
   const [message, setMessage] = useState("");
   const [hint, setHint] = useState<{ game: GameState; seat: Seat; cardIds: ReadonlySet<string>; usesSolver: boolean }>();
   const [reviewHandId, setReviewHandId] = useState<string>();
@@ -82,13 +83,24 @@ export default function App({ solver }: { solver?: Solver } = {}) {
     if (!game || !currentHandId) return;
     let completedHands = soloData.completedHands;
     if (game.phase === "complete") {
-      const record: SavedHand = { id: currentHandId, game, savedAt: new Date().toISOString() };
+      const record: SavedHand = {
+        id: currentHandId,
+        game,
+        savedAt: new Date().toISOString(),
+        ...(currentPbnMetadata ? { pbnMetadata: currentPbnMetadata } : {})
+      };
       completedHands = [record, ...completedHands.filter((hand) => hand.id !== currentHandId)].slice(0, 25);
     }
-    const nextData: SoloData = { version: 1, currentHandId, currentGame: game, completedHands };
+    const nextData: SoloData = {
+      version: 1,
+      currentHandId,
+      currentGame: game,
+      ...(currentPbnMetadata ? { currentPbnMetadata } : {}),
+      completedHands
+    };
     saveSoloData(window.localStorage, nextData);
     setSoloData(nextData);
-  }, [game, currentHandId]);
+  }, [game, currentHandId, currentPbnMetadata]);
 
   useEffect(() => {
     const dummyIsHumanControlled = !!game?.contract && game.phase === "play" &&
@@ -136,6 +148,7 @@ export default function App({ solver }: { solver?: Solver } = {}) {
     const id = createHandId();
     setCurrentHandId(id);
     setGame(createGameState({ deal: deal(), dealer, vulnerability }));
+    setCurrentPbnMetadata(undefined);
     setCall("pass");
     setReviewHandId(undefined);
     setMessage("");
@@ -159,6 +172,7 @@ export default function App({ solver }: { solver?: Solver } = {}) {
     }
     setCurrentHandId(createHandId());
     setGame(imported);
+    setCurrentPbnMetadata({ tags: board.tags, comments: board.comments });
     setDealer(board.dealer);
     setVulnerability(board.vulnerability ?? "None");
     setReviewHandId(undefined);
@@ -220,12 +234,20 @@ export default function App({ solver }: { solver?: Solver } = {}) {
   }
 
   function downloadHand(id: string) {
-    const contents = exportSavedHand(soloData, id);
+    const hand = soloData.completedHands.find((candidate) => candidate.id === id);
+    if (!hand) return;
+    const contents = exportPbn({
+      dealer: hand.game.dealer,
+      vulnerability: hand.game.vulnerability,
+      actions: hand.game.history.actions,
+      deal: hand.game.initialDeal,
+      ...hand.pbnMetadata
+    });
     if (!contents || typeof URL.createObjectURL !== "function") return;
-    const url = URL.createObjectURL(new Blob([contents], { type: "application/json" }));
+    const url = URL.createObjectURL(new Blob([contents], { type: "text/plain;charset=utf-8" }));
     const link = document.createElement("a");
     link.href = url;
-    link.download = `contractplay-${id}.json`;
+    link.download = `contractplay-${id}.pbn`;
     link.click();
     URL.revokeObjectURL(url);
   }
@@ -334,7 +356,7 @@ export default function App({ solver }: { solver?: Solver } = {}) {
               <div className="section-heading"><div><p className="eyebrow">ON THIS DEVICE</p><h2>Recent hands</h2></div><span className="auction-count">{soloData.completedHands.length}</span></div>
               {soloData.completedHands.length ? <ul className="recent-list">{soloData.completedHands.map((hand, index) => <li key={hand.id}>
                 <button className="review-link" aria-label={`Review hand ${index + 1}`} onClick={() => openReview(hand)}><strong>Hand {soloData.completedHands.length - index}</strong><span>{new Date(hand.savedAt).toLocaleDateString()}</span></button>
-                <div className="recent-actions"><button onClick={() => downloadHand(hand.id)} aria-label={`Export hand ${index + 1}`}>Export</button><button onClick={() => removeHand(hand.id)} aria-label={`Delete hand ${index + 1}`}>Delete</button></div>
+                <div className="recent-actions"><button onClick={() => downloadHand(hand.id)} aria-label={`Export PBN hand ${index + 1}`}>Export PBN</button><button onClick={() => removeHand(hand.id)} aria-label={`Delete hand ${index + 1}`}>Delete</button></div>
               </li>)}</ul> : <p className="quiet-copy">Finished hands will be saved here for review.</p>}
             </section>
           </aside>

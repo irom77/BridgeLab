@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createDeck, deal } from "@contractplay/core";
+import { applyAction, createDeck, createGameState, deal, validatePlay } from "@contractplay/core";
 import { exportPbn, parsePbn, pbnBoardToHand, serializePbn } from "./pbn.js";
 
 const normalizedDeal = (value: ReturnType<typeof deal>) => Object.fromEntries(
@@ -42,6 +42,26 @@ describe("PBN import and export", () => {
     expect(board.tags.map(({ name }) => name)).toContain("Annotator");
     expect(board.comments).toContain("review this hand");
     expect(normalizedDeal(parsePbn(serializePbn({ boards: [board] })).boards[0]!.deal!)).toEqual(normalizedDeal(board.deal!));
+  });
+
+  it("round-trips player seats through a complete played hand", () => {
+    let game = createGameState({ deal: deal(), dealer: "north", vulnerability: "None" });
+    for (const bid of ["1clubs", "pass", "pass", "pass"] as const) {
+      const result = applyAction(game, { type: "bid", seat: game.currentActor, bid });
+      if (!result.ok) throw new Error(result.error.message);
+      game = result.state;
+    }
+    while (game.phase === "play") {
+      const seat = game.currentActor;
+      const ledSuit = game.currentTrick[0]?.card.suit;
+      const card = game.hands[seat].find((candidate) => validatePlay(game.hands[seat], candidate, ledSuit).legal)!;
+      const result = applyAction(game, { type: "play", seat, card });
+      if (!result.ok) throw new Error(result.error.message);
+      game = result.state;
+    }
+
+    const pbn = exportPbn({ dealer: game.dealer, vulnerability: game.vulnerability, deal: game.initialDeal, actions: game.history.actions });
+    expect(parsePbn(pbn).boards[0]?.actions).toEqual(game.history.actions);
   });
 
   it("keeps independent boards when one deal is malformed", () => {

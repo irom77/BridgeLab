@@ -131,8 +131,8 @@ packages/
 **Interfaces:**
 - Produces: create random or imported hand, resume unfinished local hand, save completed hand, browse recent hands, review move-by-move, and take back during solo play.
 
-- [x] Store local game records with schema version, actions, and board metadata; keep the current hand and recent completed records in browser storage.
-- [x] Test save/reload, schema migration, delete/export, review stepping, and take-back branch behavior.
+- [x] Store local game records with schema version, actions, and PBN tags/comments; keep imported metadata with the current and completed hand in browser storage.
+- [x] Test save/reload, schema migration, delete/export, review stepping, and take-back branch behavior; export completed hands as PBN without losing supported metadata.
 - [x] Implement random/PBN deal setup, dealer/vulnerability selection, start/restart, autosave, resume, and result summary.
 
 #### Task 6: Implement usable bots and hint integration

@@ -7,12 +7,19 @@ export type SavedHand = Readonly<{
   id: string;
   game: GameState;
   savedAt: string;
+  pbnMetadata?: PbnMetadata;
+}>;
+
+export type PbnMetadata = Readonly<{
+  tags?: readonly Readonly<{ name: string; value: string }>[];
+  comments?: readonly string[];
 }>;
 
 export type SoloData = Readonly<{
   version: 1;
   currentHandId: string | null;
   currentGame: GameState | null;
+  currentPbnMetadata?: PbnMetadata;
   completedHands: readonly SavedHand[];
 }>;
 
@@ -44,6 +51,14 @@ function isBid(value: unknown): boolean {
   return typeof value === "string" && (value === "pass" || value === "double" || value === "redouble" || /^[1-7](clubs|diamonds|hearts|spades|notrump)$/.test(value));
 }
 
+function isPbnMetadata(value: unknown): value is PbnMetadata {
+  return isRecord(value) &&
+    (value.tags === undefined || (Array.isArray(value.tags) && value.tags.every((tag) =>
+      isRecord(tag) && typeof tag.name === "string" && typeof tag.value === "string"
+    ))) &&
+    (value.comments === undefined || (Array.isArray(value.comments) && value.comments.every((comment) => typeof comment === "string")));
+}
+
 function isGame(value: unknown): value is GameState {
   if (!isRecord(value) || !["auction", "play", "passed-out", "complete"].includes(String(value.phase))) return false;
   if (!isSeat(value.dealer) || !isSeat(value.currentActor) || !isSeat(value.trickLeader)) return false;
@@ -63,7 +78,8 @@ function isGame(value: unknown): value is GameState {
 }
 
 function isSavedHand(value: unknown): value is SavedHand {
-  return isRecord(value) && typeof value.id === "string" && typeof value.savedAt === "string" && isGame(value.game) && value.game.phase === "complete";
+  return isRecord(value) && typeof value.id === "string" && typeof value.savedAt === "string" && isGame(value.game) && value.game.phase === "complete" &&
+    (value.pbnMetadata === undefined || isPbnMetadata(value.pbnMetadata));
 }
 
 function normalize(value: unknown): SoloData {
@@ -77,6 +93,7 @@ function normalize(value: unknown): SoloData {
     version: 1,
     currentHandId: currentGame && typeof value.currentHandId === "string" ? value.currentHandId : null,
     currentGame,
+    ...(isPbnMetadata(value.currentPbnMetadata) ? { currentPbnMetadata: value.currentPbnMetadata } : {}),
     completedHands: Array.isArray(value.completedHands) ? value.completedHands.filter(isSavedHand) : []
   };
 }

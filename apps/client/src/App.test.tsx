@@ -3,9 +3,9 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-libra
 import { userEvent } from "@testing-library/user-event";
 import { applyAction, createGameState, deal, validatePlay } from "@contractplay/core";
 import type { Solver } from "@contractplay/core";
-import { exportPbn } from "@contractplay/pbn";
+import { exportPbn, parsePbn } from "@contractplay/pbn";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { saveSoloData, type SoloData } from "@contractplay/persistence";
+import { loadSoloData, saveSoloData, type SoloData } from "@contractplay/persistence";
 import App from "./App.js";
 
 function completedGame() {
@@ -29,6 +29,7 @@ function completedGame() {
 describe("bridge table", () => {
   afterEach(cleanup);
   afterEach(() => vi.restoreAllMocks());
+  afterEach(() => vi.unstubAllGlobals());
   afterEach(() => vi.useRealTimers());
   beforeEach(() => window.localStorage.clear());
 
@@ -325,7 +326,10 @@ describe("bridge table", () => {
       if (!result.ok) throw new Error(result.error.message);
       imported = result.state;
     }
-    const pbn = exportPbn({ dealer: "west", vulnerability: "EW", actions: imported.history.actions, deal: imported.initialDeal });
+    const pbn = exportPbn({
+      dealer: "west", vulnerability: "EW", actions: imported.history.actions, deal: imported.initialDeal,
+      tags: [{ name: "Event", value: "Club Night" }], comments: ["Imported note"]
+    });
     render(<App />);
     await user.click(screen.getByText("Import a PBN deal"));
     fireEvent.change(screen.getByLabelText("PBN deal"), { target: { value: pbn } });
@@ -333,6 +337,51 @@ describe("bridge table", () => {
 
     expect(screen.getByText("North to play")).toBeTruthy();
     expect(screen.getAllByRole("listitem")).toHaveLength(4);
+    await waitFor(() => expect(JSON.parse(window.localStorage.getItem("contractplay.solo")!).currentPbnMetadata).toEqual({
+      tags: expect.arrayContaining([expect.objectContaining({ name: "Event", value: "Club Night" })]),
+      comments: ["Imported note"]
+    }));
+  });
+
+  it("exports a saved hand as PBN with its metadata", async () => {
+    const user = userEvent.setup();
+    const game = completedGame();
+    saveSoloData(window.localStorage, {
+      version: 1,
+      currentHandId: "active-1",
+      currentGame: createGameState({ deal: deal(), dealer: "north", vulnerability: "None" }),
+      completedHands: [{
+        id: "pbn-export-1", game, savedAt: "2026-10-25T12:00:00.000Z",
+        pbnMetadata: { tags: [{ name: "Event", value: "Club Night" }, { name: "Site", value: "Table 4" }], comments: ["Imported board note"] }
+      }]
+    });
+    expect(loadSoloData(window.localStorage).completedHands).toHaveLength(1);
+    const createObjectURL = vi.fn().mockReturnValue("blob:contractplay-test");
+    const revokeObjectURL = vi.fn();
+    class CapturedBlob {
+      readonly contents: string;
+      readonly type: string | undefined;
+      constructor(parts: readonly unknown[], options?: BlobPropertyBag) {
+        this.contents = parts.map(String).join("");
+        this.type = options?.type;
+      }
+    }
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+    vi.stubGlobal("Blob", CapturedBlob);
+    vi.stubGlobal("URL", { createObjectURL, revokeObjectURL });
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: "Export PBN hand 1" }));
+
+    const download = createObjectURL.mock.calls[0]?.[0] as CapturedBlob | undefined;
+    expect(download).toBeInstanceOf(CapturedBlob);
+    expect(download?.type).toBe("text/plain;charset=utf-8");
+    const exportedPbn = download?.contents ?? "";
+    const board = parsePbn(exportedPbn).boards[0]!;
+    expect(board.tags).toContainEqual(expect.objectContaining({ name: "Event", value: "Club Night" }));
+    expect(board.tags).toContainEqual(expect.objectContaining({ name: "Site", value: "Table 4" }));
+    expect(board.comments).toContain("Imported board note");
+    expect(board.actions).toEqual(game.history.actions);
   });
 
   it("autosaves an accepted call and resumes it after the app reloads", async () => {

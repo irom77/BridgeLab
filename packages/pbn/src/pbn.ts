@@ -1,4 +1,4 @@
-import { SEATS, SUITS, RANKS, isValidDeal, type Card, type Deal, type Seat, type Suit, type Vulnerability, type Bid, type GameAction } from "@contractplay/core";
+import { applyAction, createGameState, SEATS, SUITS, RANKS, isValidDeal, type Card, type Deal, type Seat, type Suit, type Vulnerability, type Bid, type GameAction } from "@contractplay/core";
 
 export type PbnTag = Readonly<{ name: string; value: string; line?: number }>;
 export type PbnDiagnostic = Readonly<{ severity: "error" | "warning"; message: string; line: number }>;
@@ -162,7 +162,7 @@ function parseCard(token: string): Card | undefined {
   return { suit: letterSuit[suitCode]!, rank: rank as Card["rank"] };
 }
 
-function parseSection(board: RawBoard, section: RawSection | undefined, type: "bid" | "play", actions: GameAction[]): void {
+function parseSection(board: RawBoard, section: RawSection | undefined, type: "bid" | "play", actions: GameAction[], resolvePlaySeat?: (card: Card) => Seat | undefined): void {
   if (!section) return;
   if (!section.seat) {
     board.diagnostics.push({ severity: "error", message: `Invalid ${type === "bid" ? "Auction" : "Play"} starting seat`, line: section.line });
@@ -210,8 +210,13 @@ function parseSection(board: RawBoard, section: RawSection | undefined, type: "b
         board.diagnostics.push({ severity: "warning", message: `Unrecognized played card: ${rawToken}`, line: section.line });
         continue;
       }
-      actions.push({ type: "play", seat, card });
-      seat = nextSeat(seat);
+      const playSeat = resolvePlaySeat ? resolvePlaySeat(card) : seat;
+      if (!playSeat) {
+        stopped = true;
+        continue;
+      }
+      actions.push({ type: "play", seat: playSeat, card });
+      seat = nextSeat(playSeat);
     }
   }
 }
@@ -234,7 +239,33 @@ function materializeBoard(raw: RawBoard): PbnBoard {
   if (dealValue && !deal) raw.diagnostics.push({ severity: "error", message: "Invalid or incomplete Deal tag", line: tagLine("Deal") });
   const actions: GameAction[] = [];
   parseSection(raw, raw.auction, "bid", actions);
-  parseSection(raw, raw.play, "play", actions);
+  let playState = deal && dealer ? createGameState({ deal, dealer, vulnerability: vulnerability ?? "None" }) : undefined;
+  if (playState) {
+    for (const action of actions) {
+      if (action.type !== "bid") continue;
+      const result = applyAction(playState, action);
+      if (!result.ok) {
+        playState = undefined;
+        break;
+      }
+      playState = result.state;
+    }
+  }
+  const resolvePlaySeat = playState?.phase === "play" ? (card: Card): Seat | undefined => {
+    const seat = playState!.currentActor;
+    const result = applyAction(playState!, { type: "play", seat, card });
+    if (!result.ok) {
+      raw.diagnostics.push({ severity: "error", message: `Invalid play: ${result.error.message}`, line: raw.play?.line ?? 1 });
+      playState = undefined;
+      return undefined;
+    }
+    playState = result.state;
+    return seat;
+  } : undefined;
+  if (raw.play?.seat && playState?.phase === "play" && raw.play.seat !== playState.currentActor) {
+    raw.diagnostics.push({ severity: "error", message: "Play starting seat does not match the opening leader", line: raw.play.line });
+  }
+  parseSection(raw, raw.play, "play", actions, resolvePlaySeat);
   return {
     tags: raw.tags,
     comments: raw.comments,
