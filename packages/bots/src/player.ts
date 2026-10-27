@@ -1707,35 +1707,62 @@ export class IntermediateBot implements BotPlayer {
           if (hasOutsideAce && stoppers) return Promise.resolve("3notrump");
         }
         if (openedMajor && quickTricks(hand, openedMajor) >= 4.5) return Promise.resolve(`4${openedMajor}` as Bid);
-        if ((openedSuit === "clubs" || openedSuit === "diamonds") && points(hand) >= 16) {
-          const naturalMajor = (["spades", "hearts"] as const)
+        if (points(hand) >= 16) {
+          const eligibleMajors = openedSuit === "clubs" || openedSuit === "diamonds"
+            ? (["spades", "hearts"] as const)
+            : openedSuit === "hearts" ? (["spades"] as const)
+              : openedSuit === "spades" ? (["hearts"] as const) : ([] as const);
+          const naturalMajor = eligibleMajors
             .filter((major) => hasReasonablePreemptiveSuit(hand, major, 6))
             .sort((a, b) => hand.filter((card) => card.suit === b).length - hand.filter((card) => card.suit === a).length)[0];
-          if (naturalMajor) return Promise.resolve(`3${naturalMajor}` as Bid);
+          if (naturalMajor) return Promise.resolve(`${openedSuit === "spades" ? "4" : "3"}${naturalMajor}` as Bid);
+          if (openedSuit === "spades" && hasReasonablePreemptiveSuit(hand, "hearts", 6)) return Promise.resolve("4hearts");
         }
       }
     }
     if (contractCalls.length === 2) {
       const [opening, response] = contractCalls;
-      const openedMinor = opening?.bid.match(/^3(clubs|diamonds)$/)?.[1] as Suit | undefined;
-      const responseMajor = response?.bid.match(/^3(hearts|spades)$/)?.[1] as Suit | undefined;
+      const openedSuit = opening?.bid.match(/^3(clubs|diamonds|hearts|spades)$/)?.[1] as Suit | undefined;
+      const responseMajor = response?.bid.match(/^(?:3|4)(hearts|spades)$/)?.[1] as Suit | undefined;
+      const allowedResponse = openedSuit === "clubs" || openedSuit === "diamonds"
+        ? response?.bid === `3${responseMajor}`
+        : openedSuit === "hearts" ? response?.bid === "3spades"
+          : openedSuit === "spades" ? response?.bid === "4hearts" : false;
       if (
-        opening?.seat === seat && openedMinor && response?.seat === partner && responseMajor &&
+        opening?.seat === seat && openedSuit && allowedResponse && response?.seat === partner && responseMajor &&
         auction.every(({ bid }) => bid === "pass" || bid === opening.bid || bid === response.bid)
       ) {
         const support = hand.filter((card) => card.suit === responseMajor).length;
-        return Promise.resolve(support >= 3 ? `4${responseMajor}` as Bid : `4${openedMinor}` as Bid);
+        if (support >= 3) return Promise.resolve(`${openedSuit === "spades" ? "5" : "4"}${responseMajor}` as Bid);
+        return Promise.resolve(`4${openedSuit}` as Bid);
       }
     }
     if (contractCalls.length === 3) {
       const [opening, response, openerRebid] = contractCalls;
-      const openedMinor = opening?.bid.match(/^3(clubs|diamonds)$/)?.[1] as Suit | undefined;
-      const responseMajor = response?.bid.match(/^3(hearts|spades)$/)?.[1] as Suit | undefined;
+      const openedSuit = opening?.bid.match(/^3(clubs|diamonds|hearts|spades)$/)?.[1] as Suit | undefined;
+      const responseMajor = response?.bid.match(/^(?:3|4)(hearts|spades)$/)?.[1] as Suit | undefined;
+      const isMinorSequence = (openedSuit === "clubs" || openedSuit === "diamonds") && response?.bid === `3${responseMajor}`;
+      const isHeartToSpadeSequence = openedSuit === "hearts" && response?.bid === "3spades";
+      const isSpadeToHeartSequence = openedSuit === "spades" && response?.bid === "4hearts";
+      const completion = `4${responseMajor}`;
       if (
-        opening?.seat === partner && openedMinor && response?.seat === seat && responseMajor &&
-        openerRebid?.seat === partner && (openerRebid.bid === `4${openedMinor}` || openerRebid.bid === `4${responseMajor}`) &&
+        opening?.seat === partner && openedSuit && response?.seat === seat && responseMajor && (isMinorSequence || isHeartToSpadeSequence || isSpadeToHeartSequence) &&
+        openerRebid?.seat === partner &&
+        (openerRebid.bid === `4${openedSuit}` || openerRebid.bid === `4${responseMajor}` || (openedSuit === "spades" && openerRebid.bid === "5hearts")) &&
         auction.every(({ bid }) => bid === "pass" || [opening.bid, response.bid, openerRebid.bid].includes(bid))
-      ) return Promise.resolve(openerRebid.bid === `4${responseMajor}` ? "pass" : `4${responseMajor}` as Bid);
+      ) {
+        if (isSpadeToHeartSequence) return Promise.resolve("pass");
+        return Promise.resolve(openerRebid.bid === `4${responseMajor}` ? "pass" : completion as Bid);
+      }
+    }
+    if (contractCalls.length === 4) {
+      const [opening, response, openerRebid, placement] = contractCalls;
+      const openedHearts = opening?.bid === "3hearts";
+      if (
+        opening?.seat === partner && openedHearts && response?.seat === seat && response.bid === "3spades" &&
+        openerRebid?.seat === partner && openerRebid.bid === "4hearts" && placement?.seat === seat && placement.bid === "4spades" &&
+        auction.every(({ bid }) => bid === "pass" || [opening.bid, response.bid, openerRebid.bid, placement.bid].includes(bid))
+      ) return Promise.resolve("pass");
     }
     if (auction.length === 3 && contractCalls.length === 2 && auction[2]?.bid === "pass") {
       const [opening, unusualNotrump] = contractCalls;
