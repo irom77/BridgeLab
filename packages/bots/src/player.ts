@@ -2117,11 +2117,12 @@ export class IntermediateBot implements BotPlayer {
 
   async chooseCard(context: PlayContext) {
     const choices = legalCards(context);
+    const partner = SEATS[(SEATS.indexOf(context.seat) + 2) % SEATS.length]!;
     if (context.currentTrick.length === 1) {
       const lead = context.currentTrick[0]?.card;
       const leadRank = lead ? rankValue(lead.rank) : -1;
       const honorRanks = new Set(["J", "Q", "K", "A"]);
-      const cover = lead && honorRanks.has(lead.rank)
+      const cover = lead && context.currentTrick[0]?.seat !== partner && honorRanks.has(lead.rank)
         ? choices.filter((card) => card.suit === lead.suit && honorRanks.has(card.rank) && rankValue(card.rank) > leadRank)
         : [];
       return cover.length ? lowestCard(cover) : lowestCard(choices);
@@ -2132,7 +2133,6 @@ export class IntermediateBot implements BotPlayer {
     }
 
     const currentWinner = winningPlay(context.currentTrick, ledSuit, context.trump);
-    const partner = SEATS[(SEATS.indexOf(context.seat) + 2) % SEATS.length]!;
     if ((SEATS.indexOf(currentWinner.seat) % 2) === (SEATS.indexOf(partner) % 2)) return lowestCard(choices);
 
     const winningCards = choices.filter((card) => {

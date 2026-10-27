@@ -3574,6 +3574,18 @@ describe("beginner bot", () => {
     expect(choice).toEqual({ suit: "hearts", rank: "K" });
   });
 
+  it("does not cover partner's led honor in second hand", async () => {
+    const bot = createBot({ skill: "intermediate", biddingStyle: "SAYC" });
+    const cards = hand("hearts:K", "hearts:A", "hearts:3");
+    const choice = await bot.chooseCard({
+      seat: "north",
+      hand: cards,
+      currentTrick: [{ seat: "south", card: { suit: "hearts", rank: "Q" } }],
+      ledSuit: "hearts"
+    });
+    expect(choice).toEqual({ suit: "hearts", rank: "3" });
+  });
+
   it("conserves high cards when partner is already winning", async () => {
     const bot = createBot({ skill: "intermediate", biddingStyle: "2/1" });
     const cards = hand("hearts:3", "hearts:A");

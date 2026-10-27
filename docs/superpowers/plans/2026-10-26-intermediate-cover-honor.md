@@ -2,7 +2,7 @@
 
 ## Scope
 
-When acting second to an opponent's lead, Intermediate should cover a led honor with the lowest legal higher honor when one is available. Otherwise it keeps the existing second-hand-low choice. Advanced and Expert inherit this Intermediate behavior.
+When acting second to an opponent's lead, Intermediate should cover a led honor with the lowest legal higher honor when one is available. It should not cover partner's honor lead. In all other cases it keeps the existing second-hand-low choice. Advanced and Expert inherit this Intermediate behavior.
 
 ## Verification
 
