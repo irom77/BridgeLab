@@ -1345,7 +1345,13 @@ export class BeginnerBot implements BotPlayer {
         return "3notrump";
       }
       const support = hand.filter((card) => card.suit === twoOverOne.openingSuit).length;
-      if (support >= 3) return `4${twoOverOne.openingSuit}` as Bid;
+      if (support >= 3) {
+        const openerRaisedResponderMinor =
+          (twoOverOne.responseSuit === "clubs" || twoOverOne.responseSuit === "diamonds") &&
+          contractCalls[2]?.bid === `3${twoOverOne.responseSuit}`;
+        const level = openerRaisedResponderMinor && points(hand) >= 15 ? 3 : 4;
+        return `${level}${twoOverOne.openingSuit}` as Bid;
+      }
       if (
         (twoOverOne.responseSuit === "clubs" || twoOverOne.responseSuit === "diamonds") &&
         contractCalls[2]?.bid === `3${twoOverOne.responseSuit}` &&
@@ -1383,6 +1389,11 @@ export class BeginnerBot implements BotPlayer {
     if (twoOverOne && contractCalls.length === 4 && twoOverOne.openingSeat === seat) {
       const responderRebid = contractCalls[3]?.bid;
       const sideMajor = twoOverOne.openingSuit === "spades" ? "hearts" : "spades";
+      if (
+        responderRebid === `3${twoOverOne.openingSuit}` &&
+        (twoOverOne.responseSuit === "clubs" || twoOverOne.responseSuit === "diamonds") &&
+        contractCalls[2]?.bid === `3${twoOverOne.responseSuit}`
+      ) return `4${twoOverOne.openingSuit}` as Bid;
       if (
         responderRebid === `2${sideMajor}` &&
         hand.filter((card) => card.suit === sideMajor).length >= 3

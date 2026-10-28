@@ -101,6 +101,7 @@ The core rules, PBN package, and solo client are in place. Beginner through Expe
     - [x] Keep 2/1 forcing 1NT limited to unpassed responders: `passedBeforeOpening` already selects Standard passed-hand responses after a third-seat opening, and opener's forcing continuation has the same passed-hand guard. Existing regression coverage verifies nonforcing passed-hand responses. See [coverage audit](docs/research/2026-10-27-sayc-2-1-coverage-audit.md).
     - [x] After a one-level response and opener's suit rebid, use fourth-suit forcing with 10+ HCP when three suits have been bid; opener shows support, a notrump stopper, or rebids the opening suit. The fourth suit may be artificial.
     - [x] After 1♠–2♥, opener raises to 3♥ with three-card support and responder completes 4♥ in the game force.
+    - [x] After an uncontested 1M–2m–3m 2/1 game force, responder with three-card support and 15+ HCP shows the major fit at 3M and opener completes 4M; 13–14 HCP fast-arrives in 4M. See [implementation plan](docs/superpowers/plans/2026-10-28-two-over-one-fit-slam-interest.md).
     - [x] Keep the 2/1 force active after responder rebids a six-card minor; opener raises three-card support and responder places the minor game.
     - [x] When opener lacks three-card support for that minor rebid, place the game force in 3NT.
     - [x] After opener's balanced 2NT rebid, responder chooses 3NT without a three-card major fit, even with a six-card 2/1 minor.

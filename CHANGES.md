@@ -1,5 +1,6 @@
 # Changes
 
+- In a 2/1 game force after opener raises responder's minor, responder can show a three-card major fit below game with 15+ HCP; opener completes game, while 13–14 HCP fast-arrives.
 - Expert can continue Blackwood after 3♣/3♦–3♥/3♠–4M confirms a major fit, asking for aces and kings before placing small or grand slam.
 - Expert can investigate slam after an uncontested 3♣/3♦ opening with 19+ HCP and five-card support, using Blackwood ace and king asks.
 - SAYC and 2/1 bots now invite or place game after a simple major raise, and SAYC openers accept limit raises only with game values; same-suit raises are no longer classified as jump shifts.
