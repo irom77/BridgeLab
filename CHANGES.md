@@ -32,7 +32,9 @@
 
 Project changes are recorded here, newest first. Keep entries short and link implementation plans when useful.
 
-## Unreleased
+## 0.1.2 - 2026-10-28
+
+- Centered the auction on the table, enlarged the cards, moved setup/import/history into a compact table menu, and displayed the current app version in the header.
 
 - Over a weak three-level opening, responders with three to six trumps now place a preemptive raise one level above their trump length; stronger game, 3NT, and forcing-suit responses retain priority, and opener passes. See [implementation plan](docs/superpowers/plans/2026-10-27-intermediate-weak-three-preemptive-fit-raise.md).
 - The client now exports completed hands as PBN and retains imported tags and comments through autosave and hand completion; PBN play import follows the trick winner when assigning the next lead.
