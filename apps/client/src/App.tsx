@@ -7,6 +7,7 @@ import {
   redoAction,
   requestHint,
   SUITS,
+  trickWinner,
   undoAction,
   type Bid,
   type Card,
@@ -15,6 +16,7 @@ import {
   type SkillLevel,
   type Solver,
   type Suit,
+  type TrickCard,
   type Vulnerability
 } from "@contractplay/core";
 import { exportPbn, parsePbn } from "@contractplay/pbn";
@@ -110,9 +112,58 @@ export default function App({ solver }: { solver?: Solver } = {}) {
   const [currentPbnMetadata, setCurrentPbnMetadata] = useState<PbnMetadata | undefined>(() => soloData.currentPbnMetadata);
   const [message, setMessage] = useState("");
   const [hint, setHint] = useState<{ game: GameState; seat: Seat; cardIds: ReadonlySet<string>; usesSolver: boolean }>();
+  const [temporaryTrick, setTemporaryTrick] = useState<{ handId: string; cards: readonly TrickCard[] }>();
+  const [lastTrickOpen, setLastTrickOpen] = useState(false);
   const [reviewHandId, setReviewHandId] = useState<string>();
   const [reviewCursor, setReviewCursor] = useState(0);
   const auctionListRef = useRef<HTMLOListElement>(null);
+  const trickTimerRef = useRef<number | undefined>(undefined);
+  const previousTrickState = useRef({
+    handId: currentHandId,
+    cursor: game?.history.cursor ?? 0,
+    completedCount: game?.completedTricks.length ?? 0
+  });
+
+  useEffect(() => {
+    const previous = previousTrickState.current;
+    const next = {
+      handId: currentHandId,
+      cursor: game?.history.cursor ?? 0,
+      completedCount: game?.completedTricks.length ?? 0
+    };
+    const newHand = previous.handId !== next.handId;
+    const undone = !newHand && next.cursor < previous.cursor;
+
+    if (newHand || !game || undone) {
+      if (trickTimerRef.current !== undefined) window.clearTimeout(trickTimerRef.current);
+      trickTimerRef.current = undefined;
+      setTemporaryTrick(undefined);
+      setLastTrickOpen(false);
+    } else if (next.completedCount > previous.completedCount) {
+      if (trickTimerRef.current !== undefined) window.clearTimeout(trickTimerRef.current);
+      const completed = game.completedTricks.at(-1);
+      if (completed) {
+        setTemporaryTrick({ handId: currentHandId, cards: completed });
+        setLastTrickOpen(false);
+        trickTimerRef.current = window.setTimeout(() => {
+          setTemporaryTrick(undefined);
+          trickTimerRef.current = undefined;
+        }, 2000);
+      }
+    } else if (game.currentTrick.length > 0) {
+      setLastTrickOpen(false);
+    }
+
+    previousTrickState.current = next;
+  }, [game, currentHandId]);
+
+  useEffect(() => () => {
+    if (trickTimerRef.current !== undefined) window.clearTimeout(trickTimerRef.current);
+  }, []);
+
+  useEffect(() => {
+    setLastTrickOpen(false);
+  }, [reviewHandId]);
 
   useEffect(() => persistence.onSuspend(() => saveSoloData(persistence.storage, latestSoloData.current)), [persistence]);
 
@@ -144,7 +195,7 @@ export default function App({ solver }: { solver?: Solver } = {}) {
     const dummyIsHumanControlled = !!game?.contract && game.phase === "play" &&
       (game.completedTricks.length > 0 || game.currentTrick.length > 0) &&
       samePartnership(userSeat, game.contract.declarer) && game.currentActor === partnerOf(game.contract.declarer);
-    if (!game || !playAgainstBots || game.phase === "complete" || game.phase === "passed-out" || game.currentActor === userSeat || dummyIsHumanControlled) return;
+    if (!game || !playAgainstBots || temporaryTrick || game.phase === "complete" || game.phase === "passed-out" || game.currentActor === userSeat || dummyIsHumanControlled) return;
     let cancelled = false;
     const turnState = game;
     const bot = createBot({ skill: botSkill, biddingStyle });
@@ -167,7 +218,7 @@ export default function App({ solver }: { solver?: Solver } = {}) {
     };
     void decide();
     return () => { cancelled = true; };
-  }, [game, playAgainstBots, userSeat, biddingStyle, botSkill]);
+  }, [game, playAgainstBots, temporaryTrick, userSeat, biddingStyle, botSkill]);
 
   const actor = game?.currentActor;
   const actorName = actor ? seatNames[actor] : "";
@@ -185,6 +236,18 @@ export default function App({ solver }: { solver?: Solver } = {}) {
   const visibleHint = game && hint?.game === game && hint.seat === game.currentActor ? hint : undefined;
   const auctionDrawerOpen = auctionPinned || auctionHovered || auctionFocused;
   const phaseLabel = shownGame?.phase === "auction" ? "Auction" : shownGame?.phase === "play" ? "Card play" : shownGame?.phase === "complete" ? "Hand complete" : "Passed out";
+  const completedNsTricks = shownGame?.contract
+    ? shownGame.completedTricks.filter((trick) => samePartnership(
+        trickWinner(trick, shownGame.contract!.strain === "notrump" ? undefined : shownGame.contract!.strain),
+        "north"
+      )).length
+    : 0;
+  const completedEwTricks = (shownGame?.completedTricks.length ?? 0) - completedNsTricks;
+  const displayedTrick = !isReviewing && temporaryTrick?.handId === currentHandId
+    ? temporaryTrick.cards
+    : shownGame?.currentTrick.length
+      ? shownGame.currentTrick
+      : lastTrickOpen ? shownGame?.completedTricks.at(-1) ?? [] : [];
 
   function startHand() {
     const id = createHandId();
@@ -300,6 +363,7 @@ export default function App({ solver }: { solver?: Solver } = {}) {
   function openReview(hand: SavedHand) {
     setReviewHandId(hand.id);
     setReviewCursor(0);
+    setLastTrickOpen(false);
     setMessage("");
   }
 
@@ -363,7 +427,7 @@ export default function App({ solver }: { solver?: Solver } = {}) {
   const tableMenu = shownGame ? <details className="table-menu">
     <summary>Table menu</summary>
     <div className="table-menu-content">
-      {!isReviewing ? <button className="secondary-button menu-deal" onClick={startHand}>Deal a new hand</button> : <button className="secondary-button menu-deal" onClick={() => setReviewHandId(undefined)}>Exit review</button>}
+      {!isReviewing ? <button className="secondary-button menu-deal" onClick={startHand}>Deal a new hand</button> : <button className="secondary-button menu-deal" onClick={() => { setReviewHandId(undefined); setLastTrickOpen(false); }}>Exit review</button>}
       {!isReviewing ? <section className="menu-settings" aria-label="Next deal settings">
         <span className="eyebrow">NEXT DEAL</span>
         <label>Dealer<select aria-label="Dealer" value={dealer} onChange={(event) => setDealer(event.target.value as Seat)}>{seats.map((seat) => <option key={seat} value={seat}>{seatNames[seat]}</option>)}</select></label>
@@ -427,7 +491,7 @@ export default function App({ solver }: { solver?: Solver } = {}) {
                 </div>;
               })}
               <div className="trick-area" role="region" aria-label="Current trick">
-                {shownGame.currentTrick.length ? shownGame.currentTrick.map(({ seat, card }) => <span className={`trick-card ${card.suit === "hearts" || card.suit === "diamonds" ? "red-card" : ""}`} key={seat} role="img" aria-label={`${seatNames[seat]} played ${cardLabel(card)}`}>
+                {displayedTrick.length ? displayedTrick.map(({ seat, card }) => <span className={`trick-card trick-card-position-${seat} ${card.suit === "hearts" || card.suit === "diamonds" ? "red-card" : ""}`} key={seat} role="img" aria-label={`${seatNames[seat]} played ${cardLabel(card)}`}>
                   {cardFace(card)}<span className="trick-card-seat" aria-hidden="true">{seatNames[seat][0]}</span>
                 </span>) : <span className="trick-placeholder">{shownGame.contract ? `${seatNames[shownGame.trickLeader]} leads` : "Auction in progress"}</span>}
               </div>
@@ -440,19 +504,25 @@ export default function App({ solver }: { solver?: Solver } = {}) {
                 </form> : null}
               </section> : null}
             </div>
-            {shownGame.completedTricks.length ? <p className="trick-count" aria-live="polite">{shownGame.completedTricks.length} {shownGame.completedTricks.length === 1 ? "trick" : "tricks"} complete</p> : null}
+            {shownGame.contract ? <div className="trick-summary" aria-live="polite">
+              <span className="trick-count">NS {completedNsTricks} · EW {completedEwTricks} tricks</span>
+              {shownGame.completedTricks.length ? <button className="secondary-button last-trick-button" type="button" disabled={shownGame.currentTrick.length > 0} aria-pressed={lastTrickOpen} onClick={() => setLastTrickOpen((open) => !open)}>{lastTrickOpen ? "Hide last trick" : "Last trick"}</button> : null}
+            </div> : null}
 
             {canShowHand && game && actor ? <section className="hand-panel" aria-label={`${actorName}'s hand`}>
               <div className="hand-heading"><div><p className="eyebrow">{userControlsDummy ? "DUMMY · PLAYING AS" : "PLAYING AS"}</p><h3>{actorName}</h3></div><span>{game.hands[actor].length} cards</span></div>
+              <div className="hand-play-row">
               <div className="cards-row">
                 {sortHand(game.hands[actor]).map((card) => game.phase === "play"
-                  ? <button className={`playing-card ${card.suit === "hearts" || card.suit === "diamonds" ? "red-card" : ""} ${visibleHint?.cardIds.has(cardId(card)) ? "hinted-card" : ""}`} key={`${card.suit}-${card.rank}`} aria-label={`Play ${cardLabel(card)}`} onClick={() => submitAction({ type: "play", seat: actor, card })}>{cardFace(card)}</button>
+                  ? <button className={`playing-card ${card.suit === "hearts" || card.suit === "diamonds" ? "red-card" : ""} ${visibleHint?.cardIds.has(cardId(card)) ? "hinted-card" : ""}`} key={`${card.suit}-${card.rank}`} aria-label={`Play ${cardLabel(card)}`} disabled={!!temporaryTrick} onClick={() => submitAction({ type: "play", seat: actor, card })}>{cardFace(card)}</button>
                   : <span className={`playing-card auction-card ${card.suit === "hearts" || card.suit === "diamonds" ? "red-card" : ""}`} key={`${card.suit}-${card.rank}`} role="img" aria-label={cardLabel(card)}>{cardFace(card)}</span>)}
               </div>
               {game.phase === "play" ? <div className="hint-controls">
                 <button className="secondary-button" onClick={() => { void showHint(); }}>Show hint</button>
+                <button className="secondary-button" disabled={!game || game.history.cursor === 0} onClick={takeBack}>Take back</button>
                 {visibleHint ? <p role="status">{visibleHint.usesSolver ? "Solver recommendations are highlighted." : "Legal cards are highlighted."}</p> : null}
               </div> : null}
+              </div>
             </section> : null}
 
             {isReviewing ? <div className="review-controls" aria-label="Review controls">
@@ -460,8 +530,8 @@ export default function App({ solver }: { solver?: Solver } = {}) {
               <span>Reviewing action {reviewCursor} of {handCount}</span>
               <button className="secondary-button" disabled={reviewCursor >= handCount} onClick={() => setReviewCursor((cursor) => Math.min(handCount, cursor + 1))}>Next action</button>
             </div> : <div className="history-controls">
-              <button className="secondary-button" disabled={!game || game.history.cursor === 0} onClick={takeBack}>Take back</button>
-              <button className="secondary-button" disabled={!game || game.history.cursor >= game.history.actions.length} onClick={redo}>Redo</button>
+              {shownGame.phase !== "play" || !canShowHand ? <button className="secondary-button" disabled={!game || game.history.cursor === 0} onClick={takeBack}>Take back</button> : null}
+              <button className="secondary-button" disabled={!!temporaryTrick || !game || game.history.cursor >= game.history.actions.length} onClick={redo}>Redo</button>
             </div>}
           </section>
 

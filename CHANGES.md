@@ -1,5 +1,11 @@
 # Changes
 
+## 0.1.4 - 2026-10-28
+
+- Played cards now sit by compass seat; completed tricks remain visible for two seconds, the last trick can be reopened, and live NS/EW trick totals stay in view.
+- Show hint and Take back sit beside the hand cards. Card input and bot play pause until the completed trick display clears.
+- Moved completed roadmap checklist history into `TODO-archive.md` to keep the active roadmap focused.
+
 ## 0.1.3 - 2026-10-28
 
 - During card play, the auction is tucked into a right-edge drawer that opens on hover, focus, or click; classic card faces and clear “to play” / “played” seat markers make the table easier to follow.

@@ -1,11 +1,11 @@
 // @vitest-environment jsdom
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
-import { applyAction, createGameState, deal, validatePlay } from "@contractplay/core";
-import type { Solver } from "@contractplay/core";
+import { applyAction, createGameState, deal, trickWinner, undoAction, validatePlay } from "@contractplay/core";
+import type { GameState, Solver } from "@contractplay/core";
 import { exportPbn, parsePbn } from "@contractplay/pbn";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { loadSoloData, saveSoloData, type SoloData } from "@contractplay/persistence";
+import { loadSoloData, saveSoloData, type SavedHand, type SoloData } from "@contractplay/persistence";
 import App from "./App.js";
 
 function completedGame() {
@@ -26,12 +26,227 @@ function completedGame() {
   return game;
 }
 
+function gameAfterPlays(playCount: number) {
+  let game = createGameState({ deal: deal(), dealer: "north", vulnerability: "None" });
+  for (const bid of ["1clubs", "pass", "pass", "pass"] as const) {
+    const result = applyAction(game, { type: "bid", seat: game.currentActor, bid });
+    if (!result.ok) throw new Error(result.error.message);
+    game = result.state;
+  }
+  for (let index = 0; index < playCount; index += 1) {
+    const seat = game.currentActor;
+    const ledSuit = game.currentTrick[0]?.card.suit;
+    const card = game.hands[seat].find((candidate) => validatePlay(game.hands[seat], candidate, ledSuit).legal)!;
+    const result = applyAction(game, { type: "play", seat, card });
+    if (!result.ok) throw new Error(result.error.message);
+    game = result.state;
+  }
+  return game;
+}
+
+function storeCurrentGame(game: GameState, completedHands: readonly SavedHand[] = []) {
+  window.localStorage.setItem("contractplay.solo", JSON.stringify({
+    version: 1,
+    currentHandId: "test-hand",
+    currentGame: game,
+    completedHands
+  }));
+}
+
+function playButtonLabel(card: { rank: string; suit: string }) {
+  const rank = ({ A: "ace", K: "king", Q: "queen", J: "jack", T: "ten" } as Record<string, string>)[card.rank] ?? card.rank;
+  return `Play ${rank} of ${card.suit}`;
+}
+
 describe("bridge table", () => {
   afterEach(cleanup);
   afterEach(() => vi.restoreAllMocks());
   afterEach(() => vi.unstubAllGlobals());
   afterEach(() => vi.useRealTimers());
   beforeEach(() => window.localStorage.clear());
+
+  it("keeps a completed trick visible for two seconds", () => {
+    vi.useFakeTimers();
+    const game = gameAfterPlays(3);
+    const seat = game.currentActor;
+    const ledSuit = game.currentTrick[0]?.card.suit;
+    const finalCard = game.hands[seat].find((card) => validatePlay(game.hands[seat], card, ledSuit).legal)!;
+    storeCurrentGame(game);
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("button", { name: playButtonLabel(finalCard) }));
+    const currentTrick = screen.getByRole("region", { name: "Current trick" });
+    expect(currentTrick.querySelectorAll(".trick-card")).toHaveLength(4);
+
+    act(() => { vi.advanceTimersByTime(1999); });
+    expect(currentTrick.querySelectorAll(".trick-card")).toHaveLength(4);
+    act(() => { vi.advanceTimersByTime(1); });
+    expect(currentTrick.querySelectorAll(".trick-card")).toHaveLength(0);
+  });
+
+  it("pauses the next play until the completed trick has been visible for two seconds", () => {
+    vi.useFakeTimers();
+    const game = gameAfterPlays(3);
+    const seat = game.currentActor;
+    const ledSuit = game.currentTrick[0]?.card.suit;
+    const finalCard = game.hands[seat].find((card) => validatePlay(game.hands[seat], card, ledSuit).legal)!;
+    const completedResult = applyAction(game, { type: "play", seat, card: finalCard });
+    if (!completedResult.ok) throw new Error(completedResult.error.message);
+    const nextSeat = completedResult.state.currentActor;
+    const nextCard = completedResult.state.hands[nextSeat].find((card) => validatePlay(completedResult.state.hands[nextSeat], card).legal)!;
+    storeCurrentGame(game);
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("button", { name: playButtonLabel(finalCard) }));
+    expect(screen.getByRole("button", { name: playButtonLabel(nextCard) }).hasAttribute("disabled")).toBe(true);
+    const currentTrick = screen.getByRole("region", { name: "Current trick" });
+    expect(currentTrick.querySelectorAll(".trick-card")).toHaveLength(4);
+
+    act(() => { vi.advanceTimersByTime(1999); });
+    expect(currentTrick.querySelectorAll(".trick-card")).toHaveLength(4);
+    act(() => { vi.advanceTimersByTime(1); });
+    expect(currentTrick.querySelectorAll(".trick-card")).toHaveLength(0);
+    fireEvent.click(screen.getByRole("button", { name: playButtonLabel(nextCard) }));
+    expect(currentTrick.querySelectorAll(".trick-card")).toHaveLength(1);
+  });
+
+  it("shows the most recently completed trick on demand", () => {
+    vi.useFakeTimers();
+    storeCurrentGame(gameAfterPlays(4));
+    render(<App />);
+    const currentTrick = screen.getByRole("region", { name: "Current trick" });
+    expect(currentTrick.querySelectorAll(".trick-card")).toHaveLength(0);
+
+    fireEvent.click(screen.getByRole("button", { name: "Last trick" }));
+    expect(currentTrick.querySelectorAll(".trick-card")).toHaveLength(4);
+    fireEvent.click(screen.getByRole("button", { name: "Hide last trick" }));
+    expect(currentTrick.querySelectorAll(".trick-card")).toHaveLength(0);
+  });
+
+  it("does not replace an in-progress trick with the last trick", () => {
+    vi.useFakeTimers();
+    const game = gameAfterPlays(5);
+    storeCurrentGame(game);
+    render(<App />);
+    const currentTrick = screen.getByRole("region", { name: "Current trick" });
+    expect(currentTrick.querySelectorAll(".trick-card")).toHaveLength(1);
+    expect(screen.getByRole("button", { name: "Last trick" }).hasAttribute("disabled")).toBe(true);
+    expect(currentTrick.querySelectorAll(".trick-card")).toHaveLength(1);
+  });
+
+  it("clears the temporary trick on undo after trick completion", () => {
+    vi.useFakeTimers();
+    const game = gameAfterPlays(3);
+    const seat = game.currentActor;
+    const ledSuit = game.currentTrick[0]?.card.suit;
+    const finalCard = game.hands[seat].find((card) => validatePlay(game.hands[seat], card, ledSuit).legal)!;
+    storeCurrentGame(game);
+    render(<App />);
+    fireEvent.click(screen.getByRole("button", { name: playButtonLabel(finalCard) }));
+    expect(screen.getByRole("region", { name: "Current trick" }).querySelectorAll(".trick-card")).toHaveLength(4);
+
+    fireEvent.click(screen.getByRole("button", { name: "Take back" }));
+    expect(screen.getByRole("region", { name: "Current trick" }).querySelectorAll(".trick-card")).toHaveLength(3);
+  });
+
+  it("keeps a loaded completed hand from starting a completed trick pause", () => {
+    vi.useFakeTimers();
+    storeCurrentGame(completedGame());
+    render(<App />);
+    expect(screen.getByRole("region", { name: "Current trick" }).querySelectorAll(".trick-card")).toHaveLength(0);
+    act(() => { vi.advanceTimersByTime(2000); });
+    expect(screen.getByRole("region", { name: "Current trick" }).querySelectorAll(".trick-card")).toHaveLength(0);
+  });
+
+  it("shows seat positions for played cards", () => {
+    const game = gameAfterPlays(3);
+    storeCurrentGame(game);
+    const { container } = render(<App />);
+
+    for (const { seat } of game.currentTrick) {
+      expect(container.querySelector(`.trick-card-position-${seat}`)).toBeTruthy();
+    }
+  });
+
+  it("shows partnership trick totals for the winner", () => {
+    const game = gameAfterPlays(4);
+    const winner = trickWinner(game.completedTricks[0]!, game.contract?.strain === "notrump" ? undefined : game.contract?.strain);
+    const nsWon = winner === "north" || winner === "south";
+    storeCurrentGame(game);
+    render(<App />);
+
+    expect(screen.getByText(`NS ${nsWon ? 1 : 0} · EW ${nsWon ? 0 : 1} tricks`)).toBeTruthy();
+  });
+
+  it("keeps hand action row aligned with cards", () => {
+    storeCurrentGame(gameAfterPlays(3));
+    const { container } = render(<App />);
+    const actionRow = container.querySelector(".hand-play-row");
+
+    expect(actionRow).toBeTruthy();
+    expect(actionRow?.querySelector(".cards-row")).toBeTruthy();
+    expect(actionRow?.querySelector(".hint-controls")).toBeTruthy();
+    expect(within(actionRow as HTMLElement).getByRole("button", { name: "Show hint" })).toBeTruthy();
+    expect(within(actionRow as HTMLElement).getByRole("button", { name: "Take back" })).toBeTruthy();
+  });
+
+  it("disables redo while the completed trick pause is active", () => {
+    vi.useFakeTimers();
+    const afterThirdCardOfSecondTrick = undoAction(undoAction(gameAfterPlays(9)));
+    storeCurrentGame(afterThirdCardOfSecondTrick);
+    render(<App />);
+
+    expect(screen.getByRole("button", { name: "Redo" }).hasAttribute("disabled")).toBe(false);
+    fireEvent.click(screen.getByRole("button", { name: "Redo" }));
+    expect(screen.getByRole("button", { name: "Redo" }).hasAttribute("disabled")).toBe(true);
+    expect(screen.getByRole("region", { name: "Current trick" }).querySelectorAll(".trick-card")).toHaveLength(4);
+  });
+
+  it("pauses bot play for the full completed-trick display", async () => {
+    vi.useFakeTimers();
+    const game = gameAfterPlays(3);
+    const finalSeat = game.currentActor;
+    const finalCard = game.hands[finalSeat].find((card) => validatePlay(game.hands[finalSeat], card, game.currentTrick[0]?.card.suit).legal)!;
+    const completed = applyAction(game, { type: "play", seat: finalSeat, card: finalCard });
+    if (!completed.ok) throw new Error(completed.error.message);
+    const nextSeat = completed.state.currentActor;
+    const declarerIsNs = completed.state.contract?.declarer === "north" || completed.state.contract?.declarer === "south";
+    const defenders = declarerIsNs ? ["east", "west"] as const : ["north", "south"] as const;
+    const userSeat = defenders.find((candidate) => candidate !== finalSeat && candidate !== nextSeat)!;
+    storeCurrentGame(game);
+    render(<App />);
+    fireEvent.change(screen.getByLabelText("Opponents"), { target: { value: "bots" } });
+    fireEvent.change(screen.getByLabelText("Your seat"), { target: { value: userSeat } });
+
+    await act(async () => { await vi.advanceTimersByTimeAsync(0); });
+    const status = document.querySelector(".status-pill")!;
+    expect(status.textContent).toContain(`${nextSeat[0]!.toUpperCase()}${nextSeat.slice(1)} to play`);
+    expect(screen.getByRole("region", { name: "Current trick" }).querySelectorAll(".trick-card")).toHaveLength(4);
+
+    await act(async () => { await vi.advanceTimersByTimeAsync(1999); });
+    expect(status.textContent).toContain(`${nextSeat[0]!.toUpperCase()}${nextSeat.slice(1)} to play`);
+    await act(async () => { await vi.advanceTimersByTimeAsync(1); });
+    await act(async () => { await vi.advanceTimersByTimeAsync(0); });
+    expect(status.textContent).not.toContain(`${nextSeat[0]!.toUpperCase()}${nextSeat.slice(1)} to play`);
+  });
+
+  it("resets last-trick visibility when exiting review", async () => {
+    const user = userEvent.setup();
+    const saved = { id: "saved-hand", game: completedGame(), savedAt: "2026-10-28T00:00:00.000Z" };
+    storeCurrentGame(gameAfterPlays(4), [saved]);
+    render(<App />);
+
+    await user.click(screen.getByText("Table menu"));
+    await user.click(screen.getByRole("button", { name: "Review hand 1" }));
+    for (let action = 0; action < 8; action += 1) {
+      await user.click(screen.getByRole("button", { name: "Next action" }));
+    }
+    await user.click(screen.getByRole("button", { name: "Last trick" }));
+    expect(screen.getByRole("region", { name: "Current trick" }).querySelectorAll(".trick-card")).toHaveLength(4);
+
+    await user.click(screen.getByRole("button", { name: "Exit review" }));
+    expect(screen.getByRole("region", { name: "Current trick" }).querySelectorAll(".trick-card")).toHaveLength(0);
+  });
 
   it("starts a hand and advances the auction through the core reducer", async () => {
     const user = userEvent.setup();
@@ -305,32 +520,36 @@ describe("bridge table", () => {
   });
 
   it("plays legal cards through a complete hand and shows the result", async () => {
-    const user = userEvent.setup();
+    vi.useFakeTimers();
     render(<App />);
-    await user.click(screen.getByRole("button", { name: "Start a new hand" }));
-    const selectCall = async (call: string) => {
-      await user.selectOptions(screen.getByLabelText("Contract call"), call);
-      await user.click(screen.getByRole("button", { name: "Make bid" }));
+    fireEvent.click(screen.getByRole("button", { name: "Start a new hand" }));
+    const selectCall = (call: string) => {
+      fireEvent.change(screen.getByLabelText("Contract call"), { target: { value: call } });
+      fireEvent.click(screen.getByRole("button", { name: "Make bid" }));
     };
-    await selectCall("1clubs");
-    await selectCall("pass");
-    await selectCall("pass");
-    await selectCall("pass");
+    selectCall("1clubs");
+    selectCall("pass");
+    selectCall("pass");
+    selectCall("pass");
 
     const suitName: Record<string, string> = { "♠": "spades", "♥": "hearts", "♦": "diamonds", "♣": "clubs" };
     for (let cardCount = 0; cardCount < 52 && !screen.queryByRole("region", { name: "Hand result" }); cardCount++) {
-      const cards = screen.getAllByRole("button", { name: /^Play / });
+      let cards = screen.getAllByRole("button", { name: /^Play / });
+      if (cards.every((card) => card.hasAttribute("disabled"))) {
+        await act(async () => { await vi.advanceTimersByTimeAsync(2000); });
+        cards = screen.getAllByRole("button", { name: /^Play / });
+      }
       const leadSymbol = screen.getByRole("region", { name: "Current trick" }).textContent?.match(/[♠♥♦♣]/)?.[0];
       const followingCard = leadSymbol
         ? cards.find((card) => card.getAttribute("aria-label")?.endsWith(`of ${suitName[leadSymbol]}`))
         : undefined;
-      await user.click(followingCard ?? cards[0]!);
+      fireEvent.click(followingCard ?? cards[0]!);
     }
 
     expect(screen.getByRole("region", { name: "Hand result" })).toBeTruthy();
     expect(screen.getByRole("region", { name: "Hand result" }).textContent).toContain("tricks for NS");
-    await user.click(screen.getByText("Table menu"));
-    await waitFor(() => expect(screen.getByRole("button", { name: "Review hand 1" })).toBeTruthy());
+    fireEvent.click(screen.getByText("Table menu"));
+    expect(screen.getByRole("button", { name: "Review hand 1" })).toBeTruthy();
   }, 30000);
 
   it("uses the chosen dealer and vulnerability for a new deal", async () => {
