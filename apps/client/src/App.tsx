@@ -28,6 +28,17 @@ const biddingStrains = ["clubs", "diamonds", "hearts", "spades", "notrump"] as c
 const suitSymbols: Record<Suit, string> = { spades: "♠", hearts: "♥", diamonds: "♦", clubs: "♣" };
 const suitNames: Record<Suit, string> = { spades: "spades", hearts: "hearts", diamonds: "diamonds", clubs: "clubs" };
 const ranks: Record<string, string> = { A: "ace", K: "king", Q: "queen", J: "jack", T: "ten" };
+const cardPipLayouts: Record<number, readonly string[]> = {
+  2: ["1 / 1", "5 / 1"],
+  3: ["1 / 1", "3 / 1", "5 / 1"],
+  4: ["1 / 1", "1 / 2", "5 / 1", "5 / 2"],
+  5: ["1 / 1", "1 / 2", "3 / 1 / 4 / 3", "5 / 1", "5 / 2"],
+  6: ["1 / 1", "1 / 2", "3 / 1", "3 / 2", "5 / 1", "5 / 2"],
+  7: ["1 / 1", "1 / 2", "2 / 1", "2 / 2", "3 / 1 / 4 / 3", "5 / 1", "5 / 2"],
+  8: ["1 / 1", "1 / 2", "2 / 1", "2 / 2", "4 / 1", "4 / 2", "5 / 1", "5 / 2"],
+  9: ["1 / 1", "1 / 2", "2 / 1", "2 / 2", "3 / 1 / 4 / 3", "4 / 1", "4 / 2", "5 / 1", "5 / 2"],
+  10: ["1 / 1", "1 / 2", "2 / 1", "2 / 2", "3 / 1", "3 / 2", "4 / 1", "4 / 2", "5 / 1", "5 / 2"]
+};
 const seats: readonly Seat[] = ["north", "east", "south", "west"];
 const vulnerabilities: readonly Vulnerability[] = ["None", "NS", "EW", "Both"];
 const partnerOf = (seat: Seat): Seat => seats[(seats.indexOf(seat) + 2) % 4]!;
@@ -44,6 +55,20 @@ function callLabel(bid: Bid): string {
 
 function cardLabel(card: Card): string {
   return `${ranks[card.rank] ?? card.rank} of ${suitNames[card.suit]}`;
+}
+
+function cardFace(card: Card) {
+  const suit = suitSymbols[card.suit];
+  const rank = card.rank === "T" ? "10" : card.rank;
+  const pipCount = card.rank === "T" ? 10 : Number(card.rank);
+  const pips = cardPipLayouts[pipCount];
+  return <>
+    <span className="card-corner card-corner-top" aria-hidden="true"><span>{rank}</span><span>{suit}</span></span>
+    {pips ? <span className={`card-pips pip-count-${pipCount}`} aria-hidden="true">{pips.map((area, index) => <span className="card-pip" style={{ gridArea: area }} key={`${area}-${index}`}>{suit}</span>)}</span>
+      : card.rank === "A" ? <span className="card-center-suit" aria-hidden="true">{suit}</span>
+        : <span className="card-portrait" aria-hidden="true"><span>{card.rank}</span><span>{suit}</span></span>}
+    <span className="card-corner card-corner-bottom" aria-hidden="true"><span>{rank}</span><span>{suit}</span></span>
+  </>;
 }
 
 function sortHand(cards: readonly Card[]): Card[] {
@@ -78,6 +103,9 @@ export default function App({ solver }: { solver?: Solver } = {}) {
   const [botSkill, setBotSkill] = useState<SkillLevel>("beginner");
   const [biddingStyle, setBiddingStyle] = useState<"SAYC" | "2/1">("SAYC");
   const [call, setCall] = useState<Bid>("pass");
+  const [auctionPinned, setAuctionPinned] = useState(false);
+  const [auctionHovered, setAuctionHovered] = useState(false);
+  const [auctionFocused, setAuctionFocused] = useState(false);
   const [pbnInput, setPbnInput] = useState("");
   const [currentPbnMetadata, setCurrentPbnMetadata] = useState<PbnMetadata | undefined>(() => soloData.currentPbnMetadata);
   const [message, setMessage] = useState("");
@@ -155,6 +183,7 @@ export default function App({ solver }: { solver?: Solver } = {}) {
     (game.phase === "auction" || game.phase === "play") &&
     (!playAgainstBots || actor === userSeat || userControlsDummy);
   const visibleHint = game && hint?.game === game && hint.seat === game.currentActor ? hint : undefined;
+  const auctionDrawerOpen = auctionPinned || auctionHovered || auctionFocused;
   const phaseLabel = shownGame?.phase === "auction" ? "Auction" : shownGame?.phase === "play" ? "Card play" : shownGame?.phase === "complete" ? "Hand complete" : "Passed out";
 
   function startHand() {
@@ -163,6 +192,9 @@ export default function App({ solver }: { solver?: Solver } = {}) {
     setGame(createGameState({ deal: deal(), dealer, vulnerability }));
     setCurrentPbnMetadata(undefined);
     setCall("pass");
+    setAuctionPinned(false);
+    setAuctionHovered(false);
+    setAuctionFocused(false);
     setReviewHandId(undefined);
     setMessage("");
   }
@@ -185,6 +217,9 @@ export default function App({ solver }: { solver?: Solver } = {}) {
     }
     setCurrentHandId(createHandId());
     setGame(imported);
+    setAuctionPinned(false);
+    setAuctionHovered(false);
+    setAuctionFocused(false);
     setCurrentPbnMetadata({ tags: board.tags, comments: board.comments });
     setDealer(board.dealer);
     setVulnerability(board.vulnerability ?? "None");
@@ -375,7 +410,7 @@ export default function App({ solver }: { solver?: Solver } = {}) {
         </section>
       ) : shownGame ? (
         <>
-        <div className={`game-layout ${shownGame.phase === "auction" ? "auction-layout" : ""}`}>
+        <div className={`game-layout ${shownGame.phase === "auction" ? "auction-layout" : shownGame.phase === "play" ? "play-layout" : ""}`}>
           <section className="table-panel" aria-label={isReviewing ? "Hand review" : "Bridge table"}>
             <div className="table-heading">
               <div><p className="eyebrow">{shownGame.contract ? `BOARD 1 · ${callLabel(`${shownGame.contract.level}${shownGame.contract.strain}` as Bid)} · ${seatNames[shownGame.contract.declarer]} DECLARES` : `BOARD 1 · DEALER ${seatNames[shownGame.dealer].toUpperCase()} · VULNERABILITY ${shownGame.vulnerability.toUpperCase()}`}</p><h2>{isReviewing ? "Hand review" : phaseLabel}</h2></div>
@@ -383,9 +418,18 @@ export default function App({ solver }: { solver?: Solver } = {}) {
             </div>
 
             <div className="table-surface">
-              {seats.map((seat) => <div key={seat} className={`seat seat-${seat} ${shownActor === seat ? "active-seat" : ""}`}><span className="seat-compass">{seat[0]!.toUpperCase()}</span><span>{seatNames[seat]}</span></div>)}
+              {seats.map((seat) => {
+                const hasPlayed = shownGame.phase === "play" && shownGame.currentTrick.some((play) => play.seat === seat);
+                const isActor = shownActor === seat && (shownGame.phase === "auction" || shownGame.phase === "play");
+                const seatStatus = isActor ? (shownGame.phase === "auction" ? "To bid" : "To play") : hasPlayed ? "Played" : "";
+                return <div key={seat} className={`seat seat-${seat} ${isActor ? "active-seat" : ""} ${hasPlayed ? "played-seat" : ""}`}>
+                  <span className="seat-compass">{seat[0]!.toUpperCase()}</span><span>{seatNames[seat]}</span>{seatStatus ? <span className="seat-status">{seatStatus}</span> : null}
+                </div>;
+              })}
               <div className="trick-area" role="region" aria-label="Current trick">
-                {shownGame.currentTrick.length ? shownGame.currentTrick.map(({ seat, card }) => <span className="trick-card" key={seat}>{seatNames[seat][0]} {suitSymbols[card.suit]}{card.rank}</span>) : <span className="trick-placeholder">{shownGame.contract ? `${seatNames[shownGame.trickLeader]} leads` : "Auction in progress"}</span>}
+                {shownGame.currentTrick.length ? shownGame.currentTrick.map(({ seat, card }) => <span className={`trick-card ${card.suit === "hearts" || card.suit === "diamonds" ? "red-card" : ""}`} key={seat} role="img" aria-label={`${seatNames[seat]} played ${cardLabel(card)}`}>
+                  {cardFace(card)}<span className="trick-card-seat" aria-hidden="true">{seatNames[seat][0]}</span>
+                </span>) : <span className="trick-placeholder">{shownGame.contract ? `${seatNames[shownGame.trickLeader]} leads` : "Auction in progress"}</span>}
               </div>
               {shownGame.phase === "auction" ? <section className="auction-panel centered-auction" aria-label="Auction">
                 <div className="section-heading"><div><p className="eyebrow">CALLS SO FAR</p><h2>Auction</h2></div><span className="auction-count">{shownGame.auction.length}</span></div>
@@ -402,8 +446,8 @@ export default function App({ solver }: { solver?: Solver } = {}) {
               <div className="hand-heading"><div><p className="eyebrow">{userControlsDummy ? "DUMMY · PLAYING AS" : "PLAYING AS"}</p><h3>{actorName}</h3></div><span>{game.hands[actor].length} cards</span></div>
               <div className="cards-row">
                 {sortHand(game.hands[actor]).map((card) => game.phase === "play"
-                  ? <button className={`playing-card ${card.suit === "hearts" || card.suit === "diamonds" ? "red-card" : ""} ${visibleHint?.cardIds.has(cardId(card)) ? "hinted-card" : ""}`} key={`${card.suit}-${card.rank}`} aria-label={`Play ${cardLabel(card)}`} onClick={() => submitAction({ type: "play", seat: actor, card })}><span>{card.rank}</span><span>{suitSymbols[card.suit]}</span></button>
-                  : <span className={`playing-card auction-card ${card.suit === "hearts" || card.suit === "diamonds" ? "red-card" : ""}`} key={`${card.suit}-${card.rank}`} aria-label={cardLabel(card)}><span>{card.rank}</span><span>{suitSymbols[card.suit]}</span></span>)}
+                  ? <button className={`playing-card ${card.suit === "hearts" || card.suit === "diamonds" ? "red-card" : ""} ${visibleHint?.cardIds.has(cardId(card)) ? "hinted-card" : ""}`} key={`${card.suit}-${card.rank}`} aria-label={`Play ${cardLabel(card)}`} onClick={() => submitAction({ type: "play", seat: actor, card })}>{cardFace(card)}</button>
+                  : <span className={`playing-card auction-card ${card.suit === "hearts" || card.suit === "diamonds" ? "red-card" : ""}`} key={`${card.suit}-${card.rank}`} role="img" aria-label={cardLabel(card)}>{cardFace(card)}</span>)}
               </div>
               {game.phase === "play" ? <div className="hint-controls">
                 <button className="secondary-button" onClick={() => { void showHint(); }}>Show hint</button>
@@ -421,14 +465,28 @@ export default function App({ solver }: { solver?: Solver } = {}) {
             </div>}
           </section>
 
-          <aside className="side-panel">
-            {shownGame.phase !== "auction" ? <section className="auction-panel" aria-label="Auction">
+          <aside className={`side-panel ${shownGame.phase === "play" ? `auction-drawer ${auctionDrawerOpen ? "drawer-open" : ""}` : ""}`}
+            onPointerEnter={(event) => { if (shownGame.phase === "play" && event.pointerType === "mouse") setAuctionHovered(true); }}
+            onPointerLeave={(event) => { if (shownGame.phase === "play" && event.pointerType === "mouse") setAuctionHovered(false); }}
+            onFocus={() => { if (shownGame.phase === "play") setAuctionFocused(true); }}
+            onBlur={(event) => { if (shownGame.phase === "play" && !event.currentTarget.contains(event.relatedTarget as Node | null)) setAuctionFocused(false); }}>
+            {shownGame.phase === "play" ? <>
+              <button className="auction-drawer-toggle" type="button" aria-label={`${auctionDrawerOpen ? "Hide" : "Show"} auction, ${shownGame.auction.length} calls`} aria-expanded={auctionDrawerOpen} aria-controls="play-auction-panel" onClick={() => {
+                if (auctionPinned) {
+                  setAuctionPinned(false);
+                  setAuctionFocused(false);
+                } else {
+                  setAuctionPinned(true);
+                }
+              }}><span aria-hidden="true">☰</span></button>
+              <section className="auction-panel auction-drawer-content" id="play-auction-panel" aria-label="Auction" aria-hidden={!auctionDrawerOpen} inert={!auctionDrawerOpen}>
+                <div className="section-heading"><div><p className="eyebrow">CALLS SO FAR</p><h2>Auction</h2></div><span className="auction-count">{shownGame.auction.length}</span></div>
+                {shownGame.auction.length ? <ol className="auction-list" ref={auctionListRef}>{shownGame.auction.map(({ seat, bid }, index) => <li key={`${seat}-${index}`}><span>{seatNames[seat]}</span><strong>{callLabel(bid)}</strong></li>)}</ol> : <p className="quiet-copy">No calls have been made.</p>}
+              </section>
+            </> : null}
+            {shownGame.phase === "complete" || shownGame.phase === "passed-out" ? <section className="auction-panel" aria-label="Auction">
               <div className="section-heading"><div><p className="eyebrow">CALLS SO FAR</p><h2>Auction</h2></div><span className="auction-count">{shownGame.auction.length}</span></div>
               {shownGame.auction.length ? <ol className="auction-list" ref={auctionListRef}>{shownGame.auction.map(({ seat, bid }, index) => <li key={`${seat}-${index}`}><span>{seatNames[seat]}</span><strong>{callLabel(bid)}</strong></li>)}</ol> : <p className="quiet-copy">The first call is yours to make.</p>}
-              {!isReviewing && game?.phase === "auction" && (!playAgainstBots || game.currentActor === userSeat) ? <form className="call-controls" onSubmit={(event) => { event.preventDefault(); submitAction({ type: "bid", seat: game.currentActor, bid: call }); }}>
-                <label htmlFor="call-select">Contract call</label>
-                <div className="call-row"><select id="call-select" value={call} onChange={(event) => setCall(event.target.value as Bid)}>{contractCalls.map((option) => <option key={option} value={option}>{callLabel(option)}</option>)}</select><button className="primary-button small-button" type="submit">Make bid</button></div>
-              </form> : null}
             </section> : null}
 
             {shownGame.phase === "complete" && shownGame.score ? <section className="score-panel" aria-label="Hand result"><p className="eyebrow">HAND RESULT</p><h2>{shownGame.contract?.level} {shownGame.contract?.strain}</h2><p>{shownGame.score.tricksTaken} tricks for {shownGame.contract?.declarer === "north" || shownGame.contract?.declarer === "south" ? "NS" : "EW"} · {shownGame.score.score > 0 ? "+" : ""}{shownGame.score.score} NS</p></section> : null}

@@ -16,7 +16,9 @@ The core rules, PBN package, and solo client are in place. Beginner through Expe
 ## Solo app
 
 - [x] Build responsive React client and bridge table UI (auction, legal card play, result display, keyboard-accessible controls, and phone/tablet/desktop viewport checks).
+- [x] Make the play-phase auction available from a collapsed right-edge drawer, draw classic suit-colored playing cards, and show active/played seats during a trick.
 - [x] Add local solo setup, PBN import/export with retained supported tags/comments, autosave/resume, recent hand history, review, and take-back.
+- [ ] Let a human hand control to bots at any point during an active deal and have bots finish the remaining auction and play.
 - [x] Add deterministic beginner bots with basic SAYC / 2/1 opening-and-pass bidding and legal card selection.
 - [ ] Implement intermediate through expert strategies and complete SAYC / 2/1 agreements.
   - [x] Refine beginner openings: 15–17 balanced 1NT, five-card majors, minor fallback.

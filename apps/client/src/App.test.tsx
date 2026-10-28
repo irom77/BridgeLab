@@ -131,6 +131,76 @@ describe("bridge table", () => {
     expect(screen.getByText("South to play")).toBeTruthy();
   });
 
+  it("opens the collapsed auction on demand and marks trick participation", async () => {
+    vi.spyOn(Math, "random").mockReturnValue(0);
+    const user = userEvent.setup();
+    const { container } = render(<App />);
+    await user.click(screen.getByRole("button", { name: "Start a new hand" }));
+    for (const bid of ["1clubs", "pass", "pass", "pass"]) {
+      await user.selectOptions(screen.getByLabelText("Contract call"), bid);
+      await user.click(screen.getByRole("button", { name: "Make bid" }));
+    }
+
+    const drawer = container.querySelector("#play-auction-panel")!;
+    const toggle = screen.getByRole("button", { name: /show auction/i });
+    expect(toggle.getAttribute("aria-expanded")).toBe("false");
+    expect(drawer.getAttribute("aria-hidden")).toBe("true");
+    expect(container.querySelector(".play-layout")).toBeTruthy();
+
+    await user.hover(toggle.closest("aside")!);
+    expect(toggle.getAttribute("aria-expanded")).toBe("true");
+    await user.unhover(toggle.closest("aside")!);
+    expect(toggle.getAttribute("aria-expanded")).toBe("false");
+
+    fireEvent.click(toggle);
+    expect(toggle.getAttribute("aria-expanded")).toBe("true");
+    expect(screen.getByRole("region", { name: "Auction" })).toBeTruthy();
+    expect(screen.getByText("East to play")).toBeTruthy();
+
+    await user.click(screen.getAllByRole("button", { name: /^Play / })[0]!);
+    expect(container.querySelector(".seat-east .seat-status")?.textContent).toBe("Played");
+    expect(container.querySelector(".seat-south .seat-status")?.textContent).toBe("To play");
+  });
+
+  it("keeps the auction visible on a passed-out hand", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "Start a new hand" }));
+    for (let pass = 0; pass < 4; pass++) {
+      await user.selectOptions(screen.getByLabelText("Contract call"), "pass");
+      await user.click(screen.getByRole("button", { name: "Make bid" }));
+    }
+
+    expect(screen.getByRole("region", { name: "Auction" })).toBeTruthy();
+    expect(screen.getAllByRole("listitem")).toHaveLength(4);
+  });
+
+  it("renders playing cards with classic corner marks and a center suit", async () => {
+    vi.spyOn(Math, "random").mockReturnValue(0);
+    const user = userEvent.setup();
+    const { container } = render(<App />);
+    await user.click(screen.getByRole("button", { name: "Start a new hand" }));
+    for (const bid of ["1clubs", "pass", "pass", "pass"]) {
+      await user.selectOptions(screen.getByLabelText("Contract call"), bid);
+      await user.click(screen.getByRole("button", { name: "Make bid" }));
+    }
+
+    const card = screen.getAllByRole("button", { name: /^Play / })[0]!;
+    expect(card.querySelector(".card-corner-top")?.textContent).toBeTruthy();
+    expect(card.querySelector(".card-center-suit, .card-portrait")?.textContent).toMatch(/[♠♥♦♣]/);
+    expect(card.querySelector(".card-corner-bottom")).toBeTruthy();
+    const numericCards = screen.getAllByRole("button", { name: /^Play / }).filter((playingCard) => {
+      const rank = playingCard.querySelector(".card-corner-top span")?.textContent;
+      return rank && /^[2-9]|10$/.test(rank);
+    });
+    expect(numericCards.length).toBeGreaterThan(0);
+    for (const playingCard of numericCards) {
+      const rank = Number(playingCard.querySelector(".card-corner-top span")?.textContent);
+      expect(playingCard.querySelectorAll(".card-pip")).toHaveLength(rank);
+    }
+    expect(container.querySelector(".status-pill")?.textContent).toBe("East to play");
+  });
+
   it("shows every legal card as a hint without playing a card", async () => {
     vi.spyOn(Math, "random").mockReturnValue(0);
     const user = userEvent.setup();
@@ -390,6 +460,7 @@ describe("bridge table", () => {
     await user.click(screen.getByRole("button", { name: "Import hand" }));
 
     expect(screen.getByText("North to play")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: /show auction/i }));
     expect(screen.getAllByRole("listitem")).toHaveLength(4);
     await waitFor(() => expect(JSON.parse(window.localStorage.getItem("contractplay.solo")!).currentPbnMetadata).toEqual({
       tags: expect.arrayContaining([expect.objectContaining({ name: "Event", value: "Club Night" })]),

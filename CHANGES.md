@@ -1,5 +1,11 @@
 # Changes
 
+## 0.1.3 - 2026-10-28
+
+- During card play, the auction is tucked into a right-edge drawer that opens on hover, focus, or click; classic card faces and clear “to play” / “played” seat markers make the table easier to follow.
+
+## 0.1.2 - 2026-10-28
+
 - Imported deals now show the current player's 13 cards during the auction; cards remain non-interactive until play begins.
 - Added a Tauri 2 host for Windows, macOS, iOS, and iPadOS, native PBN file pickers with scoped text-file access, and save-on-suspend lifecycle handling. Added a shared SVG app icon and relative web asset paths.
 - Added Windows/macOS installer and iPad simulator CI workflows, GitHub Pages deployment, and draft desktop releases from version tags. Windows/macOS installers and the iPad simulator build/install/launch passed in [GitHub Actions](https://github.com/irom77/ContractPlay/actions/runs/40745554895).
@@ -31,8 +37,6 @@
 - Expert 2/1 bots now use New Minor Forcing after 1m–1M–1NT: responder asks with the unbid minor, opener shows major support or a side major, and responder places the contract. SAYC keeps its existing Expert Checkback sequence.
 
 Project changes are recorded here, newest first. Keep entries short and link implementation plans when useful.
-
-## 0.1.2 - 2026-10-28
 
 - Centered the auction on the table, enlarged the cards, moved setup/import/history into a compact table menu, and displayed the current app version in the header.
 

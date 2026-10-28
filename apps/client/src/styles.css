@@ -66,9 +66,10 @@ h1 { margin-bottom: 9px; font-size: clamp(30px, 4vw, 45px); letter-spacing: -.03
 .suit-red { color: #e28b77; }
 .text-button { z-index: 1; border: 0; padding: 9px 0; background: transparent; color: var(--gold); font-size: 13px; font-weight: 700; cursor: pointer; }
 .text-button span { margin-left: 5px; }
-.game-layout { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(275px, .75fr); gap: 18px; align-items: start; }
+.game-layout { position: relative; display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(275px, .75fr); gap: 18px; align-items: start; }
 .auction-layout { grid-template-columns: minmax(0, 1fr); }
 .auction-layout .side-panel { display: none; }
+.play-layout { grid-template-columns: minmax(0, 1fr); overflow-x: clip; }
 .table-panel, .side-panel > section, .score-panel { border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
 .table-panel { padding: 22px; }
 .table-heading, .section-heading, .hand-heading { display: flex; justify-content: space-between; align-items: center; }
@@ -76,6 +77,14 @@ h1 { margin-bottom: 9px; font-size: clamp(30px, 4vw, 45px); letter-spacing: -.03
 .status-pill { border: 1px solid rgba(231, 187, 114, .36); border-radius: 99px; padding: 8px 12px; color: var(--gold); font-size: 11px; font-weight: 600; }
 .table-surface { position: relative; height: 360px; margin-top: 22px; overflow: hidden; border: 1px solid rgba(237, 220, 174, .17); border-radius: 9px; background: radial-gradient(ellipse at center, #28604d 0, #1d4b3d 58%, #173d33 100%); }
 .auction-layout .table-surface { height: 470px; }
+.play-layout .table-panel { grid-column: 1; min-width: 0; }
+.play-layout .side-panel.auction-drawer { position: absolute; z-index: 5; top: 118px; right: 0; display: block; width: min(320px, calc(100vw - 40px)); pointer-events: none; transform: translateX(calc(100% - 44px)); transition: transform .24s ease; }
+.play-layout .auction-drawer.drawer-open { transform: translateX(0); }
+.auction-drawer-toggle { position: absolute; top: 0; left: 0; display: grid; width: 44px; min-height: 48px; place-items: center; border: 1px solid rgba(231, 187, 114, .58); border-right: 0; border-radius: 8px 0 0 8px; background: #12342f; color: var(--gold); font-size: 18px; cursor: pointer; pointer-events: auto; box-shadow: -5px 5px 16px #071b1870; }
+.auction-drawer-toggle:focus-visible { z-index: 2; outline-offset: -3px; }
+.auction-drawer-content { margin-left: 44px; max-height: min(430px, calc(100vh - 210px)); overflow: auto; border: 1px solid rgba(231, 187, 114, .45); border-radius: 0 9px 9px 9px; padding: 17px; background: #12342f; box-shadow: 0 12px 30px #071b18a8; pointer-events: auto; }
+.auction-drawer-content .section-heading { margin-bottom: 10px; }
+.auction-drawer-content .auction-list { max-height: 310px; overflow: auto; }
 .auction-layout .trick-area { display: none; }
 .centered-auction { position: absolute; z-index: 3; top: 50%; left: 50%; width: min(480px, calc(100% - 28px)); max-height: calc(100% - 32px); overflow: auto; transform: translate(-50%, -50%); border: 1px solid rgba(231, 187, 114, .34); border-radius: 10px; padding: 20px 24px; background: #12342f; box-shadow: 0 12px 36px #071b1890; }
 .centered-auction .section-heading { display: flex; align-items: center; justify-content: space-between; }
@@ -86,6 +95,10 @@ h1 { margin-bottom: 9px; font-size: clamp(30px, 4vw, 45px); letter-spacing: -.03
 .seat-compass { display: grid; width: 23px; height: 23px; place-items: center; border: 1px solid rgba(241, 234, 210, .35); border-radius: 50%; color: var(--gold); font-size: 9px; font-weight: 700; }
 .active-seat { color: var(--gold); font-weight: 700; }
 .active-seat .seat-compass { background: var(--gold); color: var(--deep); }
+.played-seat { color: #f5f1e8; }
+.played-seat .seat-compass { border-color: rgba(245, 241, 232, .75); background: rgba(245, 241, 232, .16); color: #fffdf7; }
+.seat-status { border-radius: 99px; padding: 3px 7px; background: rgba(231, 187, 114, .18); color: var(--gold); font-size: 9px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.played-seat .seat-status { background: rgba(245, 241, 232, .13); color: #f5f1e8; }
 .seat-north { top: 18px; left: 50%; transform: translateX(-50%); flex-direction: column; }
 .seat-south { bottom: 18px; left: 50%; transform: translateX(-50%); flex-direction: column; }
 .seat-east { top: 50%; right: 17px; transform: translateY(-50%); flex-direction: column; }
@@ -93,17 +106,32 @@ h1 { margin-bottom: 9px; font-size: clamp(30px, 4vw, 45px); letter-spacing: -.03
 .trick-area { position: absolute; z-index: 2; inset: 0; display: flex; align-items: center; justify-content: center; gap: 8px; }
 .trick-placeholder { color: rgba(242, 239, 220, .6); font-family: Georgia, serif; font-size: 16px; }
 .trick-count { margin: 10px 0 0; color: var(--muted); font-size: 11px; text-align: right; }
-.trick-card { display: grid; width: 42px; height: 58px; place-items: center; border-radius: 5px; background: #f8f4e9; color: #24352e; box-shadow: 0 3px 7px #0d261e66; font-size: 15px; font-weight: 700; }
+.trick-card { position: relative; display: block; width: 52px; height: 72px; border: 1px solid #d5ccb9; border-radius: 6px; background: linear-gradient(145deg, #fffdf7, #efe8d9); color: #263a33; box-shadow: 0 4px 9px #0d261e75; }
+.trick-card .card-corner { top: 4px; left: 4px; font-size: 9px; }
+.trick-card .card-corner-bottom { top: auto; bottom: 4px; left: auto; right: 4px; }
+.trick-card .card-center-suit { font-size: 27px; }
+.trick-card .card-pips { inset: 20px 8px; }
+.trick-card .card-pip { font-size: 10px; }
+.trick-card .card-portrait { width: 32px; height: 42px; font-size: 19px; }
+.trick-card-seat { position: absolute; top: 4px; right: 4px; display: grid; width: 14px; height: 14px; place-items: center; border-radius: 50%; background: #183a34; color: #fffdf7; font: 700 8px/1 sans-serif; }
 .hand-panel { margin-top: 20px; padding-top: 17px; border-top: 1px solid var(--line); }
 .hand-heading { margin-bottom: 12px; }
 .hand-heading h3 { margin: 0; font-size: 20px; }
 .hand-heading > span { color: var(--muted); font-size: 11px; }
 .cards-row { display: flex; justify-content: center; flex-wrap: wrap; gap: 6px; }
-.playing-card { width: 58px; height: 80px; display: grid; align-content: center; justify-items: center; gap: 0; border: 1px solid #e0ded5; border-radius: 5px; background: #f6f2e8; color: #25332e; box-shadow: 0 2px 5px #102a2740; font-size: 17px; font-weight: 700; cursor: pointer; transition: transform .14s ease, box-shadow .14s ease; }
+.playing-card { position: relative; flex: 0 0 62px; width: 62px; height: 90px; overflow: hidden; border: 1px solid #d4cbb9; border-radius: 7px; background: linear-gradient(145deg, #fffef9 0%, #f7f2e7 55%, #ece5d6 100%); color: #263a33; box-shadow: 0 2px 5px #102a2740, inset 0 0 0 2px rgba(255, 255, 255, .72); cursor: pointer; transition: transform .14s ease, box-shadow .14s ease; }
+.playing-card::before { position: absolute; inset: 3px; border: 1px solid rgba(166, 153, 128, .28); border-radius: 4px; content: ""; pointer-events: none; }
 .playing-card:hover { transform: translateY(-4px); box-shadow: 0 5px 9px #102a2770; }
 .auction-card { cursor: default; }
 .auction-card:hover { transform: none; box-shadow: 0 2px 5px #102a2740; }
-.playing-card span + span { font-size: 13px; }
+.card-corner { position: absolute; z-index: 1; top: 6px; left: 6px; display: grid; justify-items: center; gap: 0; font: 700 13px/.88 Georgia, serif; }
+.card-corner span + span { font: 12px/1 Georgia, serif; }
+.card-corner-bottom { top: auto; bottom: 6px; left: auto; right: 6px; transform: rotate(180deg); }
+.card-center-suit { position: absolute; top: 50%; left: 50%; color: currentColor; font: 36px/1 Georgia, serif; transform: translate(-50%, -50%); text-shadow: 0 1px 0 rgba(255, 255, 255, .7); }
+.card-pips { position: absolute; inset: 22px 10px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(5, 1fr); align-items: center; justify-items: center; }
+.card-pip { color: currentColor; font: 15px/1 Georgia, serif; }
+.card-portrait { position: absolute; top: 50%; left: 50%; display: grid; width: 42px; height: 58px; place-content: center; justify-items: center; border: 3px double rgba(174, 145, 94, .67); border-radius: 20px 5px; background: radial-gradient(ellipse at 35% 30%, #fffdf6, #eae0cd); color: currentColor; font: 700 25px/.95 Georgia, serif; transform: translate(-50%, -50%); box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .72); }
+.card-portrait span + span { font: 17px/.95 Georgia, serif; }
 .red-card { color: #a54542; }
 .side-panel { display: grid; gap: 14px; }
 .side-panel > section { padding: 19px; }
