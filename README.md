@@ -10,14 +10,15 @@
 
 ## Status
 
-ContractPlay currently provides a responsive browser table for local deals, configurable bots, PBN import, autosaved play, take-back, hand review, and card-play hints. A host can supply a solver for recommendations; without one, hints show legal cards.
+ContractPlay currently provides a responsive browser table for local deals, configurable bots, PBN import/export, autosaved play, take-back, hand review, and card-play hints. A host can supply a solver for recommendations; without one, hints show legal cards.
 
-Native clients, online multiplayer, and complete SAYC and 2/1 agreements remain planned. See the [roadmap](TODO.md) and [change history](CHANGES.md).
+Windows and macOS installer builds and an iOS app build/install/launch on an iPad simulator have passed on GitHub Actions. First GitHub Pages deployment and signed or physical-device builds remain pending their documented setup steps. Online multiplayer and complete SAYC and 2/1 agreements remain planned. See the [platform delivery guide](docs/platform-delivery.md), [roadmap](TODO.md), and [change history](CHANGES.md).
 
 ## Project structure
 
 ```text
 apps/client/          React and Vite browser client
+apps/client/src-tauri/ Tauri host for desktop and iOS/iPadOS
 packages/core/        Platform-neutral cards, rules, and game state
 packages/pbn/         PBN parser, serializer, and diagnostics
 packages/persistence/ Versioned local game storage
@@ -48,10 +49,18 @@ pnpm build
 Start the browser client with:
 
 ```sh
-pnpm --filter @contractplay/client dev
+pnpm web:dev
 ```
 
-The browser client stores the current hand and up to 25 completed hands in local storage. PBN deals can be pasted into the import panel.
+Verify the static web package and build native desktop installers with:
+
+```sh
+pnpm web:verify
+pnpm tauri:dev
+pnpm tauri:build
+```
+
+The browser and native clients store the current hand and up to 25 completed hands locally. PBN deals can be pasted or imported from a file, and completed hands can be exported as PBN. See the [platform delivery guide](docs/platform-delivery.md) for iOS/iPadOS simulator builds, deployment, and signing requirements.
 
 ## Project guidance
 

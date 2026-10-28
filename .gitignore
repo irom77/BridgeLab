@@ -4,6 +4,8 @@ dist/
 build/
 coverage/
 target/
+apps/client/src-tauri/target/
+apps/client/src-tauri/gen/
 *.tsbuildinfo
 
 # Local environment and credentials
