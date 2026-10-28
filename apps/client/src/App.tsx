@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   applyAction,
   cardId,
@@ -20,6 +20,8 @@ import {
 import { exportPbn, parsePbn } from "@contractplay/pbn";
 import { deleteSavedHand, loadSoloData, saveSoloData, type PbnMetadata, type SavedHand, type SoloData } from "@contractplay/persistence";
 import { createBot } from "@contractplay/bots";
+import { createClientPersistenceAdapter } from "./platformPersistence.js";
+import { isNativeClient, openPbnFile, savePbnFile } from "./nativeFiles.js";
 
 const seatNames: Record<Seat, string> = { north: "North", east: "East", south: "South", west: "West" };
 const biddingStrains = ["clubs", "diamonds", "hearts", "spades", "notrump"] as const;
@@ -60,7 +62,11 @@ function reviewState(hand: SavedHand, cursor: number): GameState {
 }
 
 export default function App({ solver }: { solver?: Solver } = {}) {
-  const [soloData, setSoloData] = useState<SoloData>(() => loadSoloData(window.localStorage));
+  const persistence = useMemo(() => createClientPersistenceAdapter(window.localStorage), []);
+  const [soloData, setSoloData] = useState<SoloData>(() => loadSoloData(persistence.storage));
+  const latestSoloData = useRef(soloData);
+  latestSoloData.current = soloData;
+  const pbnFileInput = useRef<HTMLInputElement>(null);
   const [game, setGame] = useState<GameState | undefined>(() => soloData.currentGame ?? undefined);
   const gameRef = useRef(game);
   gameRef.current = game;
@@ -78,6 +84,8 @@ export default function App({ solver }: { solver?: Solver } = {}) {
   const [hint, setHint] = useState<{ game: GameState; seat: Seat; cardIds: ReadonlySet<string>; usesSolver: boolean }>();
   const [reviewHandId, setReviewHandId] = useState<string>();
   const [reviewCursor, setReviewCursor] = useState(0);
+
+  useEffect(() => persistence.onSuspend(() => saveSoloData(persistence.storage, latestSoloData.current)), [persistence]);
 
   useEffect(() => {
     if (!game || !currentHandId) return;
@@ -98,7 +106,8 @@ export default function App({ solver }: { solver?: Solver } = {}) {
       ...(currentPbnMetadata ? { currentPbnMetadata } : {}),
       completedHands
     };
-    saveSoloData(window.localStorage, nextData);
+    latestSoloData.current = nextData;
+    saveSoloData(persistence.storage, nextData);
     setSoloData(nextData);
   }, [game, currentHandId, currentPbnMetadata]);
 
@@ -154,8 +163,8 @@ export default function App({ solver }: { solver?: Solver } = {}) {
     setMessage("");
   }
 
-  function importHand() {
-    const board = parsePbn(pbnInput).boards[0];
+  function importHand(contents = pbnInput) {
+    const board = parsePbn(contents).boards[0];
     const diagnostic = board?.diagnostics.find((entry) => entry.severity === "error");
     if (!board?.deal || !board.dealer || diagnostic) {
       setMessage(`Cannot import PBN: ${diagnostic?.message ?? "include a valid deal and dealer"}`);
@@ -178,6 +187,32 @@ export default function App({ solver }: { solver?: Solver } = {}) {
     setReviewHandId(undefined);
     setPbnInput("");
     setMessage("");
+  }
+
+  async function choosePbnFile() {
+    if (!isNativeClient()) {
+      pbnFileInput.current?.click();
+      return;
+    }
+    try {
+      const contents = await openPbnFile();
+      if (contents !== null) importHand(contents);
+    } catch (error) {
+      setMessage(`Cannot open PBN file: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
+  async function importSelectedPbnFile(event: React.ChangeEvent<HTMLInputElement>) {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    if (!file) return;
+    try {
+      importHand(await file.text());
+    } catch (error) {
+      setMessage(`Cannot open PBN file: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      input.value = "";
+    }
   }
 
   function submitAction(action: Parameters<typeof applyAction>[1]) {
@@ -230,10 +265,10 @@ export default function App({ solver }: { solver?: Solver } = {}) {
   }
 
   function removeHand(id: string) {
-    setSoloData(deleteSavedHand(window.localStorage, id));
+    setSoloData(deleteSavedHand(persistence.storage, id));
   }
 
-  function downloadHand(id: string) {
+  async function downloadHand(id: string) {
     const hand = soloData.completedHands.find((candidate) => candidate.id === id);
     if (!hand) return;
     const contents = exportPbn({
@@ -243,7 +278,16 @@ export default function App({ solver }: { solver?: Solver } = {}) {
       deal: hand.game.initialDeal,
       ...hand.pbnMetadata
     });
-    if (!contents || typeof URL.createObjectURL !== "function") return;
+    if (!contents) return;
+    if (isNativeClient()) {
+      try {
+        await savePbnFile(`contractplay-${id}.pbn`, contents);
+      } catch (error) {
+        setMessage(`Cannot export PBN file: ${error instanceof Error ? error.message : String(error)}`);
+      }
+      return;
+    }
+    if (typeof URL.createObjectURL !== "function") return;
     const url = URL.createObjectURL(new Blob([contents], { type: "text/plain;charset=utf-8" }));
     const link = document.createElement("a");
     link.href = url;
@@ -257,6 +301,8 @@ export default function App({ solver }: { solver?: Solver } = {}) {
     <summary>Import a PBN deal</summary>
     <form onSubmit={(event) => { event.preventDefault(); importHand(); }}>
       <label htmlFor="pbn-input">PBN deal</label>
+      <input ref={pbnFileInput} aria-label="PBN file" type="file" accept=".pbn,.txt,text/plain" onChange={(event) => { void importSelectedPbnFile(event); }} hidden />
+      <button className="secondary-button" type="button" onClick={() => { void choosePbnFile(); }}>Choose PBN file</button>
       <textarea id="pbn-input" value={pbnInput} onChange={(event) => setPbnInput(event.target.value)} placeholder={'[Dealer "N"]\n[Vulnerable "None"]\n[Deal "N:..."]'} />
       <button className="secondary-button" type="submit">Import hand</button>
     </form>

@@ -8,6 +8,10 @@
   },
   "scripts": {
     "build": "pnpm --recursive build",
+    "web:verify": "pnpm --workspace-root build && node scripts/verify-web-build.mjs",
+    "web:dev": "pnpm --workspace-root build && pnpm --filter @contractplay/client dev",
+    "tauri:dev": "pnpm --filter @contractplay/client tauri:dev",
+    "tauri:build": "pnpm --filter @contractplay/client tauri:build",
     "typecheck": "pnpm --recursive build && pnpm --recursive typecheck",
     "lint": "eslint \"apps/*/src/**/*.{ts,tsx}\" \"packages/*/src/**/*.ts\"",
     "test": "pnpm --filter @contractplay/pbn... build && pnpm --filter @contractplay/persistence... build && pnpm --filter @contractplay/bots... build && vitest run --passWithNoTests"

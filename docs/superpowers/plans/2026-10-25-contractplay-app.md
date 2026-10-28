@@ -226,10 +226,10 @@ packages/
 **Interfaces:**
 - Produces: browser build plus installable Windows, macOS, iOS, and iPadOS builds from the shared client.
 
-- [ ] Configure Tauri 2 to load the built React client and allow only the required app capabilities.
-- [ ] Implement native-safe local file/export and app lifecycle adapters behind the persistence interface.
-- [ ] Verify Windows and macOS builds on supported CI runners; verify iOS/iPad builds on macOS with Xcode.
-- [ ] Document signing, notarization, App Store submission, Windows installer, and web deployment steps.
+- [x] Configure Tauri 2 to load the built React client and allow only native file-dialog and selected text-file capabilities.
+- [x] Implement native-safe PBN import/export and persistence lifecycle adapters behind the client storage boundary.
+- [ ] Verify Windows and macOS builds on supported CI runners; build and launch the iOS/iPadOS app in an iPad simulator on macOS with Xcode (workflow configured; first run pending push).
+- [x] Document signing, notarization, App Store submission, Windows installer, and web deployment steps in `docs/platform-delivery.md`.
 
 ### Milestone 5: Live multiplayer
 

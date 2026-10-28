@@ -343,6 +343,19 @@ describe("bridge table", () => {
     }));
   });
 
+  it("imports a PBN file selected from the browser file picker", async () => {
+    const user = userEvent.setup();
+    const pbn = exportPbn({ dealer: "north", vulnerability: "None", actions: [], deal: deal() });
+    render(<App />);
+    await user.click(screen.getByText("Import a PBN deal"));
+    await user.click(screen.getByRole("button", { name: "Choose PBN file" }));
+    const file = new File([pbn], "board.pbn", { type: "text/plain" });
+    Object.defineProperty(file, "text", { value: () => Promise.resolve(pbn) });
+    fireEvent.change(document.querySelector<HTMLInputElement>('input[type="file"]')!, { target: { files: [file] } });
+
+    expect(await screen.findByText("North to bid")).toBeTruthy();
+  });
+
   it("exports a saved hand as PBN with its metadata", async () => {
     const user = userEvent.setup();
     const game = completedGame();
