@@ -1,5 +1,6 @@
 # Changes
 
+- Imported deals now show the current player's 13 cards during the auction; cards remain non-interactive until play begins.
 - Added a Tauri 2 host for Windows, macOS, iOS, and iPadOS, native PBN file pickers with scoped text-file access, and save-on-suspend lifecycle handling. Added a shared SVG app icon and relative web asset paths.
 - Added Windows/macOS installer and iPad simulator CI workflows, GitHub Pages deployment, and draft desktop releases from version tags. Windows/macOS installers and the iPad simulator build/install/launch passed in [GitHub Actions](https://github.com/irom77/ContractPlay/actions/runs/40745554895).
 - Documented local platform builds, web deployment, signing, store submission, and account/device requirements in [the platform delivery guide](docs/platform-delivery.md).

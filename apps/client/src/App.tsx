@@ -150,6 +150,9 @@ export default function App({ solver }: { solver?: Solver } = {}) {
   const userControlsDummy = !!shownGame?.contract &&
     (shownGame.completedTricks.length > 0 || shownGame.currentTrick.length > 0) &&
     samePartnership(userSeat, shownGame.contract.declarer) && shownActor === dummySeat;
+  const canShowHand = !isReviewing && !!game && !!actor &&
+    (game.phase === "auction" || game.phase === "play") &&
+    (!playAgainstBots || actor === userSeat || userControlsDummy);
   const visibleHint = game && hint?.game === game && hint.seat === game.currentActor ? hint : undefined;
   const phaseLabel = shownGame?.phase === "auction" ? "Auction" : shownGame?.phase === "play" ? "Card play" : shownGame?.phase === "complete" ? "Hand complete" : "Passed out";
 
@@ -364,15 +367,17 @@ export default function App({ solver }: { solver?: Solver } = {}) {
             </div>
             {shownGame.completedTricks.length ? <p className="trick-count" aria-live="polite">{shownGame.completedTricks.length} {shownGame.completedTricks.length === 1 ? "trick" : "tricks"} complete</p> : null}
 
-            {!isReviewing && game?.phase === "play" && actor && (!playAgainstBots || actor === userSeat || userControlsDummy) ? <section className="hand-panel" aria-label={`${actorName}'s hand`}>
+            {canShowHand && game && actor ? <section className="hand-panel" aria-label={`${actorName}'s hand`}>
               <div className="hand-heading"><div><p className="eyebrow">{userControlsDummy ? "DUMMY · PLAYING AS" : "PLAYING AS"}</p><h3>{actorName}</h3></div><span>{game.hands[actor].length} cards</span></div>
               <div className="cards-row">
-                {sortHand(game.hands[actor]).map((card) => <button className={`playing-card ${card.suit === "hearts" || card.suit === "diamonds" ? "red-card" : ""} ${visibleHint?.cardIds.has(cardId(card)) ? "hinted-card" : ""}`} key={`${card.suit}-${card.rank}`} aria-label={`Play ${cardLabel(card)}`} onClick={() => submitAction({ type: "play", seat: actor, card })}><span>{card.rank}</span><span>{suitSymbols[card.suit]}</span></button>)}
+                {sortHand(game.hands[actor]).map((card) => game.phase === "play"
+                  ? <button className={`playing-card ${card.suit === "hearts" || card.suit === "diamonds" ? "red-card" : ""} ${visibleHint?.cardIds.has(cardId(card)) ? "hinted-card" : ""}`} key={`${card.suit}-${card.rank}`} aria-label={`Play ${cardLabel(card)}`} onClick={() => submitAction({ type: "play", seat: actor, card })}><span>{card.rank}</span><span>{suitSymbols[card.suit]}</span></button>
+                  : <span className={`playing-card auction-card ${card.suit === "hearts" || card.suit === "diamonds" ? "red-card" : ""}`} key={`${card.suit}-${card.rank}`} aria-label={cardLabel(card)}><span>{card.rank}</span><span>{suitSymbols[card.suit]}</span></span>)}
               </div>
-              <div className="hint-controls">
+              {game.phase === "play" ? <div className="hint-controls">
                 <button className="secondary-button" onClick={() => { void showHint(); }}>Show hint</button>
                 {visibleHint ? <p role="status">{visibleHint.usesSolver ? "Solver recommendations are highlighted." : "Legal cards are highlighted."}</p> : null}
-              </div>
+              </div> : null}
             </section> : null}
 
             {isReviewing ? <div className="review-controls" aria-label="Review controls">

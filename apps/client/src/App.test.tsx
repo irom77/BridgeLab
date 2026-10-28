@@ -354,6 +354,9 @@ describe("bridge table", () => {
     fireEvent.change(document.querySelector<HTMLInputElement>('input[type="file"]')!, { target: { files: [file] } });
 
     expect(await screen.findByText("North to bid")).toBeTruthy();
+    expect(screen.getByRole("region", { name: "North's hand" }).textContent).toContain("13 cards");
+    expect(screen.getByRole("region", { name: "North's hand" }).querySelectorAll(".playing-card")).toHaveLength(13);
+    expect(screen.queryByRole("button", { name: /^Play / })).toBeNull();
   });
 
   it("exports a saved hand as PBN with its metadata", async () => {
