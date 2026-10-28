@@ -228,7 +228,7 @@ packages/
 
 - [x] Configure Tauri 2 to load the built React client and allow only native file-dialog and selected text-file capabilities.
 - [x] Implement native-safe PBN import/export and persistence lifecycle adapters behind the client storage boundary.
-- [ ] Verify Windows and macOS builds on supported CI runners; build and launch the iOS/iPadOS app in an iPad simulator on macOS with Xcode (workflow configured; first run pending push).
+- [x] Verify Windows and macOS installer builds; build, install, and launch the iOS app in an iPad simulator on macOS with Xcode via [GitHub Actions](https://github.com/irom77/ContractPlay/actions/runs/40745554895).
 - [x] Document signing, notarization, App Store submission, Windows installer, and web deployment steps in `docs/platform-delivery.md`.
 
 ### Milestone 5: Live multiplayer

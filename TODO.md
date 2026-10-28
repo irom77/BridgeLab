@@ -206,7 +206,7 @@ The core rules, PBN package, and solo client are in place. Beginner through Expe
 - [x] Build the web client with relative asset paths and add a static-build verifier and GitHub Pages deployment workflow.
 - [ ] Enable GitHub Pages with the Actions source and confirm its first deployment after the workflow reaches `main`.
 - [x] Add Windows/macOS installer CI and a macOS iPad simulator build-and-launch workflow; add draft desktop releases from version tags.
-- [ ] Pass the Windows, macOS, and iOS/iPadOS workflows in GitHub Actions. Workflow results are pending the first push of these changes.
+- [x] Pass Windows and macOS installer builds and the iOS/iPadOS simulator build/install/launch workflows in [GitHub Actions](https://github.com/irom77/ContractPlay/actions/runs/40745554895).
 - [x] Document Windows/macOS signing, Apple signing and store submission, web deployment, and account/device requirements in [the platform guide](docs/platform-delivery.md).
 - [ ] Validate signed installers and an iPhone/iPad device or App Store build when platform certificates, developer accounts, and devices are available.
 

@@ -1,7 +1,7 @@
 # Changes
 
 - Added a Tauri 2 host for Windows, macOS, iOS, and iPadOS, native PBN file pickers with scoped text-file access, and save-on-suspend lifecycle handling. Added a shared SVG app icon and relative web asset paths.
-- Added Windows/macOS installer and iPad simulator CI workflows, GitHub Pages deployment, and draft desktop releases from version tags. These platform workflows are configured but still need their first successful GitHub Actions run.
+- Added Windows/macOS installer and iPad simulator CI workflows, GitHub Pages deployment, and draft desktop releases from version tags. Windows/macOS installers and the iPad simulator build/install/launch passed in [GitHub Actions](https://github.com/irom77/ContractPlay/actions/runs/40745554895).
 - Documented local platform builds, web deployment, signing, store submission, and account/device requirements in [the platform delivery guide](docs/platform-delivery.md).
 - Expert can use Blackwood after 3♥–3♠ establishes a spade fit and the Grand Slam Force after a weak-three major fit reaches game. Weak-three Blackwood skips an unproductive king ask when responder holds no kings and places 7M directly when responder holds all four.
 - In a 2/1 game force after opener raises responder's minor, responder can show a three-card major fit below game with 15+ HCP; opener completes game, while 13–14 HCP fast-arrives.
