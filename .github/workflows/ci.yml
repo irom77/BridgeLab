@@ -87,7 +87,7 @@ jobs:
         id: simulator-app
         shell: bash
         run: |
-          app_path="$(find apps/client/src-tauri/gen/apple/build -type d -name '*.app' -path '*iphonesimulator*' -print -quit)"
+          app_path="$(find apps/client/src-tauri/gen/apple/build -type d -name '*.app' -path '*sim*' -print -quit)"
           test -n "$app_path"
           echo "path=$app_path" >> "$GITHUB_OUTPUT"
       - name: Install and launch on an iPad simulator
