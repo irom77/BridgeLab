@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { applyAction, createGameState, deal, validatePlay } from "@contractplay/core";
 import type { Solver } from "@contractplay/core";
@@ -45,6 +45,57 @@ describe("bridge table", () => {
     await user.click(screen.getByRole("button", { name: "Make bid" }));
     expect(screen.getAllByRole("listitem")[0]?.textContent).toBe("North1 clubs");
     expect(screen.getByText("East to bid")).toBeTruthy();
+  });
+
+  it("centers the auction and keeps setup, PBN import, and recent hands in the table menu", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "Start a new hand" }));
+
+    expect(screen.getByRole("region", { name: "Auction" }).closest(".auction-layout")).toBeTruthy();
+    const menu = screen.getByText("Table menu").closest("details");
+    expect(menu).toBeTruthy();
+    await user.click(screen.getByText("Table menu"));
+    expect(within(menu!).getByLabelText("Dealer")).toBeTruthy();
+    expect(within(menu!).getByText("Import a PBN deal")).toBeTruthy();
+    expect(within(menu!).getByRole("region", { name: "Recent hands" })).toBeTruthy();
+    await user.click(within(menu!).getByText("Import a PBN deal"));
+    expect(within(menu!).getByRole("button", { name: "Choose PBN file" })).toBeTruthy();
+    expect(within(menu!).getByRole("button", { name: "Import hand" })).toBeTruthy();
+  });
+
+  it("keeps the latest call visible in a long centered auction", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "Start a new hand" }));
+    await user.selectOptions(screen.getByLabelText("Contract call"), "1clubs");
+    await user.click(screen.getByRole("button", { name: "Make bid" }));
+    const auctionList = screen.getByRole("region", { name: "Auction" }).querySelector("ol")!;
+    Object.defineProperty(auctionList, "scrollHeight", { configurable: true, value: 300 });
+    for (const bid of ["pass", "1diamonds", "pass", "1hearts", "pass", "1spades", "pass", "1notrump", "pass"]) {
+      await user.selectOptions(screen.getByLabelText("Contract call"), bid);
+      await user.click(screen.getByRole("button", { name: "Make bid" }));
+    }
+
+    expect(auctionList.scrollTop).toBe(300);
+    expect(auctionList.lastElementChild?.textContent).toContain("Pass");
+  });
+
+  it("keeps the auction centered and hides bid controls on a bot turn", () => {
+    vi.useFakeTimers();
+    render(<App />);
+    fireEvent.change(screen.getByLabelText("Opponents"), { target: { value: "bots" } });
+    fireEvent.change(screen.getByLabelText("Your seat"), { target: { value: "south" } });
+    fireEvent.click(screen.getByRole("button", { name: "Start a new hand" }));
+
+    expect(screen.getByText("Bot · North to bid")).toBeTruthy();
+    expect(screen.getByRole("region", { name: "Auction" }).closest(".auction-layout")).toBeTruthy();
+    expect(screen.queryByLabelText("Contract call")).toBeNull();
+  });
+
+  it("shows the current package version in the persistent header", () => {
+    render(<App />);
+    expect(screen.getByText(`Version ${__CONTRACTPLAY_VERSION__}`)).toBeTruthy();
   });
 
   it("shows rule feedback and keeps the auction on the same player after an invalid bid", async () => {
@@ -208,6 +259,7 @@ describe("bridge table", () => {
 
     expect(screen.getByRole("region", { name: "Hand result" })).toBeTruthy();
     expect(screen.getByRole("region", { name: "Hand result" }).textContent).toContain("tricks for NS");
+    await user.click(screen.getByText("Table menu"));
     await waitFor(() => expect(screen.getByRole("button", { name: "Review hand 1" })).toBeTruthy());
   }, 30000);
 
@@ -221,6 +273,7 @@ describe("bridge table", () => {
 
     expect(screen.getByText("BOARD 1 · DEALER SOUTH · VULNERABILITY BOTH")).toBeTruthy();
     expect(screen.getByText("South to bid")).toBeTruthy();
+    await user.click(screen.getByText("Table menu"));
     await user.selectOptions(screen.getByLabelText("Dealer"), "west");
     await user.selectOptions(screen.getByLabelText("Vulnerability"), "NS");
     await user.click(screen.getByRole("button", { name: "Deal a new hand" }));
@@ -309,6 +362,7 @@ describe("bridge table", () => {
     fireEvent.change(screen.getByLabelText("Opponents"), { target: { value: "bots" } });
     fireEvent.change(screen.getByLabelText("Your seat"), { target: { value: "south" } });
     fireEvent.click(screen.getByRole("button", { name: "Start a new hand" }));
+    fireEvent.click(screen.getByText("Table menu"));
     fireEvent.change(screen.getByLabelText("Dealer"), { target: { value: "west" } });
     fireEvent.click(screen.getByRole("button", { name: "Deal a new hand" }));
 
@@ -387,6 +441,7 @@ describe("bridge table", () => {
     vi.stubGlobal("URL", { createObjectURL, revokeObjectURL });
     render(<App />);
 
+    await user.click(screen.getByText("Table menu"));
     await user.click(screen.getByRole("button", { name: "Export PBN hand 1" }));
 
     const download = createObjectURL.mock.calls[0]?.[0] as CapturedBlob | undefined;
@@ -443,6 +498,7 @@ describe("bridge table", () => {
     saveSoloData(window.localStorage, data);
     render(<App />);
 
+    await user.click(screen.getByText("Table menu"));
     await user.click(screen.getByRole("button", { name: /Review hand 1/ }));
     expect(screen.getByText("Reviewing action 0 of 56")).toBeTruthy();
     await user.click(screen.getByRole("button", { name: "Next action" }));

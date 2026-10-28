@@ -84,6 +84,7 @@ export default function App({ solver }: { solver?: Solver } = {}) {
   const [hint, setHint] = useState<{ game: GameState; seat: Seat; cardIds: ReadonlySet<string>; usesSolver: boolean }>();
   const [reviewHandId, setReviewHandId] = useState<string>();
   const [reviewCursor, setReviewCursor] = useState(0);
+  const auctionListRef = useRef<HTMLOListElement>(null);
 
   useEffect(() => persistence.onSuspend(() => saveSoloData(persistence.storage, latestSoloData.current)), [persistence]);
 
@@ -300,6 +301,13 @@ export default function App({ solver }: { solver?: Solver } = {}) {
   }
 
   const handCount = selectedHand?.game.history.actions.length ?? 0;
+  const shownAuctionLength = shownGame?.auction.length;
+
+  useEffect(() => {
+    const list = auctionListRef.current;
+    if (shownGame?.phase === "auction" && list) list.scrollTop = list.scrollHeight;
+  }, [shownGame?.phase, shownAuctionLength]);
+
   const pbnImportForm = <details className="pbn-import">
     <summary>Import a PBN deal</summary>
     <form onSubmit={(event) => { event.preventDefault(); importHand(); }}>
@@ -310,23 +318,46 @@ export default function App({ solver }: { solver?: Solver } = {}) {
       <button className="secondary-button" type="submit">Import hand</button>
     </form>
   </details>;
+  const recentHandsPanel = <section className="recent-panel" aria-label="Recent hands">
+    <div className="section-heading"><div><p className="eyebrow">ON THIS DEVICE</p><h2>Recent hands</h2></div><span className="auction-count">{soloData.completedHands.length}</span></div>
+    {soloData.completedHands.length ? <ul className="recent-list">{soloData.completedHands.map((hand, index) => <li key={hand.id}>
+      <button className="review-link" aria-label={`Review hand ${index + 1}`} onClick={() => openReview(hand)}><strong>Hand {soloData.completedHands.length - index}</strong><span>{new Date(hand.savedAt).toLocaleDateString()}</span></button>
+      <div className="recent-actions"><button onClick={() => downloadHand(hand.id)} aria-label={`Export PBN hand ${index + 1}`}>Export PBN</button><button onClick={() => removeHand(hand.id)} aria-label={`Delete hand ${index + 1}`}>Delete</button></div>
+    </li>)}</ul> : <p className="quiet-copy">Finished hands will be saved here for review.</p>}
+  </section>;
+  const tableMenu = shownGame ? <details className="table-menu">
+    <summary>Table menu</summary>
+    <div className="table-menu-content">
+      {!isReviewing ? <button className="secondary-button menu-deal" onClick={startHand}>Deal a new hand</button> : <button className="secondary-button menu-deal" onClick={() => setReviewHandId(undefined)}>Exit review</button>}
+      {!isReviewing ? <section className="menu-settings" aria-label="Next deal settings">
+        <span className="eyebrow">NEXT DEAL</span>
+        <label>Dealer<select aria-label="Dealer" value={dealer} onChange={(event) => setDealer(event.target.value as Seat)}>{seats.map((seat) => <option key={seat} value={seat}>{seatNames[seat]}</option>)}</select></label>
+        <label>Vulnerability<select aria-label="Vulnerability" value={vulnerability} onChange={(event) => setVulnerability(event.target.value as Vulnerability)}>{vulnerabilities.map((value) => <option key={value} value={value}>{value === "None" ? "None" : value === "Both" ? "Both" : `${value} vulnerable`}</option>)}</select></label>
+        <label>Opponents<select aria-label="Opponents" value={playAgainstBots ? "bots" : "manual"} onChange={(event) => setPlayAgainstBots(event.target.value === "bots")}><option value="manual">Manual table</option><option value="bots">Bots</option></select></label>
+        {playAgainstBots ? <><label>Your seat<select aria-label="Your seat" value={userSeat} onChange={(event) => setUserSeat(event.target.value as Seat)}>{seats.map((seat) => <option key={seat} value={seat}>{seatNames[seat]}</option>)}</select></label><label>Bot skill<select aria-label="Bot skill" value={botSkill} onChange={(event) => setBotSkill(event.target.value as SkillLevel)}><option value="beginner">Beginner</option><option value="intermediate">Intermediate</option><option value="advanced">Advanced</option><option value="expert">Expert</option></select></label><label>Bot bidding style<select aria-label="Bot bidding style" value={biddingStyle} onChange={(event) => setBiddingStyle(event.target.value as "SAYC" | "2/1")}><option value="SAYC">Basic SAYC</option><option value="2/1">Basic 2/1</option></select></label></> : null}
+      </section> : null}
+      {pbnImportForm}
+      {recentHandsPanel}
+    </div>
+  </details> : null;
 
   return (
     <main className="app-shell">
       <header className="site-header">
         <a className="brand" href="#home" aria-label="ContractPlay home"><span className="brand-mark">C</span><span>ContractPlay</span></a>
-        <span className="header-note">Play · learn · review</span>
+        <div className="header-actions">
+          <span className="header-version">Version {__CONTRACTPLAY_VERSION__}</span>
+          {tableMenu}
+        </div>
       </header>
 
-      <section className="welcome-row" aria-labelledby="page-title">
+      {!shownGame ? <section className="welcome-row" aria-labelledby="page-title">
         <div>
           <p className="eyebrow">THE TABLE IS YOURS</p>
           <h1 id="page-title">A clearer way to play bridge.</h1>
           <p className="page-intro">Follow every call and card, one move at a time.</p>
         </div>
-        {game && !isReviewing ? <button className="primary-button" onClick={startHand}>Deal a new hand</button> : null}
-        {isReviewing ? <button className="secondary-button" onClick={() => setReviewHandId(undefined)}>Exit review</button> : null}
-      </section>
+      </section> : null}
 
       {!shownGame ? (
         <section className="empty-table" aria-label="Bridge table preview">
@@ -344,15 +375,7 @@ export default function App({ solver }: { solver?: Solver } = {}) {
         </section>
       ) : shownGame ? (
         <>
-        {!isReviewing ? <section className="setup-strip" aria-label="Next deal settings">
-          <span className="eyebrow">NEXT DEAL</span>
-          <label>Dealer<select aria-label="Dealer" value={dealer} onChange={(event) => setDealer(event.target.value as Seat)}>{seats.map((seat) => <option key={seat} value={seat}>{seatNames[seat]}</option>)}</select></label>
-          <label>Vulnerability<select aria-label="Vulnerability" value={vulnerability} onChange={(event) => setVulnerability(event.target.value as Vulnerability)}>{vulnerabilities.map((value) => <option key={value} value={value}>{value === "None" ? "None" : value === "Both" ? "Both" : `${value} vulnerable`}</option>)}</select></label>
-          <label>Opponents<select aria-label="Opponents" value={playAgainstBots ? "bots" : "manual"} onChange={(event) => setPlayAgainstBots(event.target.value === "bots")}><option value="manual">Manual table</option><option value="bots">Bots</option></select></label>
-          {playAgainstBots ? <><label>Your seat<select aria-label="Your seat" value={userSeat} onChange={(event) => setUserSeat(event.target.value as Seat)}>{seats.map((seat) => <option key={seat} value={seat}>{seatNames[seat]}</option>)}</select></label><label>Bot skill<select aria-label="Bot skill" value={botSkill} onChange={(event) => setBotSkill(event.target.value as SkillLevel)}><option value="beginner">Beginner</option><option value="intermediate">Intermediate</option><option value="advanced">Advanced</option><option value="expert">Expert</option></select></label><label>Bot bidding style<select aria-label="Bot bidding style" value={biddingStyle} onChange={(event) => setBiddingStyle(event.target.value as "SAYC" | "2/1")}><option value="SAYC">Basic SAYC</option><option value="2/1">Basic 2/1</option></select></label></> : null}
-          {pbnImportForm}
-        </section> : null}
-        <div className="game-layout">
+        <div className={`game-layout ${shownGame.phase === "auction" ? "auction-layout" : ""}`}>
           <section className="table-panel" aria-label={isReviewing ? "Hand review" : "Bridge table"}>
             <div className="table-heading">
               <div><p className="eyebrow">{shownGame.contract ? `BOARD 1 · ${callLabel(`${shownGame.contract.level}${shownGame.contract.strain}` as Bid)} · ${seatNames[shownGame.contract.declarer]} DECLARES` : `BOARD 1 · DEALER ${seatNames[shownGame.dealer].toUpperCase()} · VULNERABILITY ${shownGame.vulnerability.toUpperCase()}`}</p><h2>{isReviewing ? "Hand review" : phaseLabel}</h2></div>
@@ -364,6 +387,14 @@ export default function App({ solver }: { solver?: Solver } = {}) {
               <div className="trick-area" role="region" aria-label="Current trick">
                 {shownGame.currentTrick.length ? shownGame.currentTrick.map(({ seat, card }) => <span className="trick-card" key={seat}>{seatNames[seat][0]} {suitSymbols[card.suit]}{card.rank}</span>) : <span className="trick-placeholder">{shownGame.contract ? `${seatNames[shownGame.trickLeader]} leads` : "Auction in progress"}</span>}
               </div>
+              {shownGame.phase === "auction" ? <section className="auction-panel centered-auction" aria-label="Auction">
+                <div className="section-heading"><div><p className="eyebrow">CALLS SO FAR</p><h2>Auction</h2></div><span className="auction-count">{shownGame.auction.length}</span></div>
+                {shownGame.auction.length ? <ol className="auction-list" ref={auctionListRef}>{shownGame.auction.map(({ seat, bid }, index) => <li key={`${seat}-${index}`}><span>{seatNames[seat]}</span><strong>{callLabel(bid)}</strong></li>)}</ol> : <p className="quiet-copy">The first call is yours to make.</p>}
+                {!isReviewing && game?.phase === "auction" && (!playAgainstBots || game.currentActor === userSeat) ? <form className="call-controls" onSubmit={(event) => { event.preventDefault(); submitAction({ type: "bid", seat: game.currentActor, bid: call }); }}>
+                  <label htmlFor="call-select">Contract call</label>
+                  <div className="call-row"><select id="call-select" value={call} onChange={(event) => setCall(event.target.value as Bid)}>{contractCalls.map((option) => <option key={option} value={option}>{callLabel(option)}</option>)}</select><button className="primary-button small-button" type="submit">Make bid</button></div>
+                </form> : null}
+              </section> : null}
             </div>
             {shownGame.completedTricks.length ? <p className="trick-count" aria-live="polite">{shownGame.completedTricks.length} {shownGame.completedTricks.length === 1 ? "trick" : "tricks"} complete</p> : null}
 
@@ -391,25 +422,18 @@ export default function App({ solver }: { solver?: Solver } = {}) {
           </section>
 
           <aside className="side-panel">
-            <section className="auction-panel" aria-label="Auction">
+            {shownGame.phase !== "auction" ? <section className="auction-panel" aria-label="Auction">
               <div className="section-heading"><div><p className="eyebrow">CALLS SO FAR</p><h2>Auction</h2></div><span className="auction-count">{shownGame.auction.length}</span></div>
-              {shownGame.auction.length ? <ol className="auction-list">{shownGame.auction.map(({ seat, bid }, index) => <li key={`${seat}-${index}`}><span>{seatNames[seat]}</span><strong>{callLabel(bid)}</strong></li>)}</ol> : <p className="quiet-copy">The first call is yours to make.</p>}
+              {shownGame.auction.length ? <ol className="auction-list" ref={auctionListRef}>{shownGame.auction.map(({ seat, bid }, index) => <li key={`${seat}-${index}`}><span>{seatNames[seat]}</span><strong>{callLabel(bid)}</strong></li>)}</ol> : <p className="quiet-copy">The first call is yours to make.</p>}
               {!isReviewing && game?.phase === "auction" && (!playAgainstBots || game.currentActor === userSeat) ? <form className="call-controls" onSubmit={(event) => { event.preventDefault(); submitAction({ type: "bid", seat: game.currentActor, bid: call }); }}>
                 <label htmlFor="call-select">Contract call</label>
                 <div className="call-row"><select id="call-select" value={call} onChange={(event) => setCall(event.target.value as Bid)}>{contractCalls.map((option) => <option key={option} value={option}>{callLabel(option)}</option>)}</select><button className="primary-button small-button" type="submit">Make bid</button></div>
               </form> : null}
-            </section>
+            </section> : null}
 
             {shownGame.phase === "complete" && shownGame.score ? <section className="score-panel" aria-label="Hand result"><p className="eyebrow">HAND RESULT</p><h2>{shownGame.contract?.level} {shownGame.contract?.strain}</h2><p>{shownGame.score.tricksTaken} tricks for {shownGame.contract?.declarer === "north" || shownGame.contract?.declarer === "south" ? "NS" : "EW"} · {shownGame.score.score > 0 ? "+" : ""}{shownGame.score.score} NS</p></section> : null}
             {shownGame.phase === "passed-out" ? <p className="score-panel">Passed out. Deal another hand when you’re ready.</p> : null}
 
-            <section className="recent-panel" aria-label="Recent hands">
-              <div className="section-heading"><div><p className="eyebrow">ON THIS DEVICE</p><h2>Recent hands</h2></div><span className="auction-count">{soloData.completedHands.length}</span></div>
-              {soloData.completedHands.length ? <ul className="recent-list">{soloData.completedHands.map((hand, index) => <li key={hand.id}>
-                <button className="review-link" aria-label={`Review hand ${index + 1}`} onClick={() => openReview(hand)}><strong>Hand {soloData.completedHands.length - index}</strong><span>{new Date(hand.savedAt).toLocaleDateString()}</span></button>
-                <div className="recent-actions"><button onClick={() => downloadHand(hand.id)} aria-label={`Export PBN hand ${index + 1}`}>Export PBN</button><button onClick={() => removeHand(hand.id)} aria-label={`Delete hand ${index + 1}`}>Delete</button></div>
-              </li>)}</ul> : <p className="quiet-copy">Finished hands will be saved here for review.</p>}
-            </section>
           </aside>
         </div>
         </>
