@@ -1,5 +1,6 @@
 # Changes
 
+- Expert can use Blackwood after 3♥–3♠ establishes a spade fit and the Grand Slam Force after a weak-three major fit reaches game. Weak-three Blackwood skips an unproductive king ask when responder holds no kings and places 7M directly when responder holds all four.
 - In a 2/1 game force after opener raises responder's minor, responder can show a three-card major fit below game with 15+ HCP; opener completes game, while 13–14 HCP fast-arrives.
 - Expert can continue Blackwood after 3♣/3♦–3♥/3♠–4M confirms a major fit, asking for aces and kings before placing small or grand slam.
 - Expert can investigate slam after an uncontested 3♣/3♦ opening with 19+ HCP and five-card support, using Blackwood ace and king asks.

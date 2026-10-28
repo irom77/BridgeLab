@@ -2450,15 +2450,22 @@ export class ExpertBot implements BotPlayer {
     };
     const weakThreeMajorFitAuction = () => {
       const [opening, response, raise] = calls;
-      const minor = opening?.bid.match(/^3(clubs|diamonds)$/)?.[1] as Suit | undefined;
+      const openingSuit = opening?.bid.match(/^3(clubs|diamonds|hearts|spades)$/)?.[1] as Suit | undefined;
       const major = response?.bid.match(/^3(hearts|spades)$/)?.[1] as Suit | undefined;
-      if (!opening || !minor || !response || !major || !raise) return undefined;
+      const spadeOpeningToHeartResponse = opening?.bid === "3spades" && response?.bid === "4hearts";
+      const heartOpeningToSpadeResponse = opening?.bid === "3hearts" && response?.bid === "3spades";
+      const minorOpeningToMajorResponse = (opening?.bid === "3clubs" || opening?.bid === "3diamonds") && major;
+      const agreedMajor = major ?? (spadeOpeningToHeartResponse ? "hearts" : undefined);
+      if (!opening || !openingSuit || !response || !agreedMajor || !raise) return undefined;
       const responderSeat = SEATS[(SEATS.indexOf(opening.seat) + 2) % SEATS.length]!;
+      const expectedRaise = spadeOpeningToHeartResponse ? "5hearts" : `4${agreedMajor}`;
       if (
-        response.seat !== responderSeat || raise.seat !== opening.seat || raise.bid !== `4${major}` ||
+        response.seat !== responderSeat || raise.seat !== opening.seat ||
+        !(minorOpeningToMajorResponse || heartOpeningToSpadeResponse || spadeOpeningToHeartResponse) ||
+        raise.bid !== expectedRaise || passedBeforeOpening(auction, responderSeat, opening) ||
         auction.some(({ seat, bid }) => seat !== opening.seat && seat !== responderSeat && bid !== "pass")
       ) return undefined;
-      return { opening, major, responderSeat };
+      return { opening, openingSuit, major: agreedMajor, responderSeat };
     };
     const blackwoodTrump = (): Suit | undefined => {
       const [opening, response, openerRebid] = calls;
@@ -2491,10 +2498,30 @@ export class ExpertBot implements BotPlayer {
       : undefined;
     const weakThree = weakThreeOpening();
     const weakThreeMajorFit = weakThreeMajorFitAuction();
+    const contractBidRank = (bid: Bid): number => {
+      const match = bid.match(/^([1-7])(clubs|diamonds|hearts|spades|notrump)$/);
+      if (!match) return -1;
+      return Number(match[1]) * 5 + ["clubs", "diamonds", "hearts", "spades", "notrump"].indexOf(match[2]!);
+    };
     if (
       calls.length === 3 && weakThreeMajorFit?.responderSeat === seat && points(hand) >= 19 &&
-      hand.filter((card) => card.suit === weakThreeMajorFit.major).length >= 6
+      hand.filter((card) => card.suit === weakThreeMajorFit.major).length >= 6 &&
+      weakThreeMajorFit.opening.bid !== "3spades"
     ) return Promise.resolve("4notrump");
+
+    if (calls.length === 3 && weakThreeMajorFit?.responderSeat === seat) {
+      const majorLength = hand.filter((card) => card.suit === weakThreeMajorFit.major).length;
+      const canAskBlackwood = weakThreeMajorFit.opening.bid !== "3spades" && points(hand) >= 19 && majorLength >= 6;
+      if (points(hand) >= 18 && majorLength >= 6 && !canAskBlackwood) return Promise.resolve("5notrump");
+    }
+
+    if (
+      calls.length === 4 && weakThreeMajorFit?.opening.seat === seat &&
+      calls[3]?.seat === partner && calls[3].bid === "5notrump"
+    ) {
+      const topTrumpHonors = hand.filter((card) => card.suit === weakThreeMajorFit.major && ["A", "K", "Q"].includes(card.rank)).length;
+      return Promise.resolve(`${topTrumpHonors >= 2 ? 7 : 6}${weakThreeMajorFit.major}` as Bid);
+    }
 
     if (
       calls.length === 4 && weakThreeMajorFit?.opening.seat === seat && calls[3]?.seat === partner &&
@@ -2514,7 +2541,12 @@ export class ExpertBot implements BotPlayer {
     ) {
       const partnerAces = calls[4].bid === "5clubs" ? 0 : calls[4].bid === "5diamonds" ? 1 : calls[4].bid === "5hearts" ? 2 : 3;
       const combinedAces = aceCount(hand) + partnerAces;
-      if (combinedAces === 4) return Promise.resolve("5notrump");
+      if (combinedAces === 4) {
+        const ownKings = hand.filter((card) => card.rank === "K").length;
+        if (ownKings === 0) return Promise.resolve(`6${weakThreeMajorFit.major}` as Bid);
+        if (ownKings === 4) return Promise.resolve(`7${weakThreeMajorFit.major}` as Bid);
+        return Promise.resolve("5notrump");
+      }
       return Promise.resolve(`${combinedAces >= 3 ? 6 : 5}${weakThreeMajorFit.major}` as Bid);
     }
 
@@ -2542,7 +2574,9 @@ export class ExpertBot implements BotPlayer {
       const partnerKings = calls[6].bid === "6clubs" ? 0 : calls[6].bid === "6diamonds" ? 1 : calls[6].bid === "6hearts" ? 2 : 3;
       const allAcesKnown = aceCount(hand) + partnerAces === 4;
       const allKingsKnown = hand.filter((card) => card.rank === "K").length + partnerKings === 4;
-      return Promise.resolve(`${allAcesKnown && allKingsKnown ? 7 : 6}${weakThreeMajorFit.major}` as Bid);
+      if (allAcesKnown && allKingsKnown) return Promise.resolve(`7${weakThreeMajorFit.major}` as Bid);
+      if (contractBidRank(calls[6].bid) >= contractBidRank(`6${weakThreeMajorFit.major}`)) return Promise.resolve("pass");
+      return Promise.resolve(`6${weakThreeMajorFit.major}` as Bid);
     }
 
     if (
@@ -2577,7 +2611,12 @@ export class ExpertBot implements BotPlayer {
     ) {
       const partnerAces = calls[2].bid === "5clubs" ? 0 : calls[2].bid === "5diamonds" ? 1 : calls[2].bid === "5hearts" ? 2 : 3;
       const combinedAces = aceCount(hand) + partnerAces;
-      if (combinedAces === 4) return Promise.resolve("5notrump");
+      if (combinedAces === 4) {
+        const ownKings = hand.filter((card) => card.rank === "K").length;
+        if (ownKings === 0) return Promise.resolve(`6${weakThree.suit}` as Bid);
+        if (ownKings === 4) return Promise.resolve(`7${weakThree.suit}` as Bid);
+        return Promise.resolve("5notrump");
+      }
       return Promise.resolve(`${combinedAces >= 3 ? 6 : 5}${weakThree.suit}` as Bid);
     }
 
@@ -2605,7 +2644,9 @@ export class ExpertBot implements BotPlayer {
       const partnerAces = calls[2].bid === "5clubs" ? 0 : calls[2].bid === "5diamonds" ? 1 : calls[2].bid === "5hearts" ? 2 : 3;
       const allAcesKnown = aceCount(hand) + partnerAces === 4;
       const allKingsKnown = hand.filter((card) => card.rank === "K").length + partnerKings === 4;
-      return Promise.resolve(`${allAcesKnown && allKingsKnown ? 7 : 6}${weakThree.suit}` as Bid);
+      if (allAcesKnown && allKingsKnown) return Promise.resolve(`7${weakThree.suit}` as Bid);
+      if (contractBidRank(calls[4].bid) >= contractBidRank(`6${weakThree.suit}`)) return Promise.resolve("pass");
+      return Promise.resolve(`6${weakThree.suit}` as Bid);
     }
 
     if (
