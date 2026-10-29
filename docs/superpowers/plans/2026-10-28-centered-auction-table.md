@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Focus the active table on a centered auction, larger cards, compact in-game menus, and a visible release version.
+**Goal:** Focus the active table on a centered auction, larger cards, compact in-game menus, and a visible release version. The auction uses a seat-aligned call grid inspired by Trickster Bridge.
 
-**Architecture:** Keep the existing client components and game state. Recompose the auction panel into the central table area during bidding, expose setup/import/history through a native disclosure menu, and source the header version from the client package manifest.
+**Architecture:** Keep the existing client components and game state. Recompose the auction panel into the central table area during bidding, expose setup/import/history through a native disclosure menu, and source the header version from the client package manifest. The call grid derives currently available contract, double, and redouble actions from the auction for presentation; core action validation remains authoritative.
 
 **Tech Stack:** React, TypeScript, CSS, Vite, Vitest, pnpm.
 
@@ -77,3 +77,16 @@
 - [x] Add a concise user-facing change entry.
 - [x] Run `pnpm test`, `pnpm typecheck`, `pnpm lint`, and `pnpm web:verify`.
 - [x] Inspect final diff and confirm it is ready for release without publishing the release.
+
+### Task 5: Add a seat-aligned bidding box
+
+**Files:**
+- Modify: `apps/client/src/App.tsx`
+- Modify: `apps/client/src/styles.css`
+- Test: `apps/client/src/App.test.tsx`
+
+- [x] Replace the call selector with a compact level-by-strain grid and explicit Pass, Double, and Redouble controls.
+- [x] Disable contract calls that do not outrank the current contract, and enable Double/Redouble only for the eligible side.
+- [x] Align auction calls in North-East-South-West columns beginning at the dealer, with compact suit and notrump labels.
+- [x] Update focused UI coverage for bidding, call eligibility, and seat alignment.
+- [x] Run `pnpm test` (886 tests), `pnpm typecheck`, `pnpm lint`, and `pnpm web:verify`.

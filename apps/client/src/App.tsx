@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import {
   applyAction,
   cardId,
@@ -45,7 +45,20 @@ const seats: readonly Seat[] = ["north", "east", "south", "west"];
 const vulnerabilities: readonly Vulnerability[] = ["None", "NS", "EW", "Both"];
 const partnerOf = (seat: Seat): Seat => seats[(seats.indexOf(seat) + 2) % 4]!;
 const samePartnership = (a: Seat, b: Seat): boolean => seats.indexOf(a) % 2 === seats.indexOf(b) % 2;
-const contractCalls: Bid[] = ["pass", "double", "redouble", ...[1, 2, 3, 4, 5, 6, 7].flatMap((level) => biddingStrains.map((strain) => `${level}${strain}` as Bid))];
+const contractRank = (bid: Bid): number => {
+  const match = /^(\d)(clubs|diamonds|hearts|spades|notrump)$/.exec(bid);
+  return match ? Number(match[1]) * 5 + biddingStrains.indexOf(match[2] as typeof biddingStrains[number]) : 0;
+};
+
+function isCallAvailable(game: GameState, bid: Bid): boolean {
+  if (bid === "pass") return true;
+  const previousContract = [...game.auction].reverse().find(({ bid: call }) => call !== "pass" && call !== "double" && call !== "redouble");
+  const callsSinceContract = previousContract ? game.auction.slice(game.auction.indexOf(previousContract) + 1) : [];
+  const lastNonPass = [...callsSinceContract].reverse().find(({ bid: call }) => call !== "pass");
+  if (bid === "double") return !!previousContract && !["double", "redouble"].includes(lastNonPass?.bid ?? "") && !samePartnership(previousContract.seat, game.currentActor);
+  if (bid === "redouble") return !!previousContract && lastNonPass?.bid === "double" && samePartnership(previousContract.seat, game.currentActor);
+  return !previousContract || contractRank(bid) > contractRank(previousContract.bid);
+}
 
 function callLabel(bid: Bid): string {
   if (bid === "pass") return "Pass";
@@ -53,6 +66,15 @@ function callLabel(bid: Bid): string {
   if (bid === "redouble") return "Redouble";
   const match = /^(\d)(clubs|diamonds|hearts|spades|notrump)$/.exec(bid);
   return match ? `${match[1]} ${match[2]}` : bid;
+}
+
+function compactCallLabel(bid: Bid): string {
+  if (bid === "double") return "X";
+  if (bid === "redouble") return "XX";
+  const match = /^(\d)(clubs|diamonds|hearts|spades|notrump)$/.exec(bid);
+  if (!match) return callLabel(bid);
+  const strain = match[2] as typeof biddingStrains[number];
+  return `${match[1]}${strain === "notrump" ? "NT" : suitSymbols[strain]}`;
 }
 
 function cardLabel(card: Card): string {
@@ -104,7 +126,6 @@ export default function App({ solver }: { solver?: Solver } = {}) {
   const [userSeat, setUserSeat] = useState<Seat>("north");
   const [botSkill, setBotSkill] = useState<SkillLevel>("beginner");
   const [biddingStyle, setBiddingStyle] = useState<"SAYC" | "2/1">("SAYC");
-  const [call, setCall] = useState<Bid>("pass");
   const [auctionPinned, setAuctionPinned] = useState(false);
   const [auctionHovered, setAuctionHovered] = useState(false);
   const [auctionFocused, setAuctionFocused] = useState(false);
@@ -254,7 +275,6 @@ export default function App({ solver }: { solver?: Solver } = {}) {
     setCurrentHandId(id);
     setGame(createGameState({ deal: deal(), dealer, vulnerability }));
     setCurrentPbnMetadata(undefined);
-    setCall("pass");
     setAuctionPinned(false);
     setAuctionHovered(false);
     setAuctionFocused(false);
@@ -407,6 +427,13 @@ export default function App({ solver }: { solver?: Solver } = {}) {
     if (shownGame?.phase === "auction" && list) list.scrollTop = list.scrollHeight;
   }, [shownGame?.phase, shownAuctionLength]);
 
+  const auctionRows = useMemo(() => {
+    if (!shownGame) return [];
+    const dealerIndex = seats.indexOf(shownGame.dealer);
+    const padded = [...Array(dealerIndex).fill(undefined), ...shownGame.auction];
+    return Array.from({ length: Math.ceil(padded.length / 4) }, (_, row) => padded.slice(row * 4, row * 4 + 4));
+  }, [shownGame?.dealer, shownGame?.auction]);
+
   const pbnImportForm = <details className="pbn-import">
     <summary>Import a PBN deal</summary>
     <form onSubmit={(event) => { event.preventDefault(); importHand(); }}>
@@ -496,12 +523,31 @@ export default function App({ solver }: { solver?: Solver } = {}) {
                 </span>) : <span className="trick-placeholder">{shownGame.contract ? `${seatNames[shownGame.trickLeader]} leads` : "Auction in progress"}</span>}
               </div>
               {shownGame.phase === "auction" ? <section className="auction-panel centered-auction" aria-label="Auction">
-                <div className="section-heading"><div><p className="eyebrow">CALLS SO FAR</p><h2>Auction</h2></div><span className="auction-count">{shownGame.auction.length}</span></div>
-                {shownGame.auction.length ? <ol className="auction-list" ref={auctionListRef}>{shownGame.auction.map(({ seat, bid }, index) => <li key={`${seat}-${index}`}><span>{seatNames[seat]}</span><strong>{callLabel(bid)}</strong></li>)}</ol> : <p className="quiet-copy">The first call is yours to make.</p>}
-                {!isReviewing && game?.phase === "auction" && (!playAgainstBots || game.currentActor === userSeat) ? <form className="call-controls" onSubmit={(event) => { event.preventDefault(); submitAction({ type: "bid", seat: game.currentActor, bid: call }); }}>
-                  <label htmlFor="call-select">Contract call</label>
-                  <div className="call-row"><select id="call-select" value={call} onChange={(event) => setCall(event.target.value as Bid)}>{contractCalls.map((option) => <option key={option} value={option}>{callLabel(option)}</option>)}</select><button className="primary-button small-button" type="submit">Make bid</button></div>
-                </form> : null}
+                <div className="section-heading"><div><p className="eyebrow">{shownGame.vulnerability === "None" ? "NON-VULNERABLE" : `${shownGame.vulnerability.toUpperCase()} VULNERABLE`}</p><h2>Auction</h2></div><span className="auction-count">{shownGame.auction.length}</span></div>
+                <div className="bidding-history-wrap" aria-live="polite">
+                  <table className="bidding-history" aria-label="Auction calls by seat">
+                    <thead><tr>{seats.map((seat) => <th className={shownGame.currentActor === seat ? "auction-seat-active" : ""} key={seat} scope="col" aria-label={seatNames[seat]}>{seatNames[seat].slice(0, 1)}</th>)}</tr></thead>
+                    <tbody>{auctionRows.map((row, rowIndex) => <tr key={rowIndex}>{seats.map((seat, seatIndex) => {
+                      const callIndex = rowIndex * 4 + seatIndex - seats.indexOf(shownGame.dealer);
+                      const entry = callIndex >= 0 ? shownGame.auction[callIndex] : undefined;
+                      return <td key={seat} className={entry && (entry.bid.endsWith("hearts") || entry.bid.endsWith("diamonds")) ? "auction-call-red" : ""}>{entry ? compactCallLabel(entry.bid) : ""}</td>;
+                    })}</tr>)}</tbody>
+                  </table>
+                  {shownGame.auction.length ? <ol className="sr-only" ref={auctionListRef}>{shownGame.auction.map(({ seat, bid }, index) => <li key={`${seat}-${index}`}><span>{seatNames[seat]}</span><strong>{callLabel(bid)}</strong></li>)}</ol> : <p className="quiet-copy">The first call is yours to make.</p>}
+                </div>
+                {!isReviewing && game?.phase === "auction" && (!playAgainstBots || game.currentActor === userSeat) ? <div className="bid-picker" aria-label="Choose a bid">
+                  <div className="bid-grid" role="group" aria-label="Contract bids by level and strain">
+                    <span className="bid-grid-corner" aria-hidden="true">Level</span>{biddingStrains.map((strain) => <span className={`bid-strain bid-strain-${strain}`} key={strain} aria-label={strain}>{strain === "notrump" ? "NT" : suitSymbols[strain]}</span>)}
+                    {[1, 2, 3, 4, 5, 6, 7].map((level) => <Fragment key={level}><span className="bid-level">{level}</span>{biddingStrains.map((strain) => {
+                      const bid = `${level}${strain}` as Bid;
+                      const available = isCallAvailable(game, bid);
+                      return <button key={bid} type="button" className={`bid-cell ${strain === "hearts" || strain === "diamonds" ? "bid-red" : ""}`} aria-label={`${level} ${strain}`} disabled={!available} onClick={() => submitAction({ type: "bid", seat: game.currentActor, bid })}>{level}<span>{strain === "notrump" ? "NT" : suitSymbols[strain]}</span></button>;
+                    })}</Fragment>)}
+                  </div>
+                  <div className="bid-special-calls" role="group" aria-label="Pass, double, or redouble">
+                    {(["double", "redouble", "pass"] as const).map((bid) => <button key={bid} type="button" className={`secondary-button bid-special bid-special-${bid}`} disabled={!isCallAvailable(game, bid)} onClick={() => submitAction({ type: "bid", seat: game.currentActor, bid })}>{bid === "double" ? "X" : bid === "redouble" ? "XX" : "Pass"}</button>)}
+                  </div>
+                </div> : null}
               </section> : null}
             </div>
             {shownGame.contract ? <div className="trick-summary" aria-live="polite">

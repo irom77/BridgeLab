@@ -1,5 +1,9 @@
 # Changes
 
+## 0.1.5 - 2026-10-28
+
+- Replaced the auction call selector with a Trickster-style bidding box: calls are arranged by level and strain, unavailable contract bids and doubles are disabled, and the auction history is aligned by seat.
+
 ## 0.1.4 - 2026-10-28
 
 - Played cards now sit by compass seat; completed tricks remain visible for two seconds, the last trick can be reopened, and live NS/EW trick totals stay in view.
